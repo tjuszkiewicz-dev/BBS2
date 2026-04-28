@@ -42,7 +42,7 @@ export function ServiceCarousel({ children }: ServiceCarouselProps) {
 
   return (
     <div className="relative group w-full mb-6">
-      <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
+      <div className="overflow-hidden rounded-2xl py-4 -my-4" ref={emblaRef}>
         <div className="flex backface-hidden touch-pan-y" style={{ touchAction: 'pan-y', marginLeft: '-1rem' }}>
           {React.Children.map(children, (child, i) => (
             <div

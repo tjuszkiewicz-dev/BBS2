@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const auth = await getAuthUserWithRole();
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { searchParams } = req.nextUrl;
   const companyId = searchParams.get('companyId');
   const userId    = searchParams.get('userId');

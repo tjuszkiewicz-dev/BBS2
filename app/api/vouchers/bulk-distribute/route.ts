@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const { items } = parsed.data;
   const totalNeeded = items.reduce((acc, i) => acc + i.amount, 0);
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // Pobierz company_id i dane HR z profilu server-side (migracja 004)
   const { data: hrProfileData } = await supabase

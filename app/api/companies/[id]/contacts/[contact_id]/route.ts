@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const parsed = UpdateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase
     .from('company_contacts')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
@@ -51,7 +51,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   const auth = await requireSuperadmin();
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { error } = await supabase
     .from('company_contacts')
     .delete()

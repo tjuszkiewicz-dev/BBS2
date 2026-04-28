@@ -61,6 +61,7 @@ interface StrattonContextType {
     logout: () => void; 
     switchUser: (userId: string) => void;
     setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+    setCompanies: React.Dispatch<React.SetStateAction<Company[]>>;
     handleUpdateSystemConfig: (newConfig: SystemConfig) => void;
     handleUpdateNotificationConfig: (updatedConfig: NotificationConfig) => void;
     handleUpdateCompanyConfig: (companyId: string, updates: Partial<Company>) => void;
@@ -94,7 +95,7 @@ interface StrattonContextType {
     handleUpdateTicketStatus: (ticketId: string, status: TicketStatus) => void;
     handleAnonymizeUser: (userId: string) => void;
     handleToggleTwoFactor: (userId: string, enabled: boolean) => void; 
-    fetchUsersFromApi: () => Promise<void>;
+    fetchUsersFromApi: (companyId?: string) => Promise<void>;
     addToast: (title: string, message: string, type: ToastType) => void;
     removeToast: (id: string) => void;
   };

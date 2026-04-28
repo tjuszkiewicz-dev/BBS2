@@ -30,6 +30,9 @@ export interface IbanChangeRequest {
 }
 
 export interface UserFinance {
+  voucherBalance?: number;
+  cashBalance?: number;
+  totalEarned?: number;
   payoutAccount: {
     iban: string;
     country: string;
@@ -44,6 +47,8 @@ export interface UserAddress {
   street: string;
   city: string;
   zipCode: string;
+  postalCode?: string;
+  country?: string;
 }
 
 export interface User {

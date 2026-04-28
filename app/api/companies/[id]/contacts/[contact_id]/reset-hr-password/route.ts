@@ -27,12 +27,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string; contact_id: string } },
 ) {
-  const auth = await getAuthUserWithRole(req);
+  const auth = await getAuthUserWithRole();
   if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { id: companyId, contact_id: contactId } = params;
 
   // 1. Sprawdź kontakt — pobierz e-mail i upewnij się że to operator HR
@@ -53,13 +53,17 @@ export async function POST(
     return NextResponse.json({ error: 'Kontakt nie posiada adresu e-mail' }, { status: 400 });
   }
 
-  // 2. Znajdź konto Supabase Auth po e-mailu
-  const { data: usersData, error: listErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  if (listErr) {
-    return NextResponse.json({ error: listErr.message }, { status: 500 });
+  // 2. Znajdź konto Supabase Auth po e-mailu (paginacja)
+  const allAuthUsers: any[] = [];
+  let authPage = 1;
+  while (true) {
+    const { data: authListData } = await supabase.auth.admin.listUsers({ perPage: 1000, page: authPage });
+    const pageUsers = authListData?.users ?? [];
+    allAuthUsers.push(...pageUsers);
+    if (pageUsers.length < 1000) break;
+    authPage++;
   }
-
-  const authUser = usersData.users.find(
+  const authUser = allAuthUsers.find(
     (u) => u.email?.toLowerCase() === contact.email!.toLowerCase(),
   );
   if (!authUser) {

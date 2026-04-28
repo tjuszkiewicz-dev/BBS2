@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { employeeId, amount } = parsed.data;
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // Pobierz company_id z profilu HR server-side (migracja 004)
   const { data: hrProfileData } = await supabase

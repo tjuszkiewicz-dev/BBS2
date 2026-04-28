@@ -18,8 +18,11 @@ export const useUserLogic = (
   const [importHistory, setImportHistory] = useState<ImportHistoryEntry[]>([]);
 
   // --- Pobierz użytkowników z API (wywoływane z StrattonContext gdy currentUserId jest znany) ---
-  const fetchUsersFromApi = useCallback(async () => {
-    const r = await fetch('/api/users').catch(() => null);
+  const fetchUsersFromApi = useCallback(async (companyId?: string) => {
+    const usersUrl = companyId
+      ? `/api/users?companyId=${encodeURIComponent(companyId)}`
+      : '/api/users';
+    const r = await fetch(usersUrl).catch(() => null);
     if (!r?.ok) return;
     const profiles: any[] = await r.json().catch(() => []);
     const mapped: User[] = profiles.map(p =>
@@ -28,7 +31,15 @@ export const useUserLogic = (
     const mappedIds = new Set(mapped.map(u => u.id));
     // Keep in-memory-only users (SUPERADMIN, ADVISOR etc.) that aren’t in Supabase
     setUsers(prev => {
-      const localOnly = prev.filter(u => !mappedIds.has(u.id));
+      const mappedEmails = new Set(mapped.map(u => u.email.toLowerCase()));
+      const mappedPesels = new Set(mapped.map(u => u.pesel).filter(Boolean));
+      const localOnly = prev.filter(u => {
+        if (mappedIds.has(u.id)) return false;
+        // Drop local placeholder users once the persisted counterpart exists.
+        if (mappedEmails.has(u.email.toLowerCase())) return false;
+        if (u.pesel && mappedPesels.has(u.pesel)) return false;
+        return true;
+      });
       return [...mapped, ...localOnly];
     });
   }, []);
@@ -116,51 +127,31 @@ export const useUserLogic = (
     });
 
     if (!res.ok) {
-      // Tryb lokalny — API niedostępne lub błąd (np. mock ID). Dodaj pracowników do stanu lokalnego.
-      const now = new Date().toISOString();
-      const reportId = `REP-LOCAL-${Date.now()}`;
-      const localUsers: User[] = validRows.map((row, i) => ({
-        id: `EMP-${Date.now()}-${i}`,
-        name: `${row.name} ${row.surname}`,
-        email: row.email,
-        role: Role.EMPLOYEE,
-        companyId,
-        status: 'ACTIVE' as const,
-        voucherBalance: 0,
-        pesel: row.pesel,
-        department: row.department,
-        position: row.position,
-        isTwoFactorEnabled: false,
-        termsAccepted: true,
-        termsAcceptedAt: now,
-        termsAcceptedMethod: 'BULK_IMPORT' as const,
-      }));
-      setUsers(prev => [...prev, ...localUsers]);
-
-      const historyEntry: ImportHistoryEntry = {
-        id: reportId,
-        companyId,
-        date: now,
-        hrName: currentUser.name,
-        totalProcessed: localUsers.length,
-        status: 'SUCCESS',
-        reportData: { reportId, importedCount: localUsers.length, errors: [] },
-      };
-      setImportHistory(prev => [historyEntry, ...prev]);
-
-      logEvent('BULK_IMPORT', `Zaimportowano ${localUsers.length} pracowników (tryb lokalny).`, reportId, 'IMPORT');
-      addToast('Sukces', `Dodano ${localUsers.length} pracowników.`, 'SUCCESS');
-
-      return { reportData: historyEntry.reportData, company: companies.find(c => c.id === companyId), user: currentUser };
+      const errBody = await res.json().catch(() => ({}));
+      addToast('Błąd importu', errBody.error ?? 'Nie udało się zaimportować pracowników. Sprawdź połączenie i spróbuj ponownie.', 'ERROR');
+      return null;
     }
 
     const result = await res.json();
-    const { imported, errors, reportId, users: importedUsers } = result;
+    const { imported, errors: apiErrors, reportId, users: importedUsers } = result;
+
+    // Jeśli API zwróciło błędy importu — pokaż je w toaście (max 3 pierwsze)
+    if (Array.isArray(apiErrors) && apiErrors.length > 0 && imported === 0) {
+      const preview = apiErrors.slice(0, 3).join('\n');
+      addToast('Błąd importu pracowników', preview + (apiErrors.length > 3 ? `\n...i ${apiErrors.length - 3} więcej` : ''), 'ERROR');
+      return null;
+    }
+    const errors = apiErrors;
 
     // Odśwież listę użytkowników z Supabase
     let supabaseEmails = new Set<string>();
     try {
-      const refreshRes = await fetch('/api/users');
+      // Użyj companyId (przekazane przez wywołującego) jeśli dostępne,
+      // fallback do /api/users dla superadmin (brak companyId = wszyscy)
+      const refreshUrl = companyId
+        ? `/api/users?companyId=${encodeURIComponent(companyId)}`
+        : '/api/users';
+      const refreshRes = await fetch(refreshUrl);
       if (refreshRes.ok) {
         const profiles: any[] = await refreshRes.json();
         const mapped: User[] = profiles.map(p =>
@@ -169,45 +160,31 @@ export const useUserLogic = (
         supabaseEmails = new Set(mapped.map(u => u.email.toLowerCase()));
         const mappedIds = new Set(mapped.map(u => u.id));
         setUsers(prev => {
-          const localOnly = prev.filter(u => !mappedIds.has(u.id));
+          const mappedPesels = new Set(mapped.map(u => u.pesel).filter(Boolean));
+          const localOnly = prev.filter(u => {
+            if (mappedIds.has(u.id)) return false;
+            if (supabaseEmails.has(u.email.toLowerCase())) return false;
+            if (u.pesel && mappedPesels.has(u.pesel)) return false;
+            return true;
+          });
           return [...mapped, ...localOnly];
         });
       }
     } catch (_) {}
 
-    // Jeśli Supabase nie zdołało utworzyć wszystkich pracowników (np. rate limit, błąd auth),
-    // dodaj brakujących do stanu lokalnego — żeby natychmiast pojawili się w Kartotece.
+    // Jeśli Supabase nie zdołało utworzyć wszystkich pracowników, pokaż info w błędach
     const locallyAdded: string[] = [];
     if (imported < validRows.length) {
-      const now = new Date().toISOString();
       const missing = validRows.filter(r => !supabaseEmails.has(r.email.toLowerCase()));
       if (missing.length > 0) {
-        const localUsers: User[] = missing.map((row, i) => ({
-          id: `EMP-LOCAL-${Date.now()}-${i}`,
-          name: `${row.name} ${row.surname}`,
-          email: row.email,
-          role: Role.EMPLOYEE,
-          companyId,
-          status: 'ACTIVE' as const,
-          voucherBalance: 0,
-          pesel: row.pesel,
-          department: row.department,
-          position: row.position,
-          isTwoFactorEnabled: false,
-          termsAccepted: true,
-          termsAcceptedAt: now,
-          termsAcceptedMethod: 'BULK_IMPORT' as const,
-        }));
-        setUsers(prev => {
-          const existingEmails = new Set(prev.map(u => u.email.toLowerCase()));
-          const toAdd = localUsers.filter(u => !existingEmails.has(u.email.toLowerCase()));
-          return [...prev, ...toAdd];
-        });
+        // NIE dodawaj fake-ID użytkowników do stanu lokalnego — znikną po odświeżeniu
+        // Zamiast tego zgłoś jako błędy w raporcie
         locallyAdded.push(...missing.map(r => r.email));
       }
     }
 
-    const totalAdded = imported + locallyAdded.length;
+    const totalAdded = imported;
+    const failedCount = locallyAdded.length;
 
     const historyEntry: ImportHistoryEntry = {
       id: reportId,
@@ -215,13 +192,17 @@ export const useUserLogic = (
       date: new Date().toISOString(),
       hrName: currentUser.name,
       totalProcessed: totalAdded,
-      status: errors.length === 0 || locallyAdded.length > 0 ? 'SUCCESS' : 'PARTIAL',
-      reportData: { reportId, importedCount: totalAdded, errors: [] },
+      status: errors.length === 0 && failedCount === 0 ? 'SUCCESS' : 'PARTIAL',
+      reportData: { reportId, importedCount: totalAdded, errors: failedCount > 0 ? [`Nie udało się zapisać: ${locallyAdded.join(', ')}`] : [] },
     };
     setImportHistory(prev => [historyEntry, ...prev]);
 
     logEvent('BULK_IMPORT', `Zaimportowano ${totalAdded} pracowników.`, reportId, 'IMPORT');
-    addToast('Sukces', `Dodano ${totalAdded} pracowników.`, 'SUCCESS');
+    if (failedCount > 0) {
+      addToast('Częściowy sukces', `Dodano ${totalAdded} z ${validRows.length} pracowników. ${failedCount} nie udało się zapisać w bazie.`, 'WARNING');
+    } else {
+      addToast('Sukces', `Dodano ${totalAdded} pracowników.`, 'SUCCESS');
+    }
 
     return {
       reportData: historyEntry.reportData,

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Wymagana rola superadmin' }, { status: 403 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const results: string[] = [];
 
   try {

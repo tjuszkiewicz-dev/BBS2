@@ -12,13 +12,13 @@ export async function GET(_req: NextRequest) {
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (auth.role !== 'superadmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // admin_voucher_tree() jest SECURITY DEFINER - nie podlega limitowi max_rows
   const { data, error } = await supabase.rpc('admin_voucher_tree');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const companies     = (data as any[]) ?? [];
+  const companies     = (Array.isArray(data) ? data : []) as any[];
   const totalVouchers = companies.reduce((s: number, c: any) => s + (c.total   ?? 0), 0);
   const totalPending  = companies.reduce((s: number, c: any) => s + (c.pending ?? 0), 0);
 

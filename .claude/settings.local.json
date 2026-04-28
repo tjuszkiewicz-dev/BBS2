@@ -25,7 +25,9 @@
       "Bash(claude plugin:*)",
       "Read(//c/Users/Użytkownik/.claude/plugins/marketplaces/karpathy-skills//**)",
       "Bash(xargs grep *)",
-      "Bash(sed 's/[^0-9]*$//')"
+      "Bash(sed 's/[^0-9]*$//')",
+      "Bash(supabase --version)",
+      "Bash(npm list *)"
     ]
   },
   "enableAllProjectMcpServers": true,

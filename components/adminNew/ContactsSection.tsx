@@ -106,8 +106,8 @@ const ContactForm: React.FC<{
       {form.is_hr_operator && (
         <div className="flex items-start gap-2 p-2.5 bg-blue-100 border border-blue-200 rounded-lg text-blue-800 text-xs">
           <ShieldCheck size={13} className="flex-shrink-0 mt-0.5" />
-          Ten kontakt otrzyma dostęp do panelu HR firmy. Po zapisaniu użyj przycisku
-          &nbsp;<strong>Utwórz konto HR</strong>, aby założyć konto w systemie.
+          Ten kontakt otrzyma dostęp do panelu HR firmy. Konto HR (login + hasło tymczasowe) zostanie
+          <strong> założone automatycznie</strong> po zapisaniu.
         </div>
       )}
       <div className="flex gap-2 justify-end">
@@ -198,8 +198,13 @@ export const ContactsSection: React.FC<Props> = ({ companyId, onCountChange }) =
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? 'Błąd');
+      const newContact: Contact = await res.json();
       setAdding(false);
       fetchContacts();
+      // Automatycznie załóż konto HR jeśli kontakt oznaczony jako Operator HR
+      if (data.is_hr_operator && data.email) {
+        await handleCreateHrAccount(newContact);
+      }
     } catch (e: any) {
       alert(e.message ?? 'Błąd zapisu');
     } finally {
@@ -470,7 +475,7 @@ export const ContactsSection: React.FC<Props> = ({ companyId, onCountChange }) =
               </div>
 
               {/* ── Panel konta HR ── */}
-              {isExpanded && c.is_hr_operator && (
+              {c.is_hr_operator && c.email && (accountExists || isExpanded) && (
                 <div className="px-4 py-3 border-t border-blue-100 bg-blue-50/60">
                   <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3">Dane konta HR</p>
 

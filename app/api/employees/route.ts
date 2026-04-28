@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { companyId } = parsed.data;
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // Pobierz profile pracowników tej firmy
   const { data: profiles, error } = await supabase
@@ -59,16 +59,21 @@ export async function GET(request: NextRequest) {
   const balanceMap: Record<string, number> = {};
 
   try {
-    const [authList, balancesResult] = await Promise.all([
-      supabase.auth.admin.listUsers({ perPage: 1000 }),
-      supabase.from('voucher_accounts').select('user_id, balance').in('user_id', userIds),
-    ]);
-
-    if (authList.data?.users) {
-      for (const u of authList.data.users) {
-        if (userIds.includes(u.id)) emailMap[u.id] = u.email ?? '';
-      }
+    // Pobierz emaile iterując wszystkie strony auth.users (pagination)
+    const allAuthUsers: any[] = [];
+    let authPage = 1;
+    while (true) {
+      const { data: authListData } = await supabase.auth.admin.listUsers({ perPage: 1000, page: authPage });
+      const pageUsers = authListData?.users ?? [];
+      allAuthUsers.push(...pageUsers);
+      if (pageUsers.length < 1000) break;
+      authPage++;
     }
+    for (const u of allAuthUsers) {
+      if (userIds.includes(u.id)) emailMap[u.id] = u.email ?? '';
+    }
+
+    const balancesResult = await supabase.from('voucher_accounts').select('user_id, balance').in('user_id', userIds);
 
     for (const va of balancesResult.data ?? []) {
       if (va.user_id) balanceMap[va.user_id] = va.balance ?? 0;
@@ -85,6 +90,8 @@ export async function GET(request: NextRequest) {
 
   const result = profiles.map(p => ({
     id:             p.id,
+    role:           p.role,
+    company_id:     p.company_id,
     full_name:      p.full_name,
     email:          emailMap[p.id] ?? '',
     pesel:          p.pesel,
@@ -121,7 +128,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { companyId, firstName, lastName, email, pesel, department, position, phoneNumber, iban, contractType } = parsed.data;
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const now = new Date().toISOString();
   const normalizedEmail = email.toLowerCase().trim();
 
@@ -132,28 +139,48 @@ export async function POST(request: NextRequest) {
     Math.floor(10 + Math.random() * 90) +
     '!';
 
-  // Utwórz konto w Supabase Auth
-  const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
-    email: normalizedEmail,
-    password: tempPassword,
-    email_confirm: true,
-  });
+  // Sprawdź czy konto auth już istnieje — jeśli tak, zresetuj hasło zamiast tworzyć nowe
+  let userId: string;
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const existingAuthUsers: Array<{ id: string; email?: string }> = listData?.users ?? [];
+  const existingAuthByEmail = new Map(
+    existingAuthUsers.map((u: { id: string; email?: string }) => [u.email?.toLowerCase() ?? '', u.id])
+  );
 
-  if (authError || !newUser.user) {
-    return NextResponse.json(
-      { error: authError?.message ?? 'Nie udało się utworzyć konta' },
-      { status: 400 }
-    );
+  const existingUserId = existingAuthByEmail.get(normalizedEmail);
+  if (existingUserId) {
+    // Konto istnieje — zresetuj hasło
+    const { error: updateError } = await supabase.auth.admin.updateUserById(existingUserId, {
+      password: tempPassword,
+      email_confirm: true,
+    });
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+    userId = existingUserId;
+  } else {
+    // Utwórz nowe konto w Supabase Auth
+    const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      email_confirm: true,
+    });
+    if (authError || !newUser.user) {
+      return NextResponse.json(
+        { error: authError?.message ?? 'Nie udało się utworzyć konta' },
+        { status: 400 }
+      );
+    }
+    userId = newUser.user.id;
   }
 
-  const userId = newUser.user.id;
   const rawIban = iban ? iban.replace(/\s+/g, '').toUpperCase() : null;
   const isUZ = contractType === 'UZ';
 
-  // Utwórz profil użytkownika
+  // Upsert profilu użytkownika (obsługuje zarówno nowego jak i istniejącego)
   const { error: profileError } = await supabase
     .from('user_profiles')
-    .insert({
+    .upsert({
       id:               userId,
       role:             'pracownik',
       full_name:        `${firstName} ${lastName}`,
@@ -169,14 +196,21 @@ export async function POST(request: NextRequest) {
       status:           'active',
       terms_accepted:   true,
       terms_accepted_at: now,
-      temp_password:    tempPassword,
-    });
+    }, { onConflict: 'id' });
 
   if (profileError) {
-    // Cleanup: usuń konto auth żeby nie zostawać sierotą
-    await supabase.auth.admin.deleteUser(userId);
+    // Nie usuwamy konta auth przy upsert (mogło wcześniej istnieć)
+    if (!existingUserId) {
+      await supabase.auth.admin.deleteUser(userId);
+    }
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
+
+  // Zapisz temp_password osobno (kolumna może nie być w cache schemy przy upsert)
+  await supabase
+    .from('user_profiles')
+    .update({ temp_password: tempPassword })
+    .eq('id', userId);
 
   return NextResponse.json({
     id:           userId,

@@ -23,7 +23,8 @@ interface MeResponse {
     company_id: string | null; department: string | null;
     position: string | null; hire_date: string | null;
     contract_type: string | null; phone_number: string | null;
-    iban: string | null; status: string | null;
+    iban: string | null; iban_verified: boolean | null;
+    pesel: string | null; status: string | null;
   };
   company: {
     id: string; name: string | null; nip: string | null;
@@ -58,7 +59,7 @@ function SupabaseSync({ children }: Props) {
       const { user: authUser, profile, company: companyRow } = data;
 
       const appUser = supabaseProfileToUser(
-        profile,
+        profile as any,
         authUser.email,
         profile.company_id ?? undefined
       );
@@ -85,7 +86,7 @@ function SupabaseSync({ children }: Props) {
             address: companyRow.address_city ? {
               street:     companyRow.address_street ?? '',
               city:       companyRow.address_city ?? '',
-              postalCode: companyRow.address_zip ?? '',
+              zipCode:    companyRow.address_zip ?? '',
               country:    'Polska',
             } : undefined,
           }];

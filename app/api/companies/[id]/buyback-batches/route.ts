@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase
     .from('buyback_batches')
     .select(`
@@ -43,26 +43,26 @@ export async function POST(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // 1. Pobierz vouchery BUYBACK_PENDING dla tej firmy
   const { data: pendingVouchers, error: vErr } = await supabase
     .from('vouchers')
-    .select('id, owner_id, expiry_date')
+    .select('id, current_owner_id, valid_until')
     .eq('company_id', companyId)
-    .eq('status', 'BUYBACK_PENDING');
+    .eq('status', 'buyback_pending');
 
   if (vErr) return NextResponse.json({ error: vErr.message }, { status: 500 });
   if (!pendingVouchers || pendingVouchers.length === 0) {
     return NextResponse.json({ error: 'Brak voucherów do zbycia' }, { status: 400 });
   }
 
-  // 2. Grupuj po owner_id
+  // 2. Grupuj po current_owner_id
   const grouped: Record<string, string[]> = {};
   for (const v of pendingVouchers) {
-    if (!v.owner_id) continue;
-    if (!grouped[v.owner_id]) grouped[v.owner_id] = [];
-    grouped[v.owner_id].push(v.id);
+    if (!v.current_owner_id) continue;
+    if (!grouped[v.current_owner_id]) grouped[v.current_owner_id] = [];
+    grouped[v.current_owner_id].push(v.id);
   }
 
   const employeeIds = Object.keys(grouped);
@@ -78,7 +78,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
 
-  const profileMap = new Map((profiles ?? []).map(p => [p.id, p]));
+  const profileMap: Map<string, any> = new Map((profiles ?? []).map((p: any) => [p.id, p]));
 
   // 4. Buduj items i CSV
   const now = new Date();
@@ -132,7 +132,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     .from('buyback_batches')
     .insert({
       company_id:   companyId,
-      created_by:   auth.userId,
+      created_by:   auth.id,
       period_label: periodLabel,
       total_amount: totalAmount,
       voucher_count: totalVouchers,
@@ -165,7 +165,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
   const allVoucherIds = items.flatMap(i => i.voucher_ids);
   const { error: updateErr } = await supabase
     .from('vouchers')
-    .update({ status: 'BUYBACK_COMPLETE' })
+    .update({ status: 'buyback_complete' })
     .in('id', allVoucherIds);
 
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });

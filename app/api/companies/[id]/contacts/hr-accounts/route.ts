@@ -13,12 +13,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const auth = await getAuthUserWithRole(req);
+  const auth = await getAuthUserWithRole();
   if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const companyId = params.id;
 
   // 1. Pobierz wszystkie operatorskie kontakty z e-mailem i zapisanym hasłem
@@ -55,50 +55,46 @@ export async function GET(
     return NextResponse.json({ existingAccounts: [], passwords: {} });
   }
 
-  // 2. Pobierz profile użytkowników tej firmy z rolą 'pracodawca'
-  const { data: profiles } = await supabase
-    .from('user_profiles')
-    .select('id')
-    .eq('company_id', companyId)
-    .eq('role', 'pracodawca');
-
-  if (!profiles || profiles.length === 0) {
-    return NextResponse.json({ existingAccounts: [], passwords: {} });
+  // 2. Pobierz wszystkich użytkowników auth (paginacja) i znajdź po emailu
+  const allAuthUsers: any[] = [];
+  let authPage = 1;
+  while (true) {
+    const { data: authListData } = await supabase.auth.admin.listUsers({ perPage: 1000, page: authPage });
+    const pageUsers = authListData?.users ?? [];
+    allAuthUsers.push(...pageUsers);
+    if (pageUsers.length < 1000) break;
+    authPage++;
   }
 
-  // 3. Dla każdego profilu pobierz e-mail i temp_password z auth.users (user_metadata)
-  const existingEmails = new Set<string>();
-  const emailToTempPw: Record<string, string> = {};
-  await Promise.all(
-    profiles.map(async (profile) => {
-      const { data } = await supabase.auth.admin.getUserById(profile.id);
-      if (data?.user?.email) {
-        existingEmails.add(data.user.email.toLowerCase());
-        const meta = data.user.user_metadata as Record<string, string> | undefined;
-        if (meta?.temp_password) {
-          emailToTempPw[data.user.email.toLowerCase()] = meta.temp_password;
-        }
-      }
-    }),
-  );
-
-  if (existingEmails.size === 0) {
-    return NextResponse.json({ existingAccounts: [], passwords: {} });
+  // Buduj mapę: email → { id, temp_password z user_metadata }
+  const authByEmail = new Map<string, { id: string; tempPw: string | null }>();
+  for (const u of allAuthUsers) {
+    if (u.email) {
+      const meta = u.user_metadata as Record<string, string> | undefined;
+      authByEmail.set(u.email.toLowerCase(), {
+        id: u.id,
+        tempPw: meta?.temp_password ?? null,
+      });
+    }
   }
 
-  // 4. Dopasuj kontakty — zbierz id i hasła (priorytet: user_metadata > hr_temp_password)
+  // 3. Dopasuj kontakty
   const existingAccounts: string[] = [];
   const passwords: Record<string, string> = {};
 
   for (const c of contacts) {
-    if (c.email && existingEmails.has(c.email.toLowerCase())) {
-      existingAccounts.push(c.id);
-      const metaPw  = emailToTempPw[c.email.toLowerCase()];
-      const dbPw    = (c as any).hr_temp_password;
-      const resolved = metaPw || dbPw;
-      if (resolved) {
-        passwords[c.id] = resolved;
-      }
+    if (!c.email) continue;
+    const authEntry = authByEmail.get(c.email.toLowerCase());
+    if (!authEntry) continue;
+
+    existingAccounts.push(c.id);
+
+    // Priorytet: user_metadata > hr_temp_password z tabeli
+    const metaPw = authEntry.tempPw;
+    const dbPw   = (c as any).hr_temp_password ?? null;
+    const resolved = metaPw || dbPw;
+    if (resolved) {
+      passwords[c.id] = resolved;
     }
   }
 

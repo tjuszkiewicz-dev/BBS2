@@ -35,7 +35,7 @@ export async function POST(
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (auth.role !== 'superadmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   // ── Pobierz kontakt ────────────────────────────────────────────────────────
   const { data: contact, error: contactErr } = await supabase
@@ -74,9 +74,17 @@ export async function POST(
     return NextResponse.json({ error: 'Firma nie istnieje' }, { status: 404 });
   }
 
-  // ── Sprawdź czy konto już istnieje ────────────────────────────────────────
-  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  const existingUser = listData?.users?.find(
+  // ── Sprawdź czy konto już istnieje (paginacja) ────────────────────────────
+  const allAuthUsers: any[] = [];
+  let authPage = 1;
+  while (true) {
+    const { data: authListData } = await supabase.auth.admin.listUsers({ perPage: 1000, page: authPage });
+    const pageUsers = authListData?.users ?? [];
+    allAuthUsers.push(...pageUsers);
+    if (pageUsers.length < 1000) break;
+    authPage++;
+  }
+  const existingUser = allAuthUsers.find(
     (u) => u.email?.toLowerCase() === contact.email!.toLowerCase(),
   );
 

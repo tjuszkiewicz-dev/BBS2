@@ -18,7 +18,7 @@ export async function GET() {
   const auth = await getAuthUserWithRole();
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   const { data: profile, error } = await supabase
     .from('user_profiles')
@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase
     .from('user_profiles')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })

@@ -4,10 +4,11 @@ import {
   ImportRow
 } from '../types';
 import { useStrattonSystem } from '../context/StrattonContext';
-import { generateExcelTemplate, parseExcelFile, exportActiveEmployees, exportEmployeeCredentials, HrExcelRow } from '../utils/excelHr';
+import { generateExcelTemplate, generateKartotekaTemplate, parseExcelFile, exportActiveEmployees, exportEmployeeCredentials, HrExcelRow } from '../utils/excelHr';
 import { supabaseProfileToUser } from '../lib/supabaseToUser';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { HrOrder, HRTab, STATUS_MAP, formatPeriod, buildOrderReportHtml } from '../utils/hrUtils';
+import KartotekaImportZone from '../components/hr/KartotekaImportZone';
 import { formatPhoneDigits, digitsFromPhone } from '../components/ui/PhoneInput';
 import { EmpDetailRow } from '../components/hr/dashboard/EmployeeCard';
 import { HROrderPickerModal } from '../components/hr/modals/HROrderPickerModal';
@@ -95,6 +96,31 @@ export const DashboardNewHR: React.FC<Props> = ({
 
   // ─── Live suma voucherów pracowniczych ───────────────────────────────────
   const [liveEmployeeTotal, setLiveEmployeeTotal] = useState<number | null>(null);
+  const [directoryEmployees, setDirectoryEmployees] = useState<User[]>([]);
+
+  const fetchEmployeeDirectory = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/employees?companyId=${company.id}`);
+      if (!res.ok) return;
+      const rows: any[] = await res.json();
+      if (!Array.isArray(rows)) return;
+      const mapped = rows.map((p: any) =>
+        supabaseProfileToUser(
+          {
+            ...p,
+            role: p.role ?? 'pracownik',
+            voucherBalance: Number(p.voucherBalance ?? 0),
+          },
+          p.email ?? '',
+          p.company_id ?? company.id,
+        )
+      );
+      setDirectoryEmployees(mapped);
+    } catch {
+      // no-op: fallback source is best-effort only
+    }
+  }, [company.id]);
+
   useEffect(() => {
     fetch(`/api/employees?companyId=${company.id}`)
       .then(r => r.ok ? r.json() : [])
@@ -104,14 +130,22 @@ export const DashboardNewHR: React.FC<Props> = ({
         setLiveEmployeeTotal(sum);
       })
       .catch(() => {});
-  }, [company.id]);
+    fetchEmployeeDirectory();
+  }, [company.id, fetchEmployeeDirectory]);
 
   // ─── Auto-refresh pracowników przy wejściu na tab EMPLOYEES ─────────────
   const [empRefreshing, setEmpRefreshing] = useState(false);
   const refreshEmployees = useCallback(async () => {
     setEmpRefreshing(true);
-    try { await actions.fetchUsersFromApi(); } finally { setEmpRefreshing(false); }
-  }, [actions]);
+    try {
+      await Promise.all([
+        actions.fetchUsersFromApi(company.id),
+        fetchEmployeeDirectory(),
+      ]);
+    } finally {
+      setEmpRefreshing(false);
+    }
+  }, [actions, company.id, fetchEmployeeDirectory]);
 
   const [activeTab, setActiveTab] = useState<HRTab>('ORDER');
 
@@ -194,7 +228,8 @@ export const DashboardNewHR: React.FC<Props> = ({
 
   // ─── Tab 3: Employee Directory state ────────────────────────────────────
   const [empSearch, setEmpSearch] = useState('');
-  const [empFilter, setEmpFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ACTIVE');
+  // Business rule: employee list must always show everyone by default.
+  const [empFilter, setEmpFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
   const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [empHistoryEmployee, setEmpHistoryEmployee] = useState<User | null>(null);
@@ -233,7 +268,10 @@ export const DashboardNewHR: React.FC<Props> = ({
       setCleanupResult({ ok: true, deleted: data.deleted });
       // Refresh local state
       fetchOrders();
-      await actions.fetchUsersFromApi();
+      await Promise.all([
+        actions.fetchUsersFromApi(company.id),
+        fetchEmployeeDirectory(),
+      ]);
     } catch (e: any) {
       setCleanupResult({ ok: false, error: e.message });
     } finally {
@@ -349,10 +387,29 @@ export const DashboardNewHR: React.FC<Props> = ({
   };
   // ─── Computed values ─────────────────────────────────────────────────────
 
-  const myEmployees = useMemo(
-    () => state.users.filter(u => u.companyId === company.id && u.role === Role.EMPLOYEE),
-    [state.users, company.id]
-  );
+  const myEmployees = useMemo(() => {
+    const stateEmployees = state.users.filter(u => u.companyId === company.id && u.role === Role.EMPLOYEE);
+    const apiEmployees = directoryEmployees.filter(u => u.companyId === company.id && u.role === Role.EMPLOYEE);
+
+    // Merge both sources to prevent temporary global-state glitches from hiding employees.
+    const merged: User[] = [];
+    const seen = new Set<string>();
+
+    const keyFor = (u: User) => {
+      const email = (u.email ?? '').trim().toLowerCase();
+      const pesel = (u.pesel ?? '').trim();
+      return `${u.id}::${email}::${pesel}`;
+    };
+
+    for (const u of [...stateEmployees, ...apiEmployees]) {
+      const key = keyFor(u);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(u);
+    }
+
+    return merged;
+  }, [state.users, directoryEmployees, company.id]);
 
   // Company expiry deadline this month (from HR-configured day/hour/minute)
   const companyExpiryDeadline = useMemo(() => {
@@ -447,6 +504,11 @@ export const DashboardNewHR: React.FC<Props> = ({
     myEmployees.forEach(u => { if (u.pesel) map.set(u.pesel, u); });
     return map;
   }, [myEmployees]);
+
+  const isDbUserId = useCallback((id?: string | null) => {
+    if (!id) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }, []);
 
   const totalPool = liveEmployeeTotal
     ?? vouchers.filter(v => v.companyId === company.id && (v.status === VoucherStatus.ACTIVE || v.status === VoucherStatus.DISTRIBUTED)).length;
@@ -586,9 +648,15 @@ export const DashboardNewHR: React.FC<Props> = ({
   const classifiedRows = useMemo(() => {
     return uploadedRows.map(row => ({
       ...row,
-      existingUser: row.pesel ? employeesByPesel.get(row.pesel) : undefined,
+      existingUser: (() => {
+        if (!row.pesel) return undefined;
+        const matched = employeesByPesel.get(row.pesel);
+        // Treat only persisted Supabase users as existing.
+        if (!matched || !isDbUserId(matched.id)) return undefined;
+        return matched;
+      })(),
     }));
-  }, [uploadedRows, employeesByPesel]);
+  }, [uploadedRows, employeesByPesel, isDbUserId]);
 
   const validRows = useMemo(() => classifiedRows.filter(r => r.isValid), [classifiedRows]);
   const totalAmount = useMemo(() => validRows.reduce((s, r) => s + r.amount, 0), [validRows]);
@@ -601,6 +669,89 @@ export const DashboardNewHR: React.FC<Props> = ({
     setOrderSuccess(null);
 
     try {
+      // 0. Zsynchronizuj istniejących pracowników: aktualizujemy wyłącznie pola zmienne.
+      // Imię, nazwisko i PESEL są traktowane jako niezmienne identyfikatory.
+      const existingRows = validRows.filter(r => !!r.existingUser);
+      let updatedExisting = 0;
+
+      if (existingRows.length > 0) {
+        const normalizeText = (v?: string | null) => (v ?? '').trim();
+        const normalizePhone = (v?: string | null) => digitsFromPhone(v ?? '');
+        const normalizeIban = (v?: string | null) => (v ?? '').replace(/\s+/g, '').toUpperCase();
+        const normalizeContractType = (v?: string | null): 'UOP' | 'UZ' | undefined => {
+          const s = normalizeText(v).toUpperCase();
+          if (!s) return undefined;
+          if (s.includes('UZ') || s.includes('ZLECEN')) return 'UZ';
+          if (s.includes('UOP') || s.includes('PRAC')) return 'UOP';
+          return undefined;
+        };
+
+        const updates = await Promise.allSettled(existingRows.map(async (r) => {
+          const existing = r.existingUser;
+          if (!existing) return false;
+
+          const payload: Record<string, string> = {};
+
+          const street = normalizeText(r.street);
+          const zip = normalizeText(r.zipCode);
+          const city = normalizeText(r.city);
+          const phone = normalizeText(r.phoneNumber);
+          const department = normalizeText(r.department);
+          const position = normalizeText(r.position);
+          const hireDate = normalizeText(r.hireDate);
+          const contractType = normalizeContractType(r.contractType);
+
+          if (street !== normalizeText(existing.address?.street)) payload.address_street = street;
+          if (zip !== normalizeText(existing.address?.zipCode)) payload.address_zip = zip;
+          if (city !== normalizeText(existing.address?.city)) payload.address_city = city;
+          if (normalizePhone(phone) !== normalizePhone(existing.identity?.phoneNumber)) payload.phone_number = phone;
+          if (department !== normalizeText(existing.department ?? existing.organization?.department)) payload.department = department;
+          if (position !== normalizeText(existing.position ?? existing.organization?.position)) payload.position = position;
+
+          const existingHireDate = normalizeText(existing.contract?.contractDateStart ?? existing.organization?.hireDate);
+          if (hireDate !== existingHireDate) payload.hire_date = hireDate;
+
+          if (contractType && contractType !== existing.contract?.type) {
+            payload.contract_type = contractType;
+          }
+
+          if (Object.keys(payload).length > 0) {
+            const res = await fetch(`/api/users/${existing.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error(`Błąd aktualizacji profilu ${existing.email}`);
+          }
+
+          const email = normalizeText(r.email).toLowerCase();
+          const existingEmail = normalizeText(existing.email).toLowerCase();
+          if (email && email !== existingEmail) {
+            const res = await fetch(`/api/users/${existing.id}/email`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            });
+            if (!res.ok) throw new Error(`Błąd aktualizacji email ${existing.email}`);
+          }
+
+          const newIban = normalizeIban(r.iban);
+          const oldIban = normalizeIban(existing.finance?.payoutAccount?.iban);
+          if (newIban && newIban !== oldIban) {
+            const res = await fetch(`/api/users/${existing.id}/finance`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ iban: newIban, iban_verified: false }),
+            });
+            if (!res.ok) throw new Error(`Błąd aktualizacji IBAN ${existing.email}`);
+          }
+
+          return Object.keys(payload).length > 0 || (email && email !== existingEmail) || (newIban && newIban !== oldIban);
+        }));
+
+        updatedExisting = updates.filter(u => u.status === 'fulfilled' && u.value).length;
+      }
+
       // 1. Zapisz nowych pracowników do Supabase
       const newRows = validRows.filter(r => !r.existingUser);
       let actuallyImported = 0;
@@ -611,8 +762,15 @@ export const DashboardNewHR: React.FC<Props> = ({
           surname:      r.lastName,
           email:        r.email,
           pesel:        r.pesel,
-          department:   '',
-          position:     '',
+          department:   r.department ?? '',
+          position:     r.position ?? '',
+          phoneNumber:  r.phoneNumber ?? '',
+          iban:         r.iban ?? '',
+          street:       r.street ?? '',
+          zipCode:      r.zipCode ?? '',
+          city:         r.city ?? '',
+          hireDate:     r.hireDate ?? '',
+          contractType: r.contractType ?? '',
           isValid:      true,
           errors:       [],
         }));
@@ -625,6 +783,8 @@ export const DashboardNewHR: React.FC<Props> = ({
         if (result.newEmployees && result.newEmployees.length > 0) {
           setNewEmployeeCredentials(result.newEmployees);
         }
+        // Odśwież kartotekę natychmiast po imporcie — nowi pracownicy widoczni bez przełączania zakładek
+        void fetchEmployeeDirectory();
       }
 
       // 2. Pobierz aktualną listę pracowników z API (po imporcie IDs są już w Supabase)
@@ -645,7 +805,7 @@ export const DashboardNewHR: React.FC<Props> = ({
           (r.pesel ? byPesel.get(r.pesel) : undefined) ??
           byEmail.get((r.email ?? '').toLowerCase()) ??
           undefined;
-        const userId = matched?.id ?? r.existingUser?.id;
+        const userId = matched?.id ?? (isDbUserId(r.existingUser?.id) ? r.existingUser?.id : undefined);
         return {
           employeeName:        `${r.firstName} ${r.lastName}`,
           pesel:               r.pesel,
@@ -668,13 +828,16 @@ export const DashboardNewHR: React.FC<Props> = ({
 
       setOrderSuccess(
         `Zamówienie zostało złożone. Łącznie: ${formatCurrency(totalAmount)} dla ${validRows.length} pracowników.` +
-        (newRows.length > 0 ? ` Dodano ${actuallyImported} nowych pracowników.` : '')
+        (newRows.length > 0 ? ` Dodano ${actuallyImported} nowych pracowników.` : '') +
+        (updatedExisting > 0 ? ` Zaktualizowano ${updatedExisting} istniejących pracowników.` : '')
       );
+      // Ensure employee directory reflects persisted users right after order submission.
+      void actions.fetchUsersFromApi(company.id);
       setUploadedRows([]);
     } finally {
       setIsSubmitting(false);
     }
-  }, [validRows, totalAmount, actions, fetchOrders]);
+  }, [validRows, totalAmount, actions, fetchOrders, fetchEmployeeDirectory, company.id, isDbUserId]);
 
   // ─── Tab 3: Employee actions ─────────────────────────────────────────────
 
@@ -1050,10 +1213,10 @@ export const DashboardNewHR: React.FC<Props> = ({
                 <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0 mt-0.5">1</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800">Pobierz szablon Excel</p>
-                  <p className="text-xs text-gray-500 mb-2">Kolumny: Imię, Nazwisko, PESEL, Kwota voucherów (PLN), Email</p>
+                  <p className="text-xs text-gray-500 mb-2">Kolumny: Imię, Nazwisko, PESEL, Kwota voucherów (PLN), Email, adres, telefon, dział, stanowisko, umowa, IBAN</p>
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={generateExcelTemplate}
+                      onClick={() => void generateExcelTemplate()}
                       className="flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                       <FileSpreadsheet size={15}/> Pobierz pusty szablon
                     </button>
@@ -1435,6 +1598,11 @@ export const DashboardNewHR: React.FC<Props> = ({
                 <RefreshCw size={14} className={empRefreshing ? 'animate-spin' : ''}/>
                 {empRefreshing ? 'Odświeżam…' : 'Odśwież salda'}
               </button>
+              <button
+                onClick={() => void generateKartotekaTemplate()}
+                className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded hover:bg-gray-50 transition-colors shrink-0">
+                <Download size={15}/> Pobierz szablon
+              </button>
               <button onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded hover:bg-blue-700 transition-colors shrink-0">
                 <UserPlus size={15}/> Dodaj pracownika
@@ -1459,6 +1627,14 @@ export const DashboardNewHR: React.FC<Props> = ({
                 <Download size={15}/> Pobierz dostępy pracowników
               </button>
             </div>
+
+            {/* Drag-and-drop import z szablonu kartoteki */}
+            <KartotekaImportZone
+              companyId={company.id}
+              existingEmails={new Set(myEmployees.map(u => u.email.toLowerCase()))}
+              existingPesels={new Set(myEmployees.map(u => u.pesel ?? '').filter(Boolean))}
+              onImportSuccess={() => void refreshEmployees()}
+            />
 
             <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d1d5db' }}>
               <div className="overflow-x-auto">
@@ -2357,10 +2533,17 @@ export const DashboardNewHR: React.FC<Props> = ({
             setShowAddModal(false);
             // Add to local state immediately so it appears in the table without waiting for API refresh
             actions.setUsers(prev => {
-              if (prev.some(u => u.email === newUser.email)) return prev;
+              const existing = prev.findIndex(u => u.id === newUser.id || u.email === newUser.email);
+              if (existing >= 0) {
+                const updated = [...prev];
+                updated[existing] = { ...updated[existing], ...newUser, companyId: company.id };
+                return updated;
+              }
               return [...prev, { ...newUser, companyId: company.id }];
             });
             setExpandedEmployeeId(newUser.id);
+            // Refresh directory so temp_password is visible in the employee card
+            void fetchEmployeeDirectory();
           }}
         />
       )}

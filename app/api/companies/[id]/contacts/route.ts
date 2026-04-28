@@ -24,7 +24,7 @@ export async function GET(
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (auth.role !== 'superadmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase
     .from('company_contacts')
     .select('*')
@@ -47,7 +47,7 @@ export async function POST(
   const parsed = ContactSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase
     .from('company_contacts')
     .insert({ ...parsed.data, company_id: params.id })

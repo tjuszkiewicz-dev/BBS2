@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   const { data, error } = await supabase.rpc('expire_vouchers_and_create_buybacks');
 

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Wymagany userId i companyId' }, { status: 400 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase.rpc('get_employee_vouchers', {
     p_user_id:    userId,
     p_company_id: companyId,

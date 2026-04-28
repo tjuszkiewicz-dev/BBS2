@@ -6,6 +6,41 @@ import { getAuthUserWithRole } from '@/lib/apiAuth';
 import { supabaseServer } from '@/lib/supabase';
 import { calculateAndSaveCommissions } from '@/lib/vouchers';
 
+function parsePlannedAmount(entry: any): number {
+  const raw = entry?.final_netto_voucher ?? entry?.voucherPartNet ?? entry?.amount ?? 0;
+  const amount = Number(raw);
+  return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
+}
+
+async function resolveEmployeeId(
+  supabase: any,
+  companyId: string,
+  entry: any,
+  emailToAuthId: Map<string, string>,
+): Promise<string | null> {
+  const direct = entry?.matched_user_id ?? entry?.matchedUserId;
+  if (direct) return direct;
+
+  const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').replace(/\D+/g, '');
+  if (pesel) {
+    const { data: profileByPesel } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('role', 'pracownik')
+      .eq('pesel', pesel)
+      .maybeSingle();
+    if (profileByPesel?.id) return profileByPesel.id;
+  }
+
+  const email = String(entry?.email ?? entry?.employee_email ?? '').trim().toLowerCase();
+  if (email && emailToAuthId.has(email)) {
+    return emailToAuthId.get(email) ?? null;
+  }
+
+  return null;
+}
+
 export async function PATCH(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -81,14 +116,23 @@ export async function PATCH(
         // Use voucher_valid_until stored at hr-confirm time to prevent wrong-month expiry
         const storedValidUntil: string | null = (order as any).voucher_valid_until ?? null;
 
-        const { error: mintErr } = await supabase.rpc('mint_vouchers', {
-          p_order_id:     orderId,
-          p_company_id:   order.company_id,
-          p_owner_id:     order.hr_user_id,
-          p_quantity:     order.amount_vouchers,
-          p_valid_months: 12,
-          p_valid_until:  storedValidUntil,
-        });
+        const { count: mintedCount } = await supabase
+          .from('vouchers')
+          .select('id', { head: true, count: 'exact' })
+          .eq('order_id', orderId);
+
+        let mintErr: any = null;
+        if ((mintedCount ?? 0) === 0) {
+          const mintResult = await supabase.rpc('mint_vouchers', {
+            p_order_id:     orderId,
+            p_company_id:   order.company_id,
+            p_owner_id:     order.hr_user_id,
+            p_quantity:     order.amount_vouchers,
+            p_valid_months: 12,
+            p_valid_until:  storedValidUntil,
+          });
+          mintErr = mintResult.error;
+        }
 
         if (!mintErr) {
           // 3. Dystrybuuj do pracowników wg planu
@@ -97,12 +141,27 @@ export async function PATCH(
             (order.distribution_plan as any[] | null) ??
             [];
 
+          const { data: allAuthUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+          const emailToAuthId = new Map<string, string>();
+          for (const u of allAuthUsers?.users ?? []) {
+            if (u.email) emailToAuthId.set(u.email.toLowerCase(), u.id);
+          }
+
           const batchItems: { userId: string; userName: string; amount: number }[] = [];
 
           for (const entry of planSource) {
-            const userId = entry.matched_user_id ?? entry.matchedUserId;
-            const amount = Math.floor(entry.final_netto_voucher ?? entry.voucherPartNet ?? entry.amount ?? 0);
-            if (!userId || amount <= 0) continue;
+            const userId = await resolveEmployeeId(supabase, order.company_id, entry, emailToAuthId);
+            const targetAmount = parsePlannedAmount(entry);
+            if (!userId || targetAmount <= 0) continue;
+
+            const { count: alreadyOwned } = await supabase
+              .from('vouchers')
+              .select('id', { head: true, count: 'exact' })
+              .eq('order_id', orderId)
+              .eq('current_owner_id', userId);
+
+            const amount = Math.max(0, targetAmount - (alreadyOwned ?? 0));
+            if (amount <= 0) continue;
 
             const { data: distCount, error: transferErr } = await (supabase.rpc as any)('distribute_to_employee', {
               p_company_id:   order.company_id,

@@ -38,6 +38,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const orderId = (syntheticNotaMatch ?? syntheticFvatMatch)![1];
     const type    = syntheticNotaMatch ? 'nota' : 'faktura_vat';
 
+    if (type === 'nota' && parsed.data.status === 'paid') {
+      try {
+        await syncOrderStatus(supabase, orderId, type, parsed.data.status, now);
+      } catch (e: any) {
+        return NextResponse.json({ error: e?.message ?? 'Błąd emisji lub dystrybucji voucherów' }, { status: 500 });
+      }
+    }
+
     // Pobierz dane zamówienia żeby uzupełnić pola dokumentu
     const { data: order } = await supabase
       .from('voucher_orders')
@@ -103,13 +111,32 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       docData = inserted;
     }
 
-    // Auto-aktualizuj status zamówienia + emituj vouchery jeśli opłacone
-    await syncOrderStatus(supabase, orderId, type, parsed.data.status, now);
+    if (type === 'nota' && parsed.data.status !== 'paid') {
+      await syncOrderStatus(supabase, orderId, type, parsed.data.status, now);
+    }
 
     return NextResponse.json(docData);
   }
 
   // Istniejący rekord w financial_documents — zwykły UPDATE
+  const { data: existingDoc, error: existingErr } = await supabase
+    .from('financial_documents')
+    .select('id, linked_order_id, type')
+    .eq('id', params.doc_id)
+    .eq('company_id', params.id)
+    .single();
+
+  if (existingErr) return NextResponse.json({ error: existingErr.message }, { status: 500 });
+  if (!existingDoc) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+
+  if (existingDoc.type === 'nota' && parsed.data.status === 'paid' && existingDoc.linked_order_id) {
+    try {
+      await syncOrderStatus(supabase, existingDoc.linked_order_id, 'nota', 'paid', now);
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message ?? 'Błąd emisji lub dystrybucji voucherów' }, { status: 500 });
+    }
+  }
+
   const { data, error } = await supabase
     .from('financial_documents')
     .update({
@@ -126,9 +153,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
 
-  // Auto-aktualizuj status zamówienia
-  if (data.linked_order_id) {
-    await syncOrderStatus(supabase, data.linked_order_id, data.type as 'nota' | 'faktura_vat', parsed.data.status, now);
+  if (data.linked_order_id && data.type === 'nota' && parsed.data.status !== 'paid') {
+    await syncOrderStatus(supabase, data.linked_order_id, 'nota', parsed.data.status, now);
   }
 
   return NextResponse.json(data);
@@ -137,6 +163,41 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 import { calculateAndSaveCommissions } from '@/lib/vouchers';
+
+function parsePlannedAmount(entry: any): number {
+  const raw = entry?.final_netto_voucher ?? entry?.voucherPartNet ?? entry?.amount ?? 0;
+  const amount = Number(raw);
+  return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
+}
+
+async function resolveEmployeeId(
+  supabase: ReturnType<typeof import('@/lib/supabase').supabaseServer>,
+  companyId: string,
+  entry: any,
+  emailToAuthId: Map<string, string>,
+): Promise<string | null> {
+  const direct = entry?.matched_user_id ?? entry?.matchedUserId;
+  if (direct) return direct;
+
+  const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').replace(/\D+/g, '');
+  if (pesel) {
+    const { data: profileByPesel } = await (supabase as any)
+      .from('user_profiles')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('role', 'pracownik')
+      .eq('pesel', pesel)
+      .maybeSingle();
+    if (profileByPesel?.id) return profileByPesel.id;
+  }
+
+  const email = String(entry?.email ?? entry?.employee_email ?? '').trim().toLowerCase();
+  if (email && emailToAuthId.has(email)) {
+    return emailToAuthId.get(email) ?? null;
+  }
+
+  return null;
+}
 
 async function syncOrderStatus(
   supabase: ReturnType<typeof import('@/lib/supabase').supabaseServer>,
@@ -167,41 +228,79 @@ async function syncOrderStatus(
 
   if (!order) return;
 
+  const orderWasPaid = order.status === 'paid';
+
   // Oznacz zamówienie jako opłacone (jeśli jeszcze nie jest)
-  if (order.status !== 'paid') {
+  if (!orderWasPaid) {
     await supabase
       .from('voucher_orders')
       .update({ status: 'paid', updated_at: now })
       .eq('id', orderId);
   }
 
-  // Emituj vouchery tylko raz (guard na status)
-  if (order.status === 'paid') return;  // już było
+  const { count: mintedCount } = await (supabase as any)
+    .from('vouchers')
+    .select('id', { head: true, count: 'exact' })
+    .eq('order_id', orderId);
 
-  const { error: mintErr } = await supabase.rpc('mint_vouchers', {
-    p_order_id:     orderId,
-    p_company_id:   order.company_id,
-    p_owner_id:     order.hr_user_id,
-    p_quantity:     order.amount_vouchers,
-    p_valid_months: 12,
-  });
+  if ((mintedCount ?? 0) === 0) {
+    const { error: mintErr } = await (supabase as any).rpc('mint_vouchers', {
+      p_order_id:     orderId,
+      p_company_id:   order.company_id,
+      p_owner_id:     order.hr_user_id,
+      p_quantity:     order.amount_vouchers,
+      p_valid_months: 12,
+    });
 
-  if (mintErr) return;
+    if (mintErr) throw new Error(`Błąd emisji voucherów: ${mintErr.message}`);
+  }
 
   const planSource: any[] =
     (order.payroll_snapshots as any[] | null) ??
     (order.distribution_plan as any[] | null) ??
     [];
 
+  const { data: allAuthUsers } = await (supabase as any).auth.admin.listUsers({ perPage: 1000 });
+  const emailToAuthId = new Map<string, string>();
+  for (const u of allAuthUsers?.users ?? []) {
+    if (u.email) emailToAuthId.set(u.email.toLowerCase(), u.id);
+  }
+
+  const unresolvedRows: string[] = [];
+  for (const entry of planSource) {
+    const targetAmount = parsePlannedAmount(entry);
+    if (targetAmount <= 0) continue;
+
+    const userId = await resolveEmployeeId(supabase, order.company_id, entry, emailToAuthId);
+    if (!userId) {
+      const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').trim();
+      const email = String(entry?.email ?? entry?.employee_email ?? '').trim();
+      unresolvedRows.push(`PESEL: ${pesel || 'brak'}, email: ${email || 'brak'}, kwota: ${targetAmount}`);
+    }
+  }
+
+  if (unresolvedRows.length > 0) {
+    throw new Error(`Nie można przypisać pracowników dla ${unresolvedRows.length} pozycji planu dystrybucji.`);
+  }
+
   let vouchersDistributed = 0;
   const batchItems: { userId: string; userName: string; amount: number }[] = [];
 
   for (const entry of planSource) {
-    const userId = entry.matched_user_id ?? entry.matchedUserId;
-    const amount = Math.floor(entry.final_netto_voucher ?? entry.voucherPartNet ?? entry.amount ?? 0);
-    if (!userId || amount <= 0) continue;
+    const userId = await resolveEmployeeId(supabase, order.company_id, entry, emailToAuthId);
+    const targetAmount = parsePlannedAmount(entry);
+    if (!userId || targetAmount <= 0) continue;
 
-    await (supabase.rpc as any)('distribute_to_employee', {
+    const { count: alreadyOwned } = await (supabase as any)
+      .from('vouchers')
+      .select('id', { head: true, count: 'exact' })
+      .eq('order_id', orderId)
+      .eq('current_owner_id', userId);
+
+    const amount = Math.max(0, targetAmount - (alreadyOwned ?? 0));
+    if (amount <= 0) continue;
+
+    const { data: distributedCount, error: transferErr } = await ((supabase as any).rpc as any)('distribute_to_employee', {
       p_company_id:   order.company_id,
       p_from_user_id: order.hr_user_id,
       p_to_user_id:   userId,
@@ -209,7 +308,11 @@ async function syncOrderStatus(
       p_order_id:     orderId,
     });
 
-    vouchersDistributed += amount;
+    if (transferErr) {
+      throw new Error(`Błąd dystrybucji voucherów do pracownika ${userId}: ${transferErr.message}`);
+    }
+
+    vouchersDistributed += Number(distributedCount) || amount;
 
     const { data: profile } = await supabase
       .from('user_profiles')

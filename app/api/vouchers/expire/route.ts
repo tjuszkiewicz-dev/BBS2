@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
 
   let companyId: string | null = null;
 

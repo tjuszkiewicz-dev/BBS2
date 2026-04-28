@@ -180,7 +180,7 @@ export const OrangePartnerSection: React.FC<OrangePartnerSectionProps> = ({ onSe
                 {offer.isPopular && (
                   <div className="bg-[#ff7900] text-center py-2.5">
                     <span className="text-[10px] font-black text-white uppercase tracking-[0.15em]">
-                      {offer.popularText || '★ NAJPOPULARNIEJSZY WYBÓR'}
+                      {((offer as any).popularText as string | undefined) || '★ NAJPOPULARNIEJSZY WYBÓR'}
                     </span>
                   </div>
                 )}

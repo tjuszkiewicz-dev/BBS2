@@ -41,7 +41,7 @@ export const HRAddEmployeeModal: React.FC<HRAddEmployeeModalProps> = ({ company,
   const [errors, setErrors] = useState<Partial<AddEmployeeForm>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; tempPassword: string; name: string } | null>(null);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; tempPassword: string; name: string; userId: string } | null>(null);
 
   const set = (field: keyof AddEmployeeForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -103,17 +103,10 @@ export const HRAddEmployeeModal: React.FC<HRAddEmployeeModalProps> = ({ company,
         userId = data.id ?? userId;
         tempPassword = data.tempPassword ?? null;
       } else {
-        // Fallback lokalny gdy API niedostępne (tryb demo)
-        const importRow: ImportRow = {
-          rowId: 1, name: form.firstName.trim(), surname: form.lastName.trim(),
-          email: normalizedEmail, pesel: form.pesel.trim(),
-          department: form.department.trim(), position: form.position.trim(),
-          isValid: true, errors: [],
-          phoneNumber: form.phoneNumber.trim() || undefined,
-          iban: form.iban.replace(/\s+/g, '') || undefined,
-          contractType: form.contractType,
-        };
-        await actions.handleBulkImport([importRow], company.id);
+        const errBody = await res.json().catch(() => ({}));
+        setServerError(errBody.error ?? 'Nie udało się zapisać pracownika. Spróbuj ponownie.');
+        setIsSaving(false);
+        return;
       }
 
       // Odśwież listę pracowników z Supabase
@@ -128,7 +121,7 @@ export const HRAddEmployeeModal: React.FC<HRAddEmployeeModalProps> = ({ company,
         .catch(() => {});
 
       if (tempPassword) {
-        setCreatedCredentials({ email: normalizedEmail, tempPassword, name: fullName });
+        setCreatedCredentials({ email: normalizedEmail, tempPassword, name: fullName, userId });
         return;
       }
 
@@ -218,11 +211,17 @@ export const HRAddEmployeeModal: React.FC<HRAddEmployeeModalProps> = ({ company,
             <button
               onClick={() => {
                 const newUser: User = {
-                  id: `new-${Date.now()}`, role: Role.EMPLOYEE, companyId: company.id,
-                  name: createdCredentials.name, email: createdCredentials.email,
-                  voucherBalance: 0, status: 'ACTIVE', isTwoFactorEnabled: false,
-                };
-                onSaved(newUser as any);
+                  id: createdCredentials.userId,
+                  role: Role.EMPLOYEE,
+                  companyId: company.id,
+                  name: createdCredentials.name,
+                  email: createdCredentials.email,
+                  voucherBalance: 0,
+                  status: 'ACTIVE',
+                  isTwoFactorEnabled: false,
+                  tempPassword: createdCredentials.tempPassword,
+                } as unknown as User;
+                onSaved(newUser);
               }}
               className="px-5 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >

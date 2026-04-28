@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) return NextResponse.json({ error: 'Wymagany userId' }, { status: 400 });
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const { data, error } = await supabase.rpc('get_employee_voucher_history', {
     p_user_id: userId,
   });

@@ -213,8 +213,8 @@ export const INITIAL_COMPANIES: Company[] = [
     phone: '+48 22 100 200 300',
     contactPersonName: 'Katarzyna Wiśniewska',
     voucherValidityDays: 7,
-    address: { street: 'ul. Marszałkowska 1', city: 'Warszawa', postalCode: '00-001', country: 'Polska' },
-    correspondenceAddress: { street: 'ul. Marszałkowska 1', city: 'Warszawa', postalCode: '00-001', country: 'Polska' }
+    address: { street: 'ul. Marszałkowska 1', city: 'Warszawa', zipCode: '00-001', country: 'Polska' },
+    correspondenceAddress: { street: 'ul. Marszałkowska 1', city: 'Warszawa', zipCode: '00-001', country: 'Polska' }
   },
   {
     id: 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2',
@@ -229,8 +229,8 @@ export const INITIAL_COMPANIES: Company[] = [
     phone: '+48 12 345 678 90',
     contactPersonName: 'Anna Nowak',
     voucherValidityDays: 7,
-    address: { street: 'ul. Krakowska 42', city: 'Kraków', postalCode: '30-001', country: 'Polska' },
-    correspondenceAddress: { street: 'ul. Krakowska 42', city: 'Kraków', postalCode: '30-001', country: 'Polska' }
+    address: { street: 'ul. Krakowska 42', city: 'Kraków', zipCode: '30-001', country: 'Polska' },
+    correspondenceAddress: { street: 'ul. Krakowska 42', city: 'Kraków', zipCode: '30-001', country: 'Polska' }
   }
 ];
 

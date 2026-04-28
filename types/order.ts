@@ -97,6 +97,10 @@ export interface ImportRow {
   errors: string[];
   phoneNumber?: string;
   iban?: string;
+  street?: string;
+  zipCode?: string;
+  city?: string;
+  hireDate?: string;
   contractType?: ContractType | string;
 }
 

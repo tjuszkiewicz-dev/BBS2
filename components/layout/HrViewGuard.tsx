@@ -36,7 +36,7 @@ export const HrViewGuard: React.FC<HrViewGuardProps> = ({ currentUser, companies
             address: data.address_city ? {
               street:     data.address_street ?? '',
               city:       data.address_city ?? '',
-              postalCode: data.address_zip ?? '',
+              zipCode:    data.address_zip ?? '',
               country:    'Polska',
             } : undefined,
           });
