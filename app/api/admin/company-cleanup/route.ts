@@ -1,7 +1,10 @@
 // POST /api/admin/company-cleanup
 // Czyści dane transakcyjne dla konkretnej firmy (po company_id).
-// Używa SQL funkcji company_cleanup() (migracja 023) która obsługuje
-// FK constraints i trigger immutable ledger przez set_config bypass.
+// Używa SQL funkcji company_cleanup() (migracja 033) która:
+//   - ZACHOWUJE user_profiles pracowników (profile NIE są usuwane)
+//   - Zeruje voucher_accounts
+//   - Usuwa transakcyjne dane (vouchery, zamówienia, dokumenty, itd.)
+// Dlatego NIE usuwamy auth.users — pracownicy mogą się ponownie zalogować.
 // Dostępny tylko dla superadmin lub pracodawca.
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,17 +24,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = supabaseServer();
 
-  // Pobierz ID pracowników żeby usunąć ich konta auth po RPC
-  const { data: employeesToDelete } = await supabase
-    .from('user_profiles')
-    .select('id')
-    .eq('company_id', companyId)
-    .eq('role', 'pracownik');
-
-  const empIds = (employeesToDelete ?? []).map((e: any) => e.id as string);
-
   // Wywołaj SQL funkcję company_cleanup() — obsługuje FK constraints i bypass
   // triggera immutable ledger przez set_config('app.bypass_ledger_immutability', 'true', true).
+  // Migracja 033 ZACHOWUJE user_profiles pracowników — NIE usuwamy auth.users.
   const { data: rpcData, error: rpcError } = await (supabase as any)
     .rpc('company_cleanup', { p_company_id: companyId });
 
@@ -52,15 +47,23 @@ export async function POST(req: NextRequest) {
       await del('buyback_batches', 'company_id', companyId);
       await del('financial_documents', 'company_id', companyId);
 
+      // Zeruj saldo voucherów (nie usuwaj kont — migracja 033 zachowuje profile)
+      const { data: employees } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('role', 'pracownik');
+      const empIds = (employees ?? []).map((e: any) => e.id as string);
+
       if (empIds.length > 0) {
         await (supabase as any)
           .from('voucher_accounts')
-          .delete()
+          .update({ balance: 0 })
           .in('user_id', empIds);
       }
 
       // vouchers/voucher_transactions wymagają funkcji SQL — pomiń z informacją
-      fallbackResults['vouchers'] = 'pominięto — zainstaluj migrację 023_company_cleanup_fn.sql';
+      fallbackResults['vouchers'] = 'pominięto — zainstaluj migrację 033_fix_company_cleanup_keep_employees.sql';
       fallbackResults['rpc_error'] = rpcError.message;
 
       return NextResponse.json({ ok: false, companyId, deleted: fallbackResults, rpcError: rpcError.message }, { status: 500 });
@@ -69,18 +72,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Usuń konta auth pracowników (profile usunęła funkcja SQL)
-  for (const empId of empIds) {
-    await (supabase as any).auth.admin.deleteUser(empId).catch(() => null);
-  }
-
   // RPC zwraca { ok: true, deleted: { ... } }
+  // Nie usuwamy auth.users — migracja 033 zachowuje profile pracowników.
   const result = rpcData as { ok: boolean; deleted: Record<string, number> } | null;
   return NextResponse.json({
     ok: true,
     companyId,
     deleted: result?.deleted ?? {},
-    deletedEmployees: empIds.length,
   });
 }
 

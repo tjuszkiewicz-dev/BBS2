@@ -38,6 +38,9 @@ export const useUserLogic = (
         // Drop local placeholder users once the persisted counterpart exists.
         if (mappedEmails.has(u.email.toLowerCase())) return false;
         if (u.pesel && mappedPesels.has(u.pesel)) return false;
+        // When fetching for a specific company, evict stale employees that are no longer in DB
+        // (prevents ghost entries after company cleanup removes their profiles).
+        if (companyId && u.companyId === companyId && u.role === Role.EMPLOYEE) return false;
         return true;
       });
       return [...mapped, ...localOnly];

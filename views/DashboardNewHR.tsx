@@ -84,6 +84,10 @@ export const DashboardNewHR: React.FC<Props> = ({
           distributions,
           createdBy:     o.hr_user_id ?? '',
           umowaPdfUrl:   o.umowa_pdf_url ?? null,
+          notaPdfUrl:    o.nota_pdf_url ?? null,
+          fakturaPdfUrl: o.faktura_pdf_url ?? null,
+          notaDocId:     o.nota_doc_id ?? `nota-${o.id}`,
+          fakturaDocId:  o.faktura_doc_id ?? `fvat-${o.id}`,
         };
       });
       setHrOrders(dbOrders);
@@ -174,6 +178,11 @@ export const DashboardNewHR: React.FC<Props> = ({
   const [batchGenSuccess,    setBatchGenSuccess]    = useState<string | null>(null);
   const [buybackEmpSearch,   setBuybackEmpSearch]   = useState('');
   const [buybackEmpFilter,   setBuybackEmpFilter]   = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  const [selectedBatchFormat, setSelectedBatchFormat] = useState<string>('standard');
+  const [showFormatDropdown,  setShowFormatDropdown]  = useState(false);
+  const [manualExpiring,      setManualExpiring]      = useState(false);
+  const [manualExpireResult,  setManualExpireResult]  = useState<string | null>(null);
+  const [expandedBatchId,     setExpandedBatchId]     = useState<string | null>(null);
 
   const fetchBuybackBatches = useCallback(async () => {
     if (!company.id) return;
@@ -216,6 +225,22 @@ export const DashboardNewHR: React.FC<Props> = ({
       fetchExpiredVouchers();
     }
   }, [activeTab, fetchBuybackBatches, fetchExpiredVouchers]);
+
+  // Przy każdym załadowaniu/odświeżeniu dashboardu — cicha kontrola wygaśnięć.
+  // expire_vouchers_and_create_buybacks jest idempotentna, bezpieczna do wielokrotnego wywoływania.
+  useEffect(() => {
+    if (!company.id) return;
+    fetch('/api/vouchers/expire', { method: 'POST' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d && (d.expired > 0 || d.buybacks > 0)) {
+          fetchExpiredVouchers();
+          fetchBuybackBatches();
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company.id]);
 
   // ─── Tab 1: New Order state ──────────────────────────────────────────────
   const [uploadedRows, setUploadedRows] = useState<HrExcelRow[]>([]);
@@ -350,6 +375,7 @@ export const DashboardNewHR: React.FC<Props> = ({
   const [deleteModalLoading, setDeleteModalLoading] = useState(false);
   const [deleteModalFetching, setDeleteModalFetching] = useState(false);
   const [deleteConfirmTyped, setDeleteConfirmTyped] = useState('');
+  const [redistState, setRedistState] = useState<Record<string, { loading: boolean; result: string | null; error: string | null }>>({});
 
   const openDeleteModal = async (order: HrOrder) => {
     setDeleteModalFetching(true);
@@ -385,7 +411,28 @@ export const DashboardNewHR: React.FC<Props> = ({
       setDeleteModalLoading(false);
     }
   };
-  // ─── Computed values ─────────────────────────────────────────────────────
+
+  const handleRedistribute = useCallback(async (orderId: string) => {
+    setRedistState(prev => ({ ...prev, [orderId]: { loading: true, result: null, error: null } }));
+    try {
+      const res = await fetch(`/api/orders/${orderId}/redistribute`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRedistState(prev => ({ ...prev, [orderId]: { loading: false, result: null, error: body.error ?? 'Błąd serwera' } }));
+        return;
+      }
+      const names = (body.redistributed ?? []).map((r: any) => `${r.name} (${r.amount} zł)`).join(', ');
+      const resultMsg = body.distributed > 0
+        ? `Przydzielono ${body.distributed} zł: ${names}`
+        : 'Wszyscy pracownicy mają już swoje vouchery.';
+      setRedistState(prev => ({ ...prev, [orderId]: { loading: false, result: resultMsg, error: null } }));
+      void fetchOrders();
+    } catch {
+      setRedistState(prev => ({ ...prev, [orderId]: { loading: false, result: null, error: 'Błąd połączenia z serwerem' } }));
+    }
+  }, [fetchOrders]);
+
+
 
   const myEmployees = useMemo(() => {
     const stateEmployees = state.users.filter(u => u.companyId === company.id && u.role === Role.EMPLOYEE);
@@ -474,22 +521,29 @@ export const DashboardNewHR: React.FC<Props> = ({
     return results;
   }, [myEmployees, expiredCountByEmpId, expiredApiData]);
 
-  const handleGenerateBatch = useCallback(async () => {
+  const handleGenerateBatch = useCallback(async (format?: string) => {
     if (buybackPendingEmployees.length === 0) return;
+    const chosenFormat = format ?? selectedBatchFormat;
     setBatchGenError(null);
     setBatchGenSuccess(null);
     setGeneratingBatch(true);
+    setShowFormatDropdown(false);
     try {
-      const res = await fetch(`/api/companies/${company.id}/buyback-batches`, { method: 'POST' });
+      const res = await fetch(`/api/companies/${company.id}/buyback-batches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: chosenFormat }),
+      });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? `HTTP ${res.status}`);
       if (d.csv) {
+        const ext = d.fileExt ?? '.csv';
         const blob = new Blob([d.csv], { type: 'text/csv;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
-        const a    = Object.assign(document.createElement('a'), { href: url, download: `odkup_${d.periodLabel ?? 'batch'}.csv` });
+        const a    = Object.assign(document.createElement('a'), { href: url, download: `odkup_${d.periodLabel ?? 'batch'}${ext}` });
         document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       }
-      setBatchGenSuccess(`Paczka wygenerowana: ${d.voucherCount} voucherów, ${d.totalAmount?.toFixed(2)} PLN.`);
+      setBatchGenSuccess(`Paczka wygenerowana: ${d.voucherCount} voucherów, ${Number(d.totalAmount ?? 0).toFixed(2)} PLN.`);
       fetchBuybackBatches();
       fetchExpiredVouchers();
     } catch (e: any) {
@@ -497,13 +551,31 @@ export const DashboardNewHR: React.FC<Props> = ({
     } finally {
       setGeneratingBatch(false);
     }
-  }, [company.id, buybackPendingEmployees.length, fetchBuybackBatches, fetchExpiredVouchers]);
+  }, [company.id, buybackPendingEmployees.length, selectedBatchFormat, fetchBuybackBatches, fetchExpiredVouchers]);
+
+  const handleManualExpire = useCallback(async () => {
+    setManualExpiring(true);
+    setManualExpireResult(null);
+    try {
+      const res = await fetch('/api/vouchers/expire', { method: 'POST' });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error ?? `HTTP ${res.status}`);
+      const expired  = d.expired  ?? 0;
+      const buybacks = d.buybacks ?? 0;
+      setManualExpireResult(`Wygaszone: ${expired} voucherów, utworzone zwroty: ${buybacks}.`);
+      await Promise.all([fetchExpiredVouchers(), fetchEmployeeDirectory()]);
+    } catch (e: any) {
+      setManualExpireResult(`Błąd: ${e.message}`);
+    } finally {
+      setManualExpiring(false);
+    }
+  }, [fetchExpiredVouchers]);
 
   const employeesByPesel = useMemo(() => {
     const map = new Map<string, User>();
-    myEmployees.forEach(u => { if (u.pesel) map.set(u.pesel, u); });
+    directoryEmployees.forEach(u => { if (u.pesel) map.set(u.pesel, u); });
     return map;
-  }, [myEmployees]);
+  }, [directoryEmployees]);
 
   const isDbUserId = useCallback((id?: string | null) => {
     if (!id) return false;
@@ -536,31 +608,32 @@ export const DashboardNewHR: React.FC<Props> = ({
   const [docsLoading, setDocsLoading] = useState(false);
   const [docsTab, setDocsTab] = useState<'nota' | 'faktura_vat'>('nota');
   const [pdfGenerating, setPdfGenerating] = useState<Record<string, boolean>>({});
+  const [pdfError, setPdfError] = useState<Record<string, string>>({});
+
+  const generateDocPdf = useCallback(async (docId: string) => {
+    setPdfGenerating(prev => ({ ...prev, [docId]: true }));
+    setPdfError(prev => ({ ...prev, [docId]: '' }));
+    try {
+      const res = await fetch(`/api/companies/${company.id}/financials/${docId}/pdf`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.pdf_url) {
+        setFinancialDocs(prev => prev.map(d => d.id === docId ? { ...d, pdf_url: data.pdf_url } : d));
+      } else {
+        setPdfError(prev => ({ ...prev, [docId]: data.error ?? 'Błąd generowania PDF' }));
+      }
+    } catch {
+      setPdfError(prev => ({ ...prev, [docId]: 'Serwer PDF niedostępny' }));
+    } finally {
+      setPdfGenerating(prev => ({ ...prev, [docId]: false }));
+    }
+  }, [company.id]);
 
   // Automatycznie generuje PDF w tle dla dokumentów bez pdf_url
   const autoGenerateMissingPdfs = useCallback(async (docs: FinancialDoc[]) => {
     const missing = docs.filter(d => !d.pdf_url);
     if (missing.length === 0) return;
-    // Mark all as generating
-    setPdfGenerating(prev => {
-      const next = { ...prev };
-      missing.forEach(d => { next[d.id] = true; });
-      return next;
-    });
-    await Promise.all(missing.map(async (doc) => {
-      try {
-        const res = await fetch(`/api/companies/${company.id}/financials/${doc.id}/pdf`, { method: 'POST' });
-        const data = await res.json();
-        if (res.ok && data.pdf_url) {
-          setFinancialDocs(prev => prev.map(d => d.id === doc.id ? { ...d, pdf_url: data.pdf_url } : d));
-        }
-      } catch {
-        // cicho — użytkownik zobaczy "—" jeśli się nie uda
-      } finally {
-        setPdfGenerating(prev => ({ ...prev, [doc.id]: false }));
-      }
-    }));
-  }, [company.id]);
+    await Promise.all(missing.map(doc => generateDocPdf(doc.id)));
+  }, [generateDocPdf]);
 
   const fetchFinancialDocs = useCallback(async () => {
     setDocsLoading(true);
@@ -800,12 +873,16 @@ export const DashboardNewHR: React.FC<Props> = ({
       // 3. Buduj plan dystrybucji z polami wymaganymi przez endpoint /approve:
       //    matched_user_id  → ID pracownika w Supabase (do transfer_vouchers)
       //    final_netto_voucher → ilość voucherów PLN do przekazania (bezpośrednio z Excela)
+      const freshUserIdSet = new Set(freshUsers.map(u => u.id));
       const distributionPlan = validRows.map(r => {
         const matched =
           (r.pesel ? byPesel.get(r.pesel) : undefined) ??
           byEmail.get((r.email ?? '').toLowerCase()) ??
           undefined;
-        const userId = matched?.id ?? (isDbUserId(r.existingUser?.id) ? r.existingUser?.id : undefined);
+        // Używaj matched_user_id TYLKO jeśli pochodzi z freshUsers (aktualnych danych z bazy).
+        // Nie używaj r.existingUser?.id jako fallback — może być stale/błędne UUID.
+        // Przy braku matched ID, resolveEmployeeId na backendzie użyje email/PESEL do lookup.
+        const userId = (matched?.id && freshUserIdSet.has(matched.id)) ? matched.id : undefined;
         return {
           employeeName:        `${r.firstName} ${r.lastName}`,
           pesel:               r.pesel,
@@ -1465,6 +1542,30 @@ export const DashboardNewHR: React.FC<Props> = ({
                             <FileText size={12}/> Umowa
                           </a>
                         )}
+                        {order.notaPdfUrl && (
+                          <a
+                            href={order.notaPdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            title="Pobierz Notę Księgową"
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors whitespace-nowrap shrink-0"
+                          >
+                            <FileText size={12}/> Nota
+                          </a>
+                        )}
+                        {order.fakturaPdfUrl && (
+                          <a
+                            href={order.fakturaPdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            title="Pobierz Fakturę VAT"
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100 transition-colors whitespace-nowrap shrink-0"
+                          >
+                            <FileText size={12}/> Faktura
+                          </a>
+                        )}
                         <div className="text-gray-400">
                           {expanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                         </div>
@@ -1508,6 +1609,28 @@ export const DashboardNewHR: React.FC<Props> = ({
                               </tr>
                             </tfoot>
                           </table>
+
+                          {order.status === 'PAID' && (() => {
+                            const rs = redistState[order.id];
+                            return (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <button
+                                  onClick={() => handleRedistribute(order.id)}
+                                  disabled={rs?.loading}
+                                  className="flex items-center gap-2 bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {rs?.loading ? <Loader2 size={13} className="animate-spin"/> : <CheckCircle2 size={13}/>}
+                                  Ponów dystrybucję
+                                </button>
+                                {rs?.result && (
+                                  <p className="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">{rs.result}</p>
+                                )}
+                                {rs?.error && (
+                                  <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{rs.error}</p>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {order.status === 'PENDING' && (() => {
                             const cs = hrConfirmState[order.id] ?? { checked: false, loading: false, done: false, error: null };
@@ -1631,8 +1754,8 @@ export const DashboardNewHR: React.FC<Props> = ({
             {/* Drag-and-drop import z szablonu kartoteki */}
             <KartotekaImportZone
               companyId={company.id}
-              existingEmails={new Set(myEmployees.map(u => u.email.toLowerCase()))}
-              existingPesels={new Set(myEmployees.map(u => u.pesel ?? '').filter(Boolean))}
+              existingEmails={new Set(directoryEmployees.map(u => u.email.toLowerCase()))}
+              existingPesels={new Set(directoryEmployees.map(u => u.pesel ?? '').filter(Boolean))}
               onImportSuccess={() => void refreshEmployees()}
             />
 
@@ -2135,7 +2258,19 @@ export const DashboardNewHR: React.FC<Props> = ({
                                   <Loader2 size={12} className="animate-spin"/> Generowanie…
                                 </span>
                               ) : (
-                                <span className="text-xs text-gray-400">—</span>
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <button
+                                    onClick={() => generateDocPdf(doc.id)}
+                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                                  >
+                                    <RefreshCw size={11}/> Generuj PDF
+                                  </button>
+                                  {pdfError[doc.id] && (
+                                    <span className="text-xs text-red-500 max-w-[120px] text-center leading-tight">
+                                      {pdfError[doc.id]}
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </td>
                           </tr>
@@ -2155,21 +2290,39 @@ export const DashboardNewHR: React.FC<Props> = ({
 
             {/* Header */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Anulowanie subskrypcji — odkup voucherów</h2>
                   <p className="text-sm text-gray-500 mt-1">
                     Pracownicy, których vouchery wygasły i nie zostały przedłużone, mogą otrzymać wypłatę gotówkową (1 voucher = 1 PLN).
-                    Po wygenerowaniu paczki przelewów plik CSV zostanie pobrany automatycznie.
+                    Po wygenerowaniu paczki plik zostanie pobrany automatycznie.
                   </p>
                 </div>
-                <button
-                  onClick={fetchBuybackBatches}
-                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
-                >
-                  <RefreshCw size={13}/> Odśwież
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Manual expire trigger */}
+                  <button
+                    onClick={handleManualExpire}
+                    disabled={manualExpiring}
+                    className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 disabled:opacity-60 px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+                  >
+                    {manualExpiring
+                      ? <><Loader2 size={13} className="animate-spin"/> Wygaszam...</>
+                      : <><Clock size={13}/> Wygaś vouchery teraz</>}
+                  </button>
+                  <button
+                    onClick={fetchBuybackBatches}
+                    className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
+                  >
+                    <RefreshCw size={13}/> Odśwież
+                  </button>
+                </div>
               </div>
+              {manualExpireResult && (
+                <div className={`mt-3 flex items-center gap-2 p-2.5 rounded-lg text-sm ${manualExpireResult.startsWith('Błąd') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                  {manualExpireResult.startsWith('Błąd') ? <AlertCircle size={14}/> : <CheckCircle2 size={14}/>}
+                  {manualExpireResult}
+                </div>
+              )}
             </div>
 
             {/* Pending employees — kartoteka style */}
@@ -2206,13 +2359,52 @@ export const DashboardNewHR: React.FC<Props> = ({
                   })}
                 </div>
                 {buybackPendingEmployees.length > 0 && (
-                  <button
-                    onClick={handleGenerateBatch}
-                    disabled={generatingBatch}
-                    className="ml-auto flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-60 shrink-0"
-                  >
-                    {generatingBatch ? <><Loader2 size={14} className="animate-spin"/> Generuję...</> : <><Download size={14}/> Wygeneruj paczkę przelewów</>}
-                  </button>
+                  <div className="ml-auto relative">
+                    {/* Split button: left = generate with selected format, right = dropdown arrow */}
+                    <div className="flex items-stretch">
+                      <button
+                        onClick={() => handleGenerateBatch()}
+                        disabled={generatingBatch}
+                        className="flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-l hover:bg-blue-700 transition-colors disabled:opacity-60 shrink-0 border-r border-blue-700"
+                      >
+                        {generatingBatch
+                          ? <><Loader2 size={14} className="animate-spin"/> Generuję...</>
+                          : <><Download size={14}/> Generuj paczkę przelewów</>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowFormatDropdown(v => !v)}
+                        disabled={generatingBatch}
+                        className="flex items-center px-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition-colors disabled:opacity-60 border-l border-blue-700"
+                        title="Wybierz format pliku"
+                      >
+                        <ChevronDown size={13}/>
+                      </button>
+                    </div>
+                    {showFormatDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowFormatDropdown(false)}/>
+                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[240px] overflow-hidden">
+                        {([
+                          { id: 'standard',  label: 'Standard CSV',       desc: 'Nazwa;IBAN;Kwota;Tytuł;Data' },
+                          { id: 'ing',       label: 'ING Business',       desc: 'Polecenie przelewu (.csv)' },
+                          { id: 'pko',       label: 'PKO BP Videotel',    desc: 'Kwota w groszach (.csv)' },
+                          { id: 'mbank',     label: 'mBank MultiTransfer',desc: 'Format wieloprzelewowy (.csv)' },
+                          { id: 'santander', label: 'Santander CSV',      desc: 'beneficiary;account;amount (.csv)' },
+                        ] as const).map(fmt => (
+                          <button
+                            key={fmt.id}
+                            onClick={() => { setSelectedBatchFormat(fmt.id); handleGenerateBatch(fmt.id); setShowFormatDropdown(false); }}
+                            className={`w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors ${selectedBatchFormat === fmt.id ? 'bg-blue-50' : ''}`}
+                          >
+                            <span className="block text-sm font-medium text-gray-800">{fmt.label}</span>
+                            <span className="block text-xs text-gray-400 mt-0.5">{fmt.desc}</span>
+                          </button>
+                        ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -2472,29 +2664,83 @@ export const DashboardNewHR: React.FC<Props> = ({
                     <tr>
                       <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Okres</th>
                       <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Data wygenerowania</th>
+                      <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Format</th>
+                      <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Pracownicy</th>
                       <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Vouchery</th>
                       <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Kwota</th>
                       <th className="text-center py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                      <th className="w-8"/>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {buybackBatches.map((batch: any) => (
-                      <tr key={batch.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 font-semibold text-gray-800">{batch.period_label ?? '—'}</td>
-                        <td className="py-3 px-4 text-gray-500 text-xs">
-                          {batch.created_at ? formatDate(batch.created_at) : '—'}
-                        </td>
-                        <td className="py-3 px-4 text-right text-gray-700">{batch.voucher_count ?? 0}</td>
-                        <td className="py-3 px-4 text-right font-bold text-blue-700">
-                          {Number(batch.total_amount ?? 0).toFixed(2)} PLN
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
-                            <CheckCircle2 size={11}/> {batch.status ?? 'completed'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {buybackBatches.map((batch: any) => {
+                      const isExpBatch = expandedBatchId === batch.id;
+                      const batchItems: any[] = batch.buyback_batch_items ?? [];
+                      const FORMAT_LABELS: Record<string, string> = {
+                        standard: 'Standard CSV',
+                        ing: 'ING Business',
+                        pko: 'PKO BP',
+                        mbank: 'mBank',
+                        santander: 'Santander',
+                      };
+                      return (
+                        <React.Fragment key={batch.id}>
+                          <tr
+                            className="hover:bg-gray-50 cursor-pointer"
+                            onClick={() => setExpandedBatchId(isExpBatch ? null : batch.id)}
+                          >
+                            <td className="py-3 px-4 font-semibold text-gray-800">{batch.period_label ?? '—'}</td>
+                            <td className="py-3 px-4 text-gray-500 text-xs">
+                              {batch.created_at ? formatDate(batch.created_at) : '—'}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                {FORMAT_LABELS[batch.format ?? 'standard'] ?? batch.format ?? 'CSV'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right text-gray-700">{batchItems.length}</td>
+                            <td className="py-3 px-4 text-right text-gray-700">{batch.voucher_count ?? 0}</td>
+                            <td className="py-3 px-4 text-right font-bold text-blue-700">
+                              {Number(batch.total_amount ?? 0).toFixed(2)} PLN
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                <CheckCircle2 size={11}/> {batch.status ?? 'generated'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center text-gray-400">
+                              {isExpBatch ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                            </td>
+                          </tr>
+                          {isExpBatch && batchItems.length > 0 && (
+                            <tr>
+                              <td colSpan={8} className="px-4 pb-4 pt-0 bg-gray-50">
+                                <table className="w-full mt-1 text-xs border border-gray-200 rounded-lg overflow-hidden">
+                                  <thead>
+                                    <tr className="bg-gray-100">
+                                      <th className="text-left py-2 px-3 font-medium text-gray-600">Pracownik</th>
+                                      <th className="text-left py-2 px-3 font-medium text-gray-600">IBAN</th>
+                                      <th className="text-right py-2 px-3 font-medium text-gray-600">Vouchery</th>
+                                      <th className="text-right py-2 px-3 font-medium text-gray-600">Kwota PLN</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-100">
+                                    {batchItems.map((item: any) => (
+                                      <tr key={item.id} className="bg-white">
+                                        <td className="py-2 px-3 text-gray-700 font-medium">{item.full_name}</td>
+                                        <td className="py-2 px-3 font-mono text-gray-500">{item.iban}</td>
+                                        <td className="py-2 px-3 text-right text-gray-700">{item.voucher_count}</td>
+                                        <td className="py-2 px-3 text-right font-semibold text-blue-700">{Number(item.amount_pln ?? 0).toFixed(2)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
