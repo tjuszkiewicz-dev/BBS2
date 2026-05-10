@@ -56,11 +56,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
   body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; line-height: 1.55; }
   .main-title {
     font-size: 17pt; font-weight: 900; text-align: center;
-    color: #1a1a2e; letter-spacing: 0.5pt; margin-bottom: 4pt;
-  }
-  .sub-title {
-    font-size: 9.5pt; text-align: center; color: #555; margin-bottom: 18pt;
-    font-style: italic;
+    color: #1a1a2e; letter-spacing: 0.5pt; margin-bottom: 14pt;
   }
   .preamble { margin-bottom: 12pt; text-align: justify; page-break-inside: avoid; }
   .preamble p { margin-bottom: 6pt; }
@@ -98,7 +94,6 @@ function buildUmowaHtml(ctx: UmowaContext): string {
 <body>
 
 <div class="main-title">UMOWA ZLECENIA NABYCIA<br/>VOUCHERÓW</div>
-<div class="sub-title">Nr Ilustracji: ${ctx.docVoucherId}</div>
 
 <div class="preamble">
   <p>Zawarta w dniu <b>${date}</b> w Gdańsku pomiędzy:</p>
@@ -115,7 +110,22 @@ function buildUmowaHtml(ctx: UmowaContext): string {
   ${buyerRep}, zwaną dalej <b>„Kupującym"</b></p>
 </div>
 
-<div class="section-title">§ 1 Przedmiot Umowy</div>
+<div class="section-title">§ 1 Parametry Zamówienia</div>
+<div class="section-body">
+  <p>Strony zgodnie ustalają następujące parametry niniejszego zlecenia:</p>
+  <table class="params-table">
+    <thead><tr><th>Parametr zamówienia</th><th>Wartość</th></tr></thead>
+    <tbody>
+      <tr><td>Nr zamówienia</td><td>${ctx.docVoucherId}</td></tr>
+      <tr><td>Liczba voucherów</td><td>${ctx.voucherCount.toLocaleString('pl-PL')} szt.</td></tr>
+      <tr><td>Wartość jednostkowa</td><td>1 voucher = 1,00 PLN</td></tr>
+      <tr><td>Wartość netto voucherów, nota księgowa</td><td>${fmt(ctx.voucherValueNet)}</td></tr>
+      <tr><td>Opłata serwisowa (${ctx.feePercent}%)</td><td>${fmt(ctx.feeNet)}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">§ 2 Przedmiot Umowy</div>
 <div class="section-body">
   <ol>
     <li>Przedmiotem niniejszej umowy zlecenia jest jednorazowy zakup voucherów cyfrowych (znaków
@@ -123,46 +133,27 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     platformy Eliton Benefits System (EBS), od Sprzedawcy przez Kupującego.</li>
     <li>Niniejsza umowa stanowi Załącznik nr 1 do Umowy Ramowej Współpracy Eliton Prime™ i wykonywana jest
     w ramach tej umowy.</li>
-    <li>Wartość voucherów będących przedmiotem transakcji jest każdorazowo ustalana na podstawie
-    indywidualnej Ilustracji (kalkulacji przygotowanej przez Sprzedawcę na podstawie dostarczonych przez
-    Kupującego danych z listy płac), gdzie 1 voucher = 1 PLN. Parametry zamówienia określa tabela w §2
-    niniejszej umowy.</li>
+    <li>Wartość voucherów będących przedmiotem transakcji jest każdorazowo ustalana na podstawie kalkulacji
+    przygotowanej przez Sprzedawcę na podstawie dostarczonych przez Kupującego danych z listy płac,
+    gdzie 1 voucher = 1 PLN. Parametry zamówienia określa tabela w §1 niniejszej umowy.</li>
     <li>Vouchery są znakami legitymacyjnymi w rozumieniu art. 921<sup>15</sup> Kodeksu cywilnego. Spełniają warunki
     zwolnienia z podstawy wymiaru składek ZUS na podstawie §2 ust. 1 pkt 26 rozporządzenia MPiPS z dnia
     18.12.1998 r. (Dz.U.1998.161.1106).</li>
   </ol>
 </div>
 
-<div class="section-title">§ 2 Parametry Zamówienia</div>
-<div class="section-body">
-  <p>Strony zgodnie ustalają następujące parametry niniejszego zlecenia:</p>
-  <table class="params-table">
-    <thead><tr><th>Parametr zamówienia</th><th>Wartość</th></tr></thead>
-    <tbody>
-      <tr><td>Nr Ilustracji</td><td>${ctx.docVoucherId}</td></tr>
-      <tr><td>Liczba voucherów</td><td>${ctx.voucherCount.toLocaleString('pl-PL')} szt.</td></tr>
-      <tr><td>Wartość jednostkowa</td><td>1 voucher = 1,00 PLN</td></tr>
-      <tr><td>Wartość netto voucherów, nota księgowa</td><td>${fmt(ctx.voucherValueNet)}</td></tr>
-      <tr><td>Opłata serwisowa (${ctx.feePercent}%)</td><td>${fmt(ctx.feeNet)}</td></tr>
-      <tr><td>Wartość faktury netto za obsługę</td><td>${fmt(ctx.feeNet)}</td></tr>
-    </tbody>
-  </table>
-  <p>Szczegółowy wykaz pracowników/zleceniobiorców wraz z przypisanymi wartościami voucherów stanowi
-  Ilustrację nr wskazaną powyżej, która jest integralną częścią niniejszej umowy.</p>
-</div>
-
 <div class="section-title">§ 3 Wykonanie zobowiązania</div>
 <div class="section-body">
   <ol>
     <li>Sprzedawca zobowiązany jest przekazać Kupującemu informację o liczbie voucherów obliczonych na
-    podstawie indywidualnej Ilustracji o nr wskazanym w §2.</li>
+    podstawie parametrów zamówienia wskazanych w §1.</li>
     <li>Sprzedawca przeniesie vouchery bezpośrednio na wygenerowane indywidualne konto Kupującego na
     platformie EBS, skąd są następnie przydzielane na imienne konta uczestników programu (pracowników /
     zleceniobiorców Kupującego).</li>
-    <li>Przeniesienie voucherów następuje nie później niż w terminie wskazanym w §2, liczonym od dnia
-    zaakceptowania Ilustracji przez Kupującego i zaksięgowania płatności.</li>
+    <li>Przeniesienie voucherów następuje nie później niż w terminie wskazanym w §1, liczonym od dnia
+    zaakceptowania zamówienia przez Kupującego i zaksięgowania płatności.</li>
     <li>W razie problemów technicznych związanych z przeniesieniem voucherów na konto indywidualne na
-    platformie EBS, trwających dłużej niż 3 dni robocze od przekazania Ilustracji zamówienia, Kupujący ma prawo
+    platformie EBS, trwających dłużej niż 3 dni robocze od przekazania zamówienia, Kupujący ma prawo
     odstąpienia od umowy bezkosztowo.</li>
     <li>Wszelkie procedury związane z ewentualną rezygnacją uczestnika z programu EBS prowadzone są
     wyłącznie przez operatora platformy EBS bezpośrednio z uczestnikiem. Kupujący nie jest stroną tych procedur
@@ -177,7 +168,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     wystawianych przez Sprzedawcę:
       <ul style="list-style-type:lower-alpha">
         <li>noty księgowej — na wartość nabytych voucherów, stanowiącej iloczyn liczby voucherów wskazanej
-        w § 2 i ich wartości jednostkowej (1 voucher = 1 PLN). Nota księgowa nie zawiera podatku VAT.
+        w §1 i ich wartości jednostkowej (1 voucher = 1 PLN). Nota księgowa nie zawiera podatku VAT.
         Voucher stanowi bon wieloprzeznaczeniowy (MPV) w rozumieniu art. 8b ustawy o VAT oraz Dyrektywy
         Rady 2016/1065/UE — VAT naliczany jest wyłącznie w momencie realizacji vouchera przez uczestnika
         u dostawcy usługi, nie w chwili emisji ani przekazania;</li>
@@ -259,7 +250,6 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     Kodeks cywilny (t.j. Dz.U. z 2024 r. poz. 1061).</li>
     <li>Wszelkie spory wynikłe z niniejszej Umowy rozstrzygane będą przez sąd powszechny właściwy ze względu
     na siedzibę Sprzedawcy.</li>
-    <li>Ilustracja wskazana w §2 stanowi integralną część niniejszej Umowy.</li>
     <li>Umowa sporządzona została w dwóch jednobrzmiących egzemplarzach, po jednym dla każdej ze Stron.</li>
   </ol>
 </div>
