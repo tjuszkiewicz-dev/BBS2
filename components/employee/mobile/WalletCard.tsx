@@ -1,15 +1,55 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { User } from '../../../types';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Clock } from 'lucide-react';
 
 interface WalletCardProps {
   user: User;
   onFlip?: () => void;
 }
 
+function calcTimeLeft(day: number, hour: number, minute: number) {
+  const now = new Date();
+  let target = new Date(now.getFullYear(), now.getMonth(), day, hour, minute, 0, 0);
+  if (target.getTime() <= now.getTime()) {
+    target = new Date(now.getFullYear(), now.getMonth() + 1, day, hour, minute, 0, 0);
+  }
+  const diff = Math.max(0, target.getTime() - now.getTime());
+  const totalSec = Math.floor(diff / 1000);
+  return {
+    days: Math.floor(totalSec / 86400),
+    hours: Math.floor((totalSec % 86400) / 3600),
+    minutes: Math.floor((totalSec % 3600) / 60),
+    target,
+  };
+}
+
 export const WalletCard: React.FC<WalletCardProps> = ({ user }) => {
   const balanceRef = useRef<HTMLSpanElement>(null);
+  const [expiryDay,    setExpiryDay]    = useState<number | null>(null);
+  const [expiryHour,   setExpiryHour]   = useState(0);
+  const [expiryMinute, setExpiryMinute] = useState(5);
+  const [timeLeft,     setTimeLeft]     = useState<{ days: number; hours: number; minutes: number; target: Date } | null>(null);
+
+  useEffect(() => {
+    if (!user.companyId) return;
+    fetch(`/api/companies/${user.companyId}`)
+      .then(r => r.json())
+      .then(d => {
+        setExpiryDay(d.voucher_expiry_day ?? 10);
+        setExpiryHour(d.voucher_expiry_hour ?? 0);
+        setExpiryMinute(d.voucher_expiry_minute ?? 5);
+      })
+      .catch(() => { setExpiryDay(10); });
+  }, [user.companyId]);
+
+  useEffect(() => {
+    if (expiryDay === null) return;
+    const update = () => setTimeLeft(calcTimeLeft(expiryDay, expiryHour, expiryMinute));
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, [expiryDay, expiryHour, expiryMinute]);
 
   useEffect(() => {
     const el = balanceRef.current;
@@ -81,8 +121,24 @@ export const WalletCard: React.FC<WalletCardProps> = ({ user }) => {
             <p className="font-semibold text-sm tracking-wide">{user.name}</p>
           </div>
           <div className="text-right">
-            <p className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.8)' }}>ID konta</p>
-            <p className="font-mono text-xs" style={{ color: 'rgba(255,255,255,0.95)' }}>•••• {user.id.slice(-6).toUpperCase()}</p>
+            {timeLeft ? (
+              <>
+                <p className="text-[9px] uppercase tracking-wider mb-0.5 flex items-center justify-end gap-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <Clock size={8} /> Wygaśnięcie
+                </p>
+                <p className="font-mono text-xs font-bold" style={{ color: timeLeft.days < 3 ? '#fca5a5' : '#86efac' }}>
+                  {timeLeft.days > 0 ? `${timeLeft.days}d ` : ''}{String(timeLeft.hours).padStart(2,'0')}:{String(timeLeft.minutes).padStart(2,'0')}
+                </p>
+                <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {timeLeft.target.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.8)' }}>ID konta</p>
+                <p className="font-mono text-xs" style={{ color: 'rgba(255,255,255,0.95)' }}>•••• {user.id.slice(-6).toUpperCase()}</p>
+              </>
+            )}
           </div>
         </div>
 

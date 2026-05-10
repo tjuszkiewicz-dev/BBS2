@@ -21,6 +21,7 @@ export interface SynthesizedDoc {
   payment_confirmed_at: string | null;
   external_payment_ref: string | null;
   pdf_url:              string | null;
+  umowa_pdf_url:        string | null; // URL umowy zlecenia nabycia voucherów (tylko nota)
 }
 
 export async function GET(
@@ -36,7 +37,7 @@ export async function GET(
   const [ordersResult, overridesResult] = await Promise.all([
     supabase
       .from('voucher_orders')
-      .select('id, amount_pln, fee_pln, total_pln, status, doc_voucher_id, doc_fee_id, created_at')
+      .select('id, amount_pln, fee_pln, total_pln, status, doc_voucher_id, doc_fee_id, created_at, umowa_pdf_url')
       .eq('company_id', params.id)
       .not('status', 'eq', 'cancelled')
       .order('created_at', { ascending: false }),
@@ -82,6 +83,7 @@ export async function GET(
       payment_confirmed_at: notaOverride?.payment_confirmed_at ?? null,
       external_payment_ref: notaOverride?.external_payment_ref ?? null,
       pdf_url:              notaOverride?.pdf_url ?? null,
+      umowa_pdf_url:        (order as any).umowa_pdf_url ?? null,
     });
 
     // fee_pln jest przechowywane jako gross (z VAT) — back-kalkuluj net
@@ -103,6 +105,7 @@ export async function GET(
       payment_confirmed_at: fvatOverride?.payment_confirmed_at ?? null,
       external_payment_ref: fvatOverride?.external_payment_ref ?? null,
       pdf_url:              fvatOverride?.pdf_url ?? null,
+      umowa_pdf_url:        null, // umowa jest przypisana do noty, nie faktury
     });
   }
 

@@ -25,21 +25,34 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   const supabase = supabaseServer() as any;
 
-  // Pobierz vouchery przeterminowane lub oczekujące na wykup dla tej firmy
-  const { data: vouchers, error } = await supabase
-    .from('vouchers')
-    .select('id, current_owner_id, status')
-    .eq('company_id', companyId)
-    .in('status', ['expired', 'buyback_pending']);
+  // Próba 1: SQL RPC (migracja 036) — COUNT GROUP BY w bazie, 1 wiersz per pracownik.
+  const { data: grouped, error: rpcErr } = await supabase
+    .rpc('get_expired_vouchers_by_employee', { p_company_id: companyId });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!vouchers || vouchers.length === 0) return NextResponse.json([]);
+  let countByOwner: Map<string, number>;
 
-  // Grupuj po current_owner_id
-  const countByOwner = new Map<string, number>();
-  for (const v of vouchers) {
-    if (!v.current_owner_id) continue;
-    countByOwner.set(v.current_owner_id, (countByOwner.get(v.current_owner_id) ?? 0) + 1);
+  if (!rpcErr && Array.isArray(grouped)) {
+    countByOwner = new Map(grouped.map((r: any) => [r.employee_id, Number(r.voucher_count)]));
+  } else {
+    // Fallback: paginacja — pobiera po 1000 wierszy aż do wyczerpania.
+    // Omija domyślny limit 1000 wierszy PostgREST bez nowej funkcji SQL.
+    countByOwner = new Map();
+    let offset = 0;
+    while (true) {
+      const { data: page, error: pageErr } = await supabase
+        .from('vouchers')
+        .select('current_owner_id')
+        .eq('company_id', companyId)
+        .in('status', ['expired', 'buyback_pending'])
+        .not('current_owner_id', 'is', null)
+        .range(offset, offset + 999);
+      if (pageErr || !page?.length) break;
+      for (const v of page) {
+        countByOwner.set(v.current_owner_id, (countByOwner.get(v.current_owner_id) ?? 0) + 1);
+      }
+      if (page.length < 1000) break;
+      offset += 1000;
+    }
   }
 
   if (countByOwner.size === 0) return NextResponse.json([]);

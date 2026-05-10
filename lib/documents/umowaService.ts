@@ -173,20 +173,26 @@ function buildUmowaHtml(ctx: UmowaContext): string {
 <div class="section-title">§ 4 Płatność</div>
 <div class="section-body">
   <ol>
-    <li>Płatność za vouchery zostanie dokonana jednorazowo na podstawie faktury VAT wystawionej przez
-    Sprzedawcę do niniejszego zlecenia.</li>
-    <li>Wysokość faktury stanowi iloczyn liczby zakupionych voucherów i ich wartości jednostkowej (1 voucher = 1 PLN),
-    powiększony o koszt realizacji usługi w wysokości ${ctx.feePercent}% wartości netto zamówienia.</li>
-    <li>Vouchery kwalifikują się jako bony wieloprzeznaczeniowe (MPV) w rozumieniu art. 8b ustawy o VAT oraz
-    Dyrektywy 2016/1065/UE. VAT naliczany jest w chwili realizacji vouchera przez uczestnika u dostawcy usługi
-    – nie w chwili emisji ani przekazania.</li>
-    <li>Strony wyrażają zgodę na przesyłanie faktur VAT w formie elektronicznej na adresy e-mail:<br/>
+    <li>Rozliczenie niniejszego zlecenia następuje na podstawie dwóch odrębnych dokumentów księgowych
+    wystawianych przez Sprzedawcę:
+      <ul style="list-style-type:lower-alpha">
+        <li>noty księgowej — na wartość nabytych voucherów, stanowiącej iloczyn liczby voucherów wskazanej
+        w § 2 i ich wartości jednostkowej (1 voucher = 1 PLN). Nota księgowa nie zawiera podatku VAT.
+        Voucher stanowi bon wieloprzeznaczeniowy (MPV) w rozumieniu art. 8b ustawy o VAT oraz Dyrektywy
+        Rady 2016/1065/UE — VAT naliczany jest wyłącznie w momencie realizacji vouchera przez uczestnika
+        u dostawcy usługi, nie w chwili emisji ani przekazania;</li>
+        <li>faktury VAT — za usługę obsługi i serwisu programu EBS, w wysokości ${Math.round(ctx.feePercent * 100)}% wartości
+        netto voucherów wskazanej w nocie księgowej, powiększonej o podatek VAT według stawki właściwej
+        dla tej usługi.</li>
+      </ul>
+    </li>
+    <li>Sprzedawca wystawia i przesyła oba dokumenty jednocześnie, drogą elektroniczną, na adresy e-mail:<br/>
     Sprzedawca: <b>faktury@stratton-prime.pl</b><br/>
     Kupujący: ${buyerEmail}</li>
-    <li>Płatność za fakturę dokonywana jest przelewem na konto Sprzedawcy w Millennium Bank:<br/>
+    <li>Płatność za oba dokumenty dokonywana jest łącznie, przelewem na konto Sprzedawcy w Millennium Bank:<br/>
     <b>IBAN PL 66 1160 2202 0000 0006 6619 4064</b><br/>
-    w terminie 7 dni od daty otrzymania przez Sprzedawcę prawidłowo wystawionej faktury VAT.</li>
-    <li>Wynagrodzenie obejmuje wszystkie koszty umowy leżące po stronie Sprzedawcy.</li>
+    w terminie 7 dni od daty otrzymania przez Kupującego obu dokumentów.</li>
+    <li>Wynagrodzenie Sprzedawcy obejmuje wszystkie koszty realizacji zlecenia leżące po jego stronie.</li>
   </ol>
 </div>
 

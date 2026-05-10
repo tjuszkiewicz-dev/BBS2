@@ -12,15 +12,42 @@ function parsePlannedAmount(entry: any): number {
   return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
 }
 
+async function buildEmailToAuthId(supabase: any): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  let page = 1;
+  while (true) {
+    const { data } = await supabase.auth.admin.listUsers({ perPage: 1000, page });
+    const users = data?.users ?? [];
+    for (const u of users) {
+      if (u.email) map.set(u.email.toLowerCase(), u.id);
+    }
+    if (users.length < 1000) break;
+    page++;
+  }
+  return map;
+}
+
 async function resolveEmployeeId(
   supabase: any,
   companyId: string,
   entry: any,
   emailToAuthId: Map<string, string>,
 ): Promise<string | null> {
+  // 1. Direct UUID stored at order-creation time — validate it still exists
   const direct = entry?.matched_user_id ?? entry?.matchedUserId;
-  if (direct) return direct;
+  if (direct) {
+    const { data: profileCheck } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', direct)
+      .eq('company_id', companyId)
+      .eq('role', 'pracownik')
+      .maybeSingle();
+    if (profileCheck?.id) return profileCheck.id;
+    // UUID is stale/invalid — fall through to PESEL/email lookup
+  }
 
+  // 2. PESEL lookup in user_profiles
   const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').replace(/\D+/g, '');
   if (pesel) {
     const { data: profileByPesel } = await supabase
@@ -33,6 +60,7 @@ async function resolveEmployeeId(
     if (profileByPesel?.id) return profileByPesel.id;
   }
 
+  // 3. Email lookup — emailToAuthId already covers all auth pages (built with pagination)
   const email = String(entry?.email ?? entry?.employee_email ?? '').trim().toLowerCase();
   if (email && emailToAuthId.has(email)) {
     return emailToAuthId.get(email) ?? null;
@@ -141,11 +169,7 @@ export async function PATCH(
             (order.distribution_plan as any[] | null) ??
             [];
 
-          const { data: allAuthUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-          const emailToAuthId = new Map<string, string>();
-          for (const u of allAuthUsers?.users ?? []) {
-            if (u.email) emailToAuthId.set(u.email.toLowerCase(), u.id);
-          }
+          const emailToAuthId = await buildEmailToAuthId(supabase);
 
           const batchItems: { userId: string; userName: string; amount: number }[] = [];
 
@@ -172,8 +196,11 @@ export async function PATCH(
               p_valid_until:  storedValidUntil,
             });
 
-            if (transferErr) continue;
-            const actual = Number(distCount) || amount;
+            if (transferErr) {
+              console.error(`[invoices/pay] distribute_to_employee failed for userId=${userId} orderId=${orderId}:`, transferErr.message);
+              continue;
+            }
+            const actual = Number(distCount) > 0 ? Number(distCount) : amount;
             vouchersDistributed += actual;
 
             const { data: profile } = await supabase

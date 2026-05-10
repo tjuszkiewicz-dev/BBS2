@@ -31,10 +31,38 @@ export async function GET(request: NextRequest) {
     return badRequest('Wymagany parametr: companyId (UUID)');
   }
 
-  const result = await getCompanyOrders(parsed.data.companyId);
+  const companyId = parsed.data.companyId;
+  const result = await getCompanyOrders(companyId);
   if (result.error) return serverError(result.error.message);
 
-  return Response.json({ data: result.data, error: null });
+  // Enrich orders with nota/faktura PDF URLs from financial_documents
+  const supabase = supabaseServer();
+  const { data: financialDocs } = await supabase
+    .from('financial_documents')
+    .select('linked_order_id, type, pdf_url, id')
+    .eq('company_id', companyId)
+    .not('linked_order_id', 'is', null);
+
+  const notaPdfMap = new Map<string, string>();
+  const fakturaPdfMap = new Map<string, string>();
+  const notaIdMap = new Map<string, string>();
+  const fakturaIdMap = new Map<string, string>();
+  for (const doc of financialDocs ?? []) {
+    if (doc.type === 'nota' && doc.pdf_url) notaPdfMap.set(doc.linked_order_id, doc.pdf_url);
+    if (doc.type === 'faktura_vat' && doc.pdf_url) fakturaPdfMap.set(doc.linked_order_id, doc.pdf_url);
+    if (doc.type === 'nota') notaIdMap.set(doc.linked_order_id, doc.id);
+    if (doc.type === 'faktura_vat') fakturaIdMap.set(doc.linked_order_id, doc.id);
+  }
+
+  const enriched = (result.data ?? []).map((order: any) => ({
+    ...order,
+    nota_pdf_url:    notaPdfMap.get(order.id) ?? null,
+    faktura_pdf_url: fakturaPdfMap.get(order.id) ?? null,
+    nota_doc_id:     notaIdMap.get(order.id) ?? `nota-${order.id}`,
+    faktura_doc_id:  fakturaIdMap.get(order.id) ?? `fvat-${order.id}`,
+  }));
+
+  return Response.json({ data: enriched, error: null });
 }
 
 export async function POST(request: NextRequest) {

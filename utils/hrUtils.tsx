@@ -18,6 +18,10 @@ export interface HrOrder {
   distributions: { employeeId: string; employeeName: string; pesel: string; amount: number }[];
   createdBy: string;
   umowaPdfUrl: string | null;
+  notaPdfUrl: string | null;
+  fakturaPdfUrl: string | null;
+  notaDocId: string | null;
+  fakturaDocId: string | null;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────

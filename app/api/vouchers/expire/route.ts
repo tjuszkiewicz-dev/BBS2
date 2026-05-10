@@ -30,11 +30,15 @@ export async function POST(req: NextRequest) {
     companyId = body?.companyId ?? null;
   }
 
-  const { data: expired, error } = await supabase.rpc('expire_overdue_vouchers', {
+  const { data, error } = await supabase.rpc('expire_vouchers_and_create_buybacks', {
     p_company_id: companyId,
   } as any);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ expired: expired ?? 0 });
+  const row = Array.isArray(data) ? data[0] : data;
+  return NextResponse.json({
+    expired:  row?.expired_count  ?? 0,
+    buybacks: row?.buyback_count  ?? 0,
+  });
 }

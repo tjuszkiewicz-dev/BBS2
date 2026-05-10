@@ -176,8 +176,19 @@ async function resolveEmployeeId(
   entry: any,
   emailToAuthId: Map<string, string>,
 ): Promise<string | null> {
+  // 1. Direct UUID stored at order-creation time — validate it still exists
   const direct = entry?.matched_user_id ?? entry?.matchedUserId;
-  if (direct) return direct;
+  if (direct) {
+    const { data: profileCheck } = await (supabase as any)
+      .from('user_profiles')
+      .select('id')
+      .eq('id', direct)
+      .eq('company_id', companyId)
+      .eq('role', 'pracownik')
+      .maybeSingle();
+    if (profileCheck?.id) return profileCheck.id;
+    // UUID is stale/invalid — fall through to PESEL/email lookup
+  }
 
   const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').replace(/\D+/g, '');
   if (pesel) {
@@ -260,10 +271,19 @@ async function syncOrderStatus(
     (order.distribution_plan as any[] | null) ??
     [];
 
-  const { data: allAuthUsers } = await (supabase as any).auth.admin.listUsers({ perPage: 1000 });
+  // Paginated email→authId map (same fix as in pay/route.ts)
   const emailToAuthId = new Map<string, string>();
-  for (const u of allAuthUsers?.users ?? []) {
-    if (u.email) emailToAuthId.set(u.email.toLowerCase(), u.id);
+  {
+    let page = 1;
+    while (true) {
+      const { data: pageData } = await (supabase as any).auth.admin.listUsers({ perPage: 1000, page });
+      const users = pageData?.users ?? [];
+      for (const u of users) {
+        if (u.email) emailToAuthId.set(u.email.toLowerCase(), u.id);
+      }
+      if (users.length < 1000) break;
+      page++;
+    }
   }
 
   const unresolvedRows: string[] = [];
@@ -306,13 +326,15 @@ async function syncOrderStatus(
       p_to_user_id:   userId,
       p_amount:       amount,
       p_order_id:     orderId,
+      p_valid_until:  (order as any).voucher_valid_until ?? null,
     });
 
     if (transferErr) {
-      throw new Error(`Błąd dystrybucji voucherów do pracownika ${userId}: ${transferErr.message}`);
+      console.error(`[syncOrderStatus] distribute_to_employee failed for userId=${userId} orderId=${orderId}:`, transferErr.message);
+      continue;
     }
 
-    vouchersDistributed += Number(distributedCount) || amount;
+    vouchersDistributed += Number(distributedCount) > 0 ? Number(distributedCount) : amount;
 
     const { data: profile } = await supabase
       .from('user_profiles')

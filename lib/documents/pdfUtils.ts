@@ -13,7 +13,7 @@ export const ISSUER = {
 /** Wysyła HTML do PDF-serwera (Puppeteer), zwraca Buffer lub null jeśli serwer niedostępny */
 export async function generatePdfBuffer(html: string, pdfOptions?: Record<string, unknown>): Promise<Buffer | null> {
   try {
-    const serverUrl = process.env.PDF_SERVER_URL ?? 'http://localhost:3012';
+    const serverUrl = process.env.PDF_SERVER_URL ?? 'http://localhost:3015';
     const body: Record<string, unknown> = { html };
     if (pdfOptions) body.pdfOptions = pdfOptions;
     const res = await fetch(`${serverUrl}/api/generate-pdf-raw`, {

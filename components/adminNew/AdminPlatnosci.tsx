@@ -29,6 +29,7 @@ interface FinancialDoc {
   payment_confirmed_at: string | null;
   external_payment_ref: string | null;
   pdf_url:              string | null;
+  umowa_pdf_url:        string | null;
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const [busyId,  setBusyId]  = useState<string | null>(null);
+  const [pdfGenId, setPdfGenId] = useState<string | null>(null);
   const [tab,     setTab]     = useState<'nota' | 'faktura_vat'>('nota');
 
   const fetchDocs = useCallback(async () => {
@@ -88,7 +90,22 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
       setBusyId(null);
     }
   };
-
+  const generatePdf = async (docId: string) => {
+    setPdfGenId(docId);
+    try {
+      const res = await fetch(`/api/companies/${company.id}/financials/${docId}/pdf`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(body.error ?? 'Błąd generowania PDF. Upewnij się, że serwer PDF działa na porcie 3015.');
+        return;
+      }
+      setDocs(prev => prev.map(d => d.id === docId ? { ...d, pdf_url: body.pdf_url } : d));
+    } catch {
+      alert('Błąd połączenia z serwerem');
+    } finally {
+      setPdfGenId(null);
+    }
+  };
   const filtered = docs.filter((d) => d.type === tab);
 
   const totalPending = filtered.filter((d) => d.status === 'pending').reduce((s, d) => s + d.amount_gross, 0);
@@ -171,7 +188,7 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
                 {(tab === 'nota'
-                  ? ['Data', 'Numer noty', 'Wartość', 'Status płatności', 'Potwierdzenie', 'PDF', 'Akcja']
+                  ? ['Data', 'Numer noty', 'Wartość', 'Status płatności', 'Potwierdzenie', 'PDF', 'Umowa', 'Akcja']
                   : ['Data', 'Nr faktury', 'Netto', 'VAT', 'Brutto', 'Status', 'Potwierdzenie', 'PDF', 'Akcja']
                 ).map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-slate-500 font-semibold whitespace-nowrap">
@@ -209,9 +226,32 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
                         <Download size={10} /> PDF
                       </a>
                     ) : (
-                      <span className="text-slate-300 text-[11px]">—</span>
+                      <button
+                        onClick={() => generatePdf(doc.id)}
+                        disabled={pdfGenId === doc.id}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold hover:bg-amber-100 transition disabled:opacity-50"
+                      >
+                        {pdfGenId === doc.id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+                        Generuj PDF
+                      </button>
                     )}
                   </td>
+                  {tab === 'nota' && (
+                    <td className="px-4 py-3 text-center">
+                      {doc.umowa_pdf_url ? (
+                        <a
+                          href={doc.umowa_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-semibold hover:bg-indigo-100 transition"
+                        >
+                          <Download size={10} /> Umowa
+                        </a>
+                      ) : (
+                        <span className="text-slate-300 text-[11px]">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     {doc.status === 'pending' ? (
                       <button

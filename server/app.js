@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3015;
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : ['http://localhost:3010', 'http://localhost:3011'];
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010', 'http://localhost:3011', 'http://localhost:3050', 'http://localhost:3051', 'http://localhost:3052', 'http://localhost:3053'];
 
 app.use(helmet());
 

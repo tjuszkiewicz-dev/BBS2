@@ -1,10 +1,10 @@
-// PATCH /api/orders/[id]/pay — potwierdź płatność, emituj vouchery i dystrybuuj do pracowników
-// Tylko superadmin. Dopiero tutaj następuje emisja voucherów i dystrybucja do pracowników.
+// POST /api/orders/[id]/redistribute
+// Ponawia dystrybucję voucherów dla pracowników, którzy ich jeszcze nie otrzymali.
+// Dostępne dla pracodawcy (własna firma) i superadmina.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserWithRole } from '@/lib/apiAuth';
 import { supabaseServer } from '@/lib/supabase';
-import { calculateAndSaveCommissions } from '@/lib/vouchers';
 
 function parsePlannedAmount(entry: any): number {
   const raw = entry?.final_netto_voucher ?? entry?.voucherPartNet ?? entry?.amount ?? 0;
@@ -47,7 +47,6 @@ async function resolveEmployeeId(
     // UUID is stale/invalid — fall through to PESEL/email lookup
   }
 
-  // 2. PESEL lookup in user_profiles
   const pesel = String(entry?.employee_pesel ?? entry?.pesel ?? '').replace(/\D+/g, '');
   if (pesel) {
     const { data: profileByPesel } = await supabase
@@ -60,7 +59,6 @@ async function resolveEmployeeId(
     if (profileByPesel?.id) return profileByPesel.id;
   }
 
-  // 3. Email lookup — emailToAuthId already covers all auth pages (built with pagination)
   const email = String(entry?.email ?? entry?.employee_email ?? '').trim().toLowerCase();
   if (email && emailToAuthId.has(email)) {
     return emailToAuthId.get(email) ?? null;
@@ -69,15 +67,17 @@ async function resolveEmployeeId(
   return null;
 }
 
-export async function PATCH(
+export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const auth = await getAuthUserWithRole();
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (auth.role !== 'superadmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!['superadmin', 'pracodawca'].includes(auth.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const orderId = params.id;
 
   const { data: order, error: fetchErr } = await supabase
@@ -86,82 +86,77 @@ export async function PATCH(
     .eq('id', orderId)
     .single();
 
-  if (fetchErr || !order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-  if (!['approved', 'paid'].includes(order.status)) {
-    return NextResponse.json({ error: 'Order must be approved first' }, { status: 409 });
-  }
-
-  // 1. Mark as paid
+  if (fetchErr || !order) return NextResponse.json({ error: 'Zamówienie nie istnieje' }, { status: 404 });
   if (order.status !== 'paid') {
-    const { error: updateErr } = await supabase
-      .from('voucher_orders')
-      .update({ status: 'paid', updated_at: new Date().toISOString() })
-      .eq('id', orderId);
-
-    if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    return NextResponse.json({ error: 'Dystrybucja możliwa tylko dla opłaconych zamówień' }, { status: 409 });
   }
 
-  // 2. Emit vouchers — minted to the HR user (company account owner)
-  // Use voucher_valid_until stored at hr-confirm time to prevent wrong-month expiry
+  // Pracodawca może redistrybuować tylko dla swojej firmy
+  if (auth.role === 'pracodawca') {
+    const { data: hrProfile } = await supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', auth.id)
+      .single();
+    if (hrProfile?.company_id !== order.company_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
   const storedValidUntil: string | null = (order as any).voucher_valid_until ?? null;
-
-  const { count: mintedCount } = await supabase
-    .from('vouchers')
-    .select('id', { head: true, count: 'exact' })
-    .eq('order_id', orderId);
-
-  if ((mintedCount ?? 0) === 0) {
-    const { error: mintErr } = await supabase.rpc('mint_vouchers', {
-      p_order_id:     orderId,
-      p_company_id:   order.company_id,
-      p_owner_id:     order.hr_user_id,
-      p_quantity:     order.amount_vouchers,
-      p_valid_months: 12,
-      p_valid_until:  storedValidUntil,
-    });
-
-    if (mintErr) return NextResponse.json({ error: mintErr.message }, { status: 500 });
-  }
-
-  // 3. Auto-distribute based on payroll plan in order
   const planSource: any[] =
     (order.payroll_snapshots as any[] | null) ??
     (order.distribution_plan as any[] | null) ??
     [];
 
+  if (planSource.length === 0) {
+    return NextResponse.json({ error: 'Brak planu dystrybucji dla tego zamówienia' }, { status: 400 });
+  }
+
   const emailToAuthId = await buildEmailToAuthId(supabase);
 
   let distributedCount = 0;
+  const skipped: string[] = [];
   const batchItems: { userId: string; userName: string; amount: number }[] = [];
 
   for (const entry of planSource) {
     const userId = await resolveEmployeeId(supabase, order.company_id, entry, emailToAuthId);
     const targetAmount = parsePlannedAmount(entry);
-    if (!userId || targetAmount <= 0) continue;
+    const employeeName: string = entry?.employee_name ?? entry?.employeeName ?? entry?.pesel ?? userId ?? 'nieznany';
 
+    if (!userId) {
+      skipped.push(`${employeeName}: nie znaleziono użytkownika (PESEL/email niezgodny)`);
+      continue;
+    }
+    if (targetAmount <= 0) continue;
+
+    // Sprawdź ile pracownik już ma z tego zamówienia
     const { count: alreadyOwned } = await supabase
       .from('vouchers')
       .select('id', { head: true, count: 'exact' })
       .eq('order_id', orderId)
       .eq('current_owner_id', userId);
 
-    const amount = Math.max(0, targetAmount - (alreadyOwned ?? 0));
-    if (amount <= 0) continue;
+    const missing = Math.max(0, targetAmount - (alreadyOwned ?? 0));
+    if (missing <= 0) continue; // już ma wszystkie vouchery
 
-    const { data: distCount, error: transferErr } = await (supabase.rpc as any)('distribute_to_employee', {
+    const { data: distCount, error: transferErr } = await supabase.rpc('distribute_to_employee', {
       p_company_id:   order.company_id,
       p_from_user_id: order.hr_user_id,
       p_to_user_id:   userId,
-      p_amount:       amount,
+      p_amount:       missing,
       p_order_id:     orderId,
       p_valid_until:  storedValidUntil,
     });
 
     if (transferErr) {
-      console.error(`[pay] distribute_to_employee failed for userId=${userId} orderId=${orderId}:`, transferErr.message);
+      console.error(`[redistribute] distribute_to_employee failed for userId=${userId}:`, transferErr.message);
+      skipped.push(`${employeeName}: ${transferErr.message}`);
       continue;
     }
-    const actualAmount = Number(distCount) > 0 ? Number(distCount) : amount;
+
+    const actual = Number(distCount) > 0 ? Number(distCount) : missing;
+    distributedCount += actual;
 
     const { data: profile } = await supabase
       .from('user_profiles')
@@ -169,28 +164,24 @@ export async function PATCH(
       .eq('id', userId)
       .single();
 
-    batchItems.push({ userId, userName: profile?.full_name ?? userId, amount: actualAmount });
-    distributedCount += actualAmount;
+    batchItems.push({ userId, userName: profile?.full_name ?? employeeName, amount: actual });
 
-    // In-app notification for employee
     await supabase.from('notifications').insert({
       user_id: userId,
-      message: `Otrzymałeś ${actualAmount} nowych voucherów od pracodawcy.`,
+      message: `Otrzymałeś ${actual} voucherów (ponowna dystrybucja zamówienia).`,
       type:    'SUCCESS',
     });
   }
 
-  // 4. Save distribution batch protocol
   if (batchItems.length > 0) {
-    const batchId = `PROTOCOL-PAY-${new Date().toISOString().slice(0, 10)}-${orderId.slice(-8).toUpperCase()}`;
-
+    const batchId = `PROTOCOL-REDIST-${new Date().toISOString().slice(0, 10)}-${orderId.slice(-8).toUpperCase()}`;
     const { error: batchErr } = await supabase
       .from('distribution_batches')
       .insert({
         id:           batchId,
         company_id:   order.company_id,
         hr_user_id:   order.hr_user_id,
-        hr_name:      'System (Po opłaceniu)',
+        hr_name:      'System (Ponowna dystrybucja)',
         total_amount: distributedCount,
         order_id:     orderId,
         status:       'completed',
@@ -208,13 +199,10 @@ export async function PATCH(
     }
   }
 
-  // 5. Calculate and save commissions (prowizje zawsze w PLN)
-  await calculateAndSaveCommissions(
-    orderId,
-    Number(order.fee_pln),
-    order.company_id,
-    order.is_first_invoice
-  );
-
-  return NextResponse.json({ paid: true, distributed: distributedCount, batchCreated: batchItems.length > 0 });
+  return NextResponse.json({
+    success: true,
+    distributed: distributedCount,
+    redistributed: batchItems.map(i => ({ name: i.userName, amount: i.amount })),
+    skipped,
+  });
 }

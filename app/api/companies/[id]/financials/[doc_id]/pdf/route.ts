@@ -8,9 +8,10 @@ import { supabaseServer } from '@/lib/supabase';
 import { ISSUER, generatePdfBuffer, uploadPdf } from '@/lib/documents/pdfUtils';
 import { buildPolishInvoiceHtml, DocumentContext } from '@/lib/documentService';
 
-type Params = { params: { id: string; doc_id: string } };
+type Params = { params: Promise<{ id: string; doc_id: string }> };
 
-export async function POST(_req: NextRequest, { params }: Params) {
+export async function POST(_req: NextRequest, { params: paramsPromise }: Params) {
+  const params = await paramsPromise;
   const auth = await getAuthUserWithRole();
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!['superadmin', 'pracodawca'].includes(auth.role)) {
