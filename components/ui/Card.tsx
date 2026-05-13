@@ -14,7 +14,7 @@ export const Card: React.FC<CardProps> = ({
   children, title, subtitle, action, className = '', noPadding = false 
 }) => {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${className}`}>
+    <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${className}`}>
       {(title || action) && (
         <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
           <div>
