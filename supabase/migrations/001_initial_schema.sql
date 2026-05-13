@@ -309,22 +309,8 @@ CREATE TABLE IF NOT EXISTS ticket_messages (
 );
 
 -- ---------------------------------------------------------------------------
--- 1.12 notifications — powiadomienia in-app
+-- 1.12 notifications — tworzone przez 002_notifications.sql
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS notifications (
-  id                  UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id             UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  message             TEXT    NOT NULL,
-  type                TEXT    NOT NULL CHECK (type IN ('INFO','WARNING','SUCCESS','ERROR')),
-  priority            TEXT    DEFAULT 'NORMAL' CHECK (priority IN ('CRITICAL','HIGH','NORMAL','LOW')),
-  is_read             BOOLEAN DEFAULT FALSE,
-  action_type         TEXT,
-  action_target_id    TEXT,
-  action_label        TEXT,
-  target_entity_id    TEXT,
-  target_entity_type  TEXT,
-  created_at          TIMESTAMPTZ DEFAULT now()
-);
 
 -- ---------------------------------------------------------------------------
 -- 1.13 services — katalog usług dostępnych dla pracowników
@@ -442,10 +428,6 @@ CREATE INDEX IF NOT EXISTS idx_dbi_user     ON distribution_batch_items(user_id)
 CREATE INDEX IF NOT EXISTS idx_tickets_creator ON support_tickets(creator_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_company ON support_tickets(company_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status  ON support_tickets(status);
-
--- notifications
-CREATE INDEX IF NOT EXISTS idx_notifications_user   ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE is_read = FALSE;
 
 -- employee_vouchers
 CREATE INDEX IF NOT EXISTS idx_ev_employee ON employee_vouchers(employee_id);
@@ -661,7 +643,6 @@ ALTER TABLE distribution_batch_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE buyback_agreements    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ticket_messages       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE import_history        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_log             ENABLE ROW LEVEL SECURITY;
@@ -714,11 +695,6 @@ CREATE POLICY "Superadmin — zamówienia"   ON voucher_orders FOR ALL
 CREATE POLICY "Własne prowizje"           ON commissions FOR SELECT USING (auth.uid() = agent_id);
 CREATE POLICY "Superadmin — prowizje"     ON commissions FOR ALL
   USING (EXISTS (SELECT 1 FROM user_profiles up WHERE up.id = auth.uid() AND up.role = 'superadmin'));
-
--- ---------------------------------------------------------------------------
--- notifications — własne powiadomienia
--- ---------------------------------------------------------------------------
-CREATE POLICY "Własne powiadomienia"      ON notifications FOR ALL USING (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
 -- support_tickets
@@ -909,7 +885,7 @@ DECLARE
     'user_profiles','companies','voucher_accounts','voucher_orders','vouchers',
     'voucher_transactions','employee_vouchers','commissions',
     'distribution_batches','distribution_batch_items','buyback_agreements',
-    'support_tickets','ticket_messages','notifications','services',
+    'support_tickets','ticket_messages','services',
     'import_history','system_config','audit_log'
   ];
 BEGIN

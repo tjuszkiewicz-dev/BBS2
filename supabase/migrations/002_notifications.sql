@@ -20,7 +20,14 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 CREATE INDEX IF NOT EXISTS notifications_user_id_idx ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS notifications_read_idx    ON notifications(read);
+-- kolumna może się nazywać "read" (schema 002) lub "is_read" (schema 001) — obsługujemy oba
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='read') THEN
+    CREATE INDEX IF NOT EXISTS notifications_read_idx ON notifications(read);
+  ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='is_read') THEN
+    CREATE INDEX IF NOT EXISTS notifications_read_idx ON notifications(is_read);
+  END IF;
+END $$;
 
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
