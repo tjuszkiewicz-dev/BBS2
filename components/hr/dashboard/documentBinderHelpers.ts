@@ -49,7 +49,7 @@ export const generateClientSidePdf = async (
         </style>
         <div class="header">
             <h1>Potwierdzenie Otrzymania Środków</h1>
-            <h2>System Benefitowy EBS</h2>
+            <h2>System Benefitowy BBS</h2>
         </div>
         <div class="meta">
             <p><strong>Podmiot Przekazujący:</strong> ${company.name}</p>
@@ -67,7 +67,7 @@ export const generateClientSidePdf = async (
             <div class="sig-line">Podpis Pracodawcy (HR)<br/>(Wygenerowano Elektronicznie)</div>
             <div class="sig-line">Podpis Pracownika<br/>(Potwierdzenie Odbioru)</div>
         </div>
-        <div class="footer">Dokument wygenerowany w systemie EBS. Numer referencyjny operacji: ${data.id}</div>
+        <div class="footer">Dokument wygenerowany w systemie BBS. Numer referencyjny operacji: ${data.id}</div>
     `;
 
     try {

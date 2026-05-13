@@ -149,7 +149,7 @@ export const EmployeeImportModal: React.FC<EmployeeImportModalProps> = ({
     
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Szablon_Pracownicy");
-    XLSX.writeFile(wb, "Szablon_Pracownicy_EBS_Pelny.xlsx");
+    XLSX.writeFile(wb, "Szablon_Pracownicy_BBS_Pelny.xlsx");
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

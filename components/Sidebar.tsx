@@ -161,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
           {isDesktopOpen && (
             <div className="mt-3 text-center">
-            <p className={`text-[10px] whitespace-nowrap ${currentUser.role === Role.EMPLOYEE ? 'text-slate-600' : 'text-slate-400'}`}>Wersja EBS 1.0.9 (Accounting UI)</p>
+            <p className={`text-[10px] whitespace-nowrap ${currentUser.role === Role.EMPLOYEE ? 'text-slate-600' : 'text-slate-400'}`}>Wersja BBS 1.0.9 (Accounting UI)</p>
             </div>
           )}
         </div>

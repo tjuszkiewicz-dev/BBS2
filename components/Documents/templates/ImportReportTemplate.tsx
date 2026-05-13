@@ -74,7 +74,7 @@ export const ImportReportTemplate: React.FC<Props> = ({ data, company, user }) =
         </div>
 
         <div className="mt-8 pt-4 border-t border-slate-200 text-[8pt] text-slate-400 text-center">
-            <p>Dokument wygenerowany automatycznie przez system EBS. Zawiera poufne dane dostępowe.</p>
+            <p>Dokument wygenerowany automatycznie przez system BBS. Zawiera poufne dane dostępowe.</p>
             <p>Prosimy o bezpieczne przekazanie haseł pracownikom i ich natychmiastową zmianę po pierwszym logowaniu.</p>
         </div>
     </div>

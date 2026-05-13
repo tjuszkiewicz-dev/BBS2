@@ -130,8 +130,8 @@ function buildUmowaHtml(ctx: UmowaContext): string {
   <ol>
     <li>Przedmiotem niniejszej umowy zlecenia jest jednorazowy zakup voucherów cyfrowych (znaków
     legitymacyjnych) uprawniających do korzystania z usług i towarów dostępnych w zamkniętym katalogu
-    platformy Eliton Benefits System (EBS), od Sprzedawcy przez Kupującego.</li>
-    <li>Niniejsza umowa stanowi Załącznik nr 1 do Umowy Ramowej Współpracy Eliton Prime™ i wykonywana jest
+    platformy Baltic Benefits System (BBS), od Sprzedawcy przez Kupującego.</li>
+    <li>Niniejsza umowa stanowi Załącznik nr 1 do Umowy Ramowej Współpracy Baltic Prime™ i wykonywana jest
     w ramach tej umowy.</li>
     <li>Wartość voucherów będących przedmiotem transakcji jest każdorazowo ustalana na podstawie kalkulacji
     przygotowanej przez Sprzedawcę na podstawie dostarczonych przez Kupującego danych z listy płac,
@@ -148,15 +148,15 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     <li>Sprzedawca zobowiązany jest przekazać Kupującemu informację o liczbie voucherów obliczonych na
     podstawie parametrów zamówienia wskazanych w §1.</li>
     <li>Sprzedawca przeniesie vouchery bezpośrednio na wygenerowane indywidualne konto Kupującego na
-    platformie EBS, skąd są następnie przydzielane na imienne konta uczestników programu (pracowników /
+    platformie BBS, skąd są następnie przydzielane na imienne konta uczestników programu (pracowników /
     zleceniobiorców Kupującego).</li>
     <li>Przeniesienie voucherów następuje nie później niż w terminie wskazanym w §1, liczonym od dnia
     zaakceptowania zamówienia przez Kupującego i zaksięgowania płatności.</li>
     <li>W razie problemów technicznych związanych z przeniesieniem voucherów na konto indywidualne na
-    platformie EBS, trwających dłużej niż 3 dni robocze od przekazania zamówienia, Kupujący ma prawo
+    platformie BBS, trwających dłużej niż 3 dni robocze od przekazania zamówienia, Kupujący ma prawo
     odstąpienia od umowy bezkosztowo.</li>
-    <li>Wszelkie procedury związane z ewentualną rezygnacją uczestnika z programu EBS prowadzone są
-    wyłącznie przez operatora platformy EBS bezpośrednio z uczestnikiem. Kupujący nie jest stroną tych procedur
+    <li>Wszelkie procedury związane z ewentualną rezygnacją uczestnika z programu BBS prowadzone są
+    wyłącznie przez operatora platformy BBS bezpośrednio z uczestnikiem. Kupujący nie jest stroną tych procedur
     i nie uczestniczy w żadnych rozliczeniach z nimi związanych.</li>
   </ol>
 </div>
@@ -172,7 +172,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
         Voucher stanowi bon wieloprzeznaczeniowy (MPV) w rozumieniu art. 8b ustawy o VAT oraz Dyrektywy
         Rady 2016/1065/UE — VAT naliczany jest wyłącznie w momencie realizacji vouchera przez uczestnika
         u dostawcy usługi, nie w chwili emisji ani przekazania;</li>
-        <li>faktury VAT — za usługę obsługi i serwisu programu EBS, w wysokości ${Math.round(ctx.feePercent * 100)}% wartości
+        <li>faktury VAT — za usługę obsługi i serwisu programu BBS, w wysokości ${Math.round(ctx.feePercent * 100)}% wartości
         netto voucherów wskazanej w nocie księgowej, powiększonej o podatek VAT według stawki właściwej
         dla tej usługi.</li>
       </ul>
@@ -208,8 +208,8 @@ function buildUmowaHtml(ctx: UmowaContext): string {
   <ol>
     <li>Kupujący oświadcza, że przeczytał, rozumie i akceptuje postanowienia niniejszej umowy w całości, bez zastrzeżeń.</li>
     <li>Kupujący oświadcza, że posiada wystarczającą wiedzę na temat funkcjonalności, zasad korzystania i
-    przechowywania voucherów na platformie EBS, aby świadomie zawrzeć niniejszą umowę.</li>
-    <li>Kupujący otrzymał wystarczającą ilość informacji o voucherach i platformie EBS, aby podjąć świadomą
+    przechowywania voucherów na platformie BBS, aby świadomie zawrzeć niniejszą umowę.</li>
+    <li>Kupujący otrzymał wystarczającą ilość informacji o voucherach i platformie BBS, aby podjąć świadomą
     decyzję o zakupie.</li>
     <li>Kupujący zobowiązuje się przestrzegać wszelkich obowiązujących zobowiązań podatkowych (PIT, ZUS)
     wynikających z nabycia i dystrybucji voucherów wśród uczestników programu.</li>
@@ -227,7 +227,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     działalności bankowej, ubezpieczeniowej ani żadnej innej działalności wymagającej licencji, zezwolenia lub
     wpisu do rejestru działalności regulowanej.<br/>
     Voucher jest przypisany imiennie do uczestnika programu; nie może być przekazany osobie trzeciej ani
-    wymieniony na środki płatnicze. Architektura platformy EBS technicznie wyklucza cesję, sprzedaż i
+    wymieniony na środki płatnicze. Architektura platformy BBS technicznie wyklucza cesję, sprzedaż i
     wymianę vouchera na gotówkę – co stanowi warunek kwalifikacji AML/KNF oraz ZUS.</li>
   </ol>
 </div>

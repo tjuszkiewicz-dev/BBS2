@@ -3,8 +3,8 @@ import type React from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'EBS – Eliton Benefits System',
-  description: 'System zarządzania benefitami pracowniczymi',
+  title: 'BBS – Baltic Benefits System',
+  description: 'Baltic Benefits System – zarządzanie benefitami pracowniczymi',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -27,7 +27,7 @@ export const HREmployeeGuide: React.FC<HREmployeeGuideProps> = ({ onClose }) => 
                         {!isOpen && <span className="text-xs font-normal text-slate-500 hidden md:inline">- Kliknij, aby rozwinąć</span>}
                     </h3>
                     {isOpen && (
-                        <p className="text-xs text-slate-500 mt-0.5">Cykl życia pracownika w systemie EBS.</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Cykl życia pracownika w systemie BBS.</p>
                     )}
                 </div>
             </div>

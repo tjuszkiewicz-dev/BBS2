@@ -23,7 +23,7 @@ export const HRDashboardGuide: React.FC<HRDashboardGuideProps> = ({ onClose }) =
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
-                        Jak wygląda cykl miesięczny w EBS?
+                        Jak wygląda cykl miesięczny w BBS?
                         {!isOpen && <span className="text-xs font-normal text-slate-500 hidden md:inline">- Kliknij, aby rozwinąć</span>}
                     </h3>
                     {isOpen && (

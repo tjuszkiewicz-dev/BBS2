@@ -131,12 +131,13 @@ function EmployeeLayout() {
             >
               <Menu size={24} />
             </button>
-            {/* EBS logo — desktop only */}
+            {/* BBS logo — desktop only */}
             <button
               onClick={() => setDesktopSidebarOpen(prev => !prev)}
               className="hidden md:flex self-stretch -ml-1 px-2 rounded-lg transition items-center justify-center overflow-visible hover:bg-white/10"
             >
-              <img src="/ebs-black.svg" alt="EBS" style={{ height: 62, width: 'auto', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
+              {/* TODO: replace with BBS logo */}
+              <img src="/ebs-black.svg" alt="BBS" style={{ height: 62, width: 'auto', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
               />
             </button>
             <div className="hidden sm:block">

@@ -156,7 +156,7 @@ export const DashboardEmployee: React.FC<Props> = ({
     const s: ServiceItem = {
       id: `PARTNER-${Date.now()}`,
       name: `${partnerName}: ${productName}`,
-      description: `Specjalna oferta partnerska od ${partnerName} dla pracowników EBS. Kliknij "Zatwierdź", aby zamówić kontakt z konsultantem.`,
+      description: `Specjalna oferta partnerska od ${partnerName} dla pracowników BBS. Kliknij "Zatwierdź", aby zamówić kontakt z konsultantem.`,
       price: 0,
       type: ServiceType.ONE_TIME,
       icon: 'Shield',
@@ -278,7 +278,7 @@ export const DashboardEmployee: React.FC<Props> = ({
 
       {/* Twoje Aplikacje */}
         <div id="sec-emp-twoje-aplikacje" className="!mt-4">
-        <SectionDivider title="Twoje Aplikacje" subtitle="Zarządzane przez Eliton" accent="#7C3AED" />
+        <SectionDivider title="Twoje Aplikacje" subtitle="Zarządzane przez Baltic" accent="#7C3AED" />
         <ServiceCarousel>
           <AppIconCard
             icon={<Brain size={24} style={{ color: '#7C3AED' }} />}
@@ -657,7 +657,7 @@ export const DashboardEmployee: React.FC<Props> = ({
           <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
           <div className="relative z-10">
             <h2 className="text-3xl font-black text-white mb-2">Aktywne uslugi</h2>
-            <p className="text-white/70">{count > 0 ? `Korzystasz z ${count} usďż˝ug EBS.` : 'Nie aktywowaďż˝eďż˝ jeszcze ďż˝adnych usďż˝ug.'}</p>
+            <p className="text-white/70">{count > 0 ? `Korzystasz z ${count} usďż˝ug BBS.` : 'Nie aktywowaďż˝eďż˝ jeszcze ďż˝adnych usďż˝ug.'}</p>
           </div>
         </div>
         {count === 0 ? (

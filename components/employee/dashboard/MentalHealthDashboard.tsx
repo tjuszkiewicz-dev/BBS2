@@ -231,7 +231,7 @@ export const MentalHealthDashboard: React.FC<MentalHealthDashboardProps> = ({ cu
                         <div className="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2 rounded-lg text-white shadow-sm">
                             <Leaf size={20} className="fill-white/20"/>
                         </div>
-                        <span className={`font-bold text-lg tracking-tight hidden md:block ${theme.highlight}`}>EBS Wellbeing</span>
+                        <span className={`font-bold text-lg tracking-tight hidden md:block ${theme.highlight}`}>BBS Wellbeing</span>
                     </div>
                 </div>
 

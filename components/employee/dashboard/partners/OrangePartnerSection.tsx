@@ -85,7 +85,7 @@ export const OrangePartnerSection: React.FC<OrangePartnerSectionProps> = ({ onSe
 
           {/* Special top-right text floating out a bit, anchored relative inside the card for stability */}
           <div className="absolute top-6 right-8 opacity-90 hidden md:block">
-            <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">KOD: EBS-CORP</span>
+            <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">KOD: BBS-CORP</span>
           </div>
 
           <div className="relative z-10 flex flex-col lg:flex-row justify-between gap-8 items-start lg:items-center">

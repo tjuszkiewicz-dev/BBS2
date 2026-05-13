@@ -213,7 +213,7 @@ export const InvoiceTemplate: React.FC<Props> = ({ type, order, company }) => {
         <div>
             <p className="font-bold text-slate-500 mb-0.5">Adnotacje systemowe:</p>
             <p>ID Zamówienia: {order.id}</p>
-            <p>Wygenerowano w systemie EBS. Dokument nie wymaga podpisu (Art. 106n ustawy o VAT).</p>
+            <p>Wygenerowano w systemie BBS. Dokument nie wymaga podpisu (Art. 106n ustawy o VAT).</p>
         </div>
         <div className="text-right">
             <p>Strona 1 z 1</p>

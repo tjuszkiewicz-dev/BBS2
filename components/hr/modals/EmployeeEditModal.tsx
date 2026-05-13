@@ -273,7 +273,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                         </Card>
 
                         {/* ── DOSTĘP DO PLATFORMY ── */}
-                        <Card title="Dostęp do Platformy EBS" className="md:col-span-2">
+                        <Card title="Dostęp do Platformy BBS" className="md:col-span-2">
                           <div className="flex flex-col gap-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* E-mail / login */}

@@ -86,18 +86,19 @@ export const WalletCard: React.FC<WalletCardProps> = ({ user }) => {
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"/>
-              <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.7)' }}>Eliton Benefits System</span>
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.7)' }}>Baltic Benefits System</span>
             </div>
             <p className="text-xs font-semibold flex items-center gap-1" style={{ color: '#86efac' }}>
               <ShieldCheck size={11}/> Verified Employee
             </p>
           </div>
-          {/* EBS Neon Logo – top right */}
+          {/* BBS Neon Logo – top right */}
           <div className="pointer-events-none select-none" style={{ width: 80 }}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <div style={{ position: 'absolute', width: '130%', height: '100%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(16,185,129,0.45) 0%, transparent 75%)', filter: 'blur(18px)', mixBlendMode: 'screen' }}/>
               <div style={{ position: 'absolute', width: '70%', height: '70%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.65) 0%, transparent 75%)', filter: 'blur(10px)', mixBlendMode: 'screen' }}/>
-              <img src="/ebs-neon-no-bg.png" alt="EBS" style={{ width: '100%', objectFit: 'contain', position: 'relative', zIndex: 2, filter: 'drop-shadow(0 0 10px rgba(34,197,94,0.7)) drop-shadow(0 0 4px rgba(74,222,128,0.8))' }}/>
+              {/* TODO: replace with BBS logo */}
+              <img src="/ebs-neon-no-bg.png" alt="BBS" style={{ width: '100%', objectFit: 'contain', position: 'relative', zIndex: 2, filter: 'drop-shadow(0 0 10px rgba(34,197,94,0.7)) drop-shadow(0 0 4px rgba(74,222,128,0.8))' }}/>
             </div>
           </div>
         </div>

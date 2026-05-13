@@ -37,7 +37,7 @@ export const DistributionProtocolTemplate: React.FC<Props> = ({ batch, company }
             </div>
             <div className="text-right">
                 <div className="bg-slate-900 text-white px-3 py-1 text-xs font-bold font-sans inline-block mb-2">
-                    EBS-SECURE
+                    BBS-SECURE
                 </div>
                 <p className="text-[10pt] font-bold text-slate-900 font-sans">Stratton Prime S.A.</p>
             </div>
@@ -137,7 +137,7 @@ export const DistributionProtocolTemplate: React.FC<Props> = ({ batch, company }
 
             <div className="mt-8 border-t border-slate-200 pt-3 flex justify-between items-center text-[7pt] text-slate-400 font-sans">
                 <div>
-                    Dokument wygenerowany elektronicznie w systemie EBS.
+                    Dokument wygenerowany elektronicznie w systemie BBS.
                     <br/>Unikalny identyfikator wydruku: {batch.id}.{Date.now().toString(36)}
                 </div>
                 <div>

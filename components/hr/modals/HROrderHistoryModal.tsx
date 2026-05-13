@@ -83,7 +83,7 @@ export function HROrderHistoryModal({ employee, hrOrders, company, onClose }: HR
       <tbody>${rows.length ? rows : '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:24px">Brak zamówień dla tego pracownika</td></tr>'}</tbody>
     </table>
     <div class="total">Łącznie otrzymanych voucherów: ${totalReceived.toFixed(2)} zł</div>
-    <div class="footer">Raport wygenerowany przez system EBS — Eliton Benefits System | ${company.name} | NIP: ${(company as any).nip ?? ''}</div>
+    <div class="footer">Raport wygenerowany przez system BBS — Baltic Benefits System | ${company.name} | NIP: ${(company as any).nip ?? ''}</div>
     <script>window.onload=()=>window.print()</script>
     </body></html>`;
 

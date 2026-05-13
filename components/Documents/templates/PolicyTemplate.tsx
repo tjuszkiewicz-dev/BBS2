@@ -24,7 +24,7 @@ export const PolicyTemplate: React.FC<Props> = ({ data, company }) => {
         <div className="mb-8 border-b border-black pb-4 flex justify-between items-end">
             <div>
                 <h1 className="text-xl font-bold uppercase tracking-wider text-black">{data.name}</h1>
-                <p className="text-sm text-gray-600 mt-1">Dokument Systemowy EBS</p>
+                <p className="text-sm text-gray-600 mt-1">Dokument Systemowy BBS</p>
             </div>
             <div className="text-right text-xs text-gray-500">
                 <p>Wersja: {data.version}.0</p>
@@ -40,7 +40,7 @@ export const PolicyTemplate: React.FC<Props> = ({ data, company }) => {
 
         {/* Footer */}
         <div className="mt-auto pt-6 border-t border-gray-300 text-center text-[8pt] text-gray-400">
-            Dokument pobrany z platformy Eliton Benefits System (EBS).<br/>
+            Dokument pobrany z platformy Baltic Benefits System (BBS).<br/>
             Obowiązuje od dnia publikacji w systemie.
         </div>
     </div>

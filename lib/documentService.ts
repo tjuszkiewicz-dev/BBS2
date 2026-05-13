@@ -110,7 +110,7 @@ export function buildPolishInvoiceHtml(ctx: DocumentContext, type: 'nota' | 'fak
   const cenaJedn    = isNota ? 1                 : ctx.feeNet;
   const opis        = isNota
     ? 'Emisja elektronicznych voucherów wielofunkcyjnych (MPV)'
-    : 'Obsługa serwisowa — udostępnienie i dystrybucja voucherów EBS';
+    : 'Obsługa serwisowa — udostępnienie i dystrybucja voucherów BBS';
 
   // QR code: numer dokumentu + kwota (zewnętrzne API, Puppeteer może pobrać)
   const qrData = encodeURIComponent(`${docNumber}|${fmtPl(amountGross)} PLN|${ISSUER.bank}`);

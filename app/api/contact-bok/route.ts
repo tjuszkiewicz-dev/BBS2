@@ -58,13 +58,13 @@ export async function POST(req: NextRequest) {
   const resend = new Resend(resendKey);
 
   const { error } = await resend.emails.send({
-    from: 'EBS System <noreply@elitonbenefits.pl>',
+    from: 'BBS System <noreply@elitonbenefits.pl>',
     to:   ['bok@stratton-prime.pl'],
     replyTo: senderEmail,
-    subject: `[EBS BOK] ${categoryLabels[category]}: ${subject}`,
+    subject: `[BBS BOK] ${categoryLabels[category]}: ${subject}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #30df6a;">Nowe zgłoszenie BOK — Eliton Benefits System</h2>
+        <h2 style="color: #30df6a;">Nowe zgłoszenie BOK — Baltic Benefits System</h2>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
           <tr>
             <td style="padding: 8px; background: #f5f5f5; font-weight: bold; width: 160px;">Pracownik:</td>
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         </table>
         <div style="padding: 16px; background: #f9f9f9; border-left: 4px solid #30df6a; white-space: pre-wrap;">${message}</div>
         <p style="color: #999; font-size: 12px; margin-top: 24px;">
-          Wygenerowano automatycznie przez EBS | ID użytkownika: ${auth.id}
+          Wygenerowano automatycznie przez BBS | ID użytkownika: ${auth.id}
         </p>
       </div>
     `,

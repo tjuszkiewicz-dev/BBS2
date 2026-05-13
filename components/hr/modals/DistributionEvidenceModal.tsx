@@ -168,7 +168,7 @@ export const DistributionEvidenceModal: React.FC<DistributionEvidenceModalProps>
                 {/* Print Footer */}
                 <div className="mt-12 hidden print:flex justify-between text-xs text-gray-500 pt-4 border-t border-gray-300">
                     <div>
-                        Sporządził: System EBS<br/>
+                        Sporządził: System BBS<br/>
                         Data wydruku: {new Date().toLocaleDateString()}
                     </div>
                     <div className="text-right">

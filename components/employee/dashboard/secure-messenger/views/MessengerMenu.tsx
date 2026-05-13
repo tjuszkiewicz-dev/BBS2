@@ -118,7 +118,7 @@ export const MessengerMenu: React.FC<Props> = ({ onSelectChat, onSelectNote, onC
       <footer className="p-6 text-center z-10">
         <div className="flex justify-center items-center gap-2 text-slate-500 text-xs">
            <Shield className="w-3 h-3" />
-           <span>Secured by EBS Enterprise Vault</span>
+           <span>Secured by BBS Enterprise Vault</span>
         </div>
       </footer>
     </div>

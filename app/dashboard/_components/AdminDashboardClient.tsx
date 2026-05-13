@@ -88,7 +88,8 @@ function AdminLayout() {
               onClick={() => setDesktopSidebarOpen(prev => !prev)}
               className="hidden md:flex self-stretch -ml-1 px-2 rounded-lg transition items-center justify-center hover:bg-slate-100"
             >
-              <img src="/ebs-black.svg" alt="EBS" style={{ height: 46, width: 'auto', objectFit: 'contain' }} />
+              {/* TODO: replace with BBS logo */}
+              <img src="/ebs-black.svg" alt="BBS" style={{ height: 46, width: 'auto', objectFit: 'contain' }} />
             </button>
             <div className="hidden sm:block">
               <h2 className="text-base font-bold leading-tight text-slate-900">

@@ -73,7 +73,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
                    <p className="font-bold">STRATTON PRIME S.A.</p>
                    <p>ul. Finansowa 12, 00-001 Warszawa</p>
                    <p>NIP: 521-333-44-55</p>
-                   <p>Reprezentacja: System (EBS)</p>
+                   <p>Reprezentacja: System (BBS)</p>
                </div>
            </div>
        </div>
@@ -99,7 +99,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
                 </thead>
                 <tbody className="text-black">
                     <tr>
-                        <td className="border border-black p-2 text-black">Voucher Prime (EBS) - Zwrot</td>
+                        <td className="border border-black p-2 text-black">Voucher Prime (BBS) - Zwrot</td>
                         <td className="border border-black p-2 text-center font-mono text-black">{data.voucherCount}</td>
                         <td className="border border-black p-2 text-right font-mono text-black">1.00 PLN</td>
                         <td className="border border-black p-2 text-right font-bold font-mono text-black">{formatCurrency(data.totalValue)}</td>
@@ -121,7 +121,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
          </div>
 
          <p>
-            4. Z chwilą zapłaty, Vouchery zostają trwale umorzone w systemie EBS.
+            4. Z chwilą zapłaty, Vouchery zostają trwale umorzone w systemie BBS.
          </p>
 
          <p>
@@ -151,7 +151,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
          </div>
          
          <div className="text-center mt-8 text-gray-400 font-sans border-t border-gray-200 pt-2" style={{ fontSize: '7pt' }}>
-            Dokument wygenerowany z systemu Eliton Benefits System (EBS) | ID: {data.id} | Suma kontrolna: {data.id.split('-').pop()}
+            Dokument wygenerowany z systemu Baltic Benefits System (BBS) | ID: {data.id} | Suma kontrolna: {data.id.split('-').pop()}
          </div>
        </div>
     </div>

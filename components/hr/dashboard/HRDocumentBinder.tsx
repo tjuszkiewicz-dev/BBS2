@@ -201,7 +201,7 @@ export const HRDocumentBinder: React.FC<Props> = ({
                         id: trans.sourceRef, // Use original ref ID
                         companyId: company.id,
                         date: trans.date,
-                        hrName: 'System EBS',
+                        hrName: 'System BBS',
                         totalAmount: trans.amount,
                         status: 'COMPLETED',
                         items: [{

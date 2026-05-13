@@ -1,4 +1,4 @@
-// Placeholder component for Eliton Exclusive banner
+// Placeholder component for Baltic Exclusive banner
 import React from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export const ElitonBanner = () => {
           </div>
           
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-             Przygotuj się na <span className="text-orange-500">Eliton Exclusive.</span>
+             Przygotuj się na <span className="text-orange-500">Baltic Exclusive.</span>
           </h2>
           
           <p className="text-slate-400 text-sm leading-relaxed max-w-md">
