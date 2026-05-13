@@ -15,26 +15,47 @@ module.exports = {
         script: ['cursive'], // Fallback for signatures
       },
       colors: {
-        // Semantic aliases for existing colors
         primary: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981', // emerald-500
-          600: '#059669', // emerald-600 (Main Brand)
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
+          50:  '#f0f9fb',
+          100: '#d9eff4',
+          200: '#b3dfea',
+          300: '#7ecbda',
+          400: '#4a95a9',
+          500: '#3a7d8f',
+          600: '#2d6575',
+          700: '#224f5c',
+          800: '#183b45',
+          900: '#0e2a31',
+          950: '#071519',
         },
         secondary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          500: '#6366f1', // indigo-500
-          600: '#4f46e5', // indigo-600
-          700: '#4338ca',
-        }
+          50:  '#fdf8ee',
+          100: '#faefd0',
+          200: '#f5dc9d',
+          300: '#efc35f',
+          400: '#f0a500',
+          500: '#d4920a',
+          600: '#b07808',
+          700: '#8a5e06',
+          800: '#6b4805',
+          900: '#4f3504',
+          950: '#2e1e02',
+        },
+        background: {
+          DEFAULT: '#0b1622',
+          surface: '#111e2d',
+          card: '#162233',
+          border: '#1e3347',
+        },
+      },
+      borderRadius: {
+        'sm': '0.375rem',
+        DEFAULT: '0.625rem',
+        'md': '0.75rem',
+        'lg': '1rem',
+        'xl': '1.25rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
       },
       animation: {
         'in': 'fadeIn 0.3s ease-out',
