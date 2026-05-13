@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+// TODO: move to dynamic import with { ssr: false }
 import * as THREE from 'three';
 import './MagicRings.css';
 
