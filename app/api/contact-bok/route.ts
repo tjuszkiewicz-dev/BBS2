@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
   const resend = new Resend(resendKey);
 
   const { error } = await resend.emails.send({
-    from: 'BBS System <noreply@elitonbenefits.pl>',
-    to:   ['bok@stratton-prime.pl'],
+    from: 'BBS System <noreply@balticbenefits.pl>',
+    to:   ['bok@balticbenefits.pl'],
     replyTo: senderEmail,
     subject: `[BBS BOK] ${categoryLabels[category]}: ${subject}`,
     html: `

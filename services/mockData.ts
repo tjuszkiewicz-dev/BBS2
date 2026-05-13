@@ -10,7 +10,7 @@ const BUYBACK_TEMPLATE_CONTENT = `UMOWA ODKUPU VOUCHERÓW NR: {AGREEMENT_ID}
 
 Zawarta w dniu {DATE} pomiędzy:
 
-1. STRATTON PRIME S.A. z siedzibą w Warszawie (Właściciel Platformy Eliton), zwanym dalej "Operatorem",
+1. BALTIC BENEFITS SP. Z O.O. z siedzibą w Gdańsku (Właściciel Platformy BBS), zwanym dalej "Operatorem",
 a
 2. {USER_NAME} (ID Systemowe: {USER_ID}), zwanym dalej "Użytkownikiem".
 
@@ -19,15 +19,15 @@ a
 2. Operator zobowiązuje się do odkupu wyżej wymienionych Voucherów za kwotę {TOTAL_VALUE} PLN (słownie: {TOTAL_VALUE} złotych 00/100).
 
 §2 WARUNKI PŁATNOŚCI
-1. Płatność nastąpi w formie uznania salda technicznego lub przelewu na rachunek bankowy powiązany z kontem Użytkownika w Systemie EBS w terminie 7 dni.
+1. Płatność nastąpi w formie uznania salda technicznego lub przelewu na rachunek bankowy powiązany z kontem Użytkownika w Systemie BBS w terminie 7 dni.
 2. Z chwilą zatwierdzenia niniejszej umowy Vouchery zostają trwale wycofane z obiegu (anulowane) i nie mogą być wykorzystane do zakupu usług.
 
 §3 POSTANOWIENIA KOŃCOWE
-1. Umowa została wygenerowana elektronicznie w systemie Eliton Benefits System (EBS) i nie wymaga odręcznego podpisu.
+1. Umowa została wygenerowana elektronicznie w systemie Baltic Benefits System (BBS) i nie wymaga odręcznego podpisu.
 2. Data wygenerowania dokumentu jest datą skutecznego zawarcia umowy pod warunkiem jej zatwierdzenia przez Operatora.
 
 PODPISANO:
-Operator: System Eliton (w im. Stratton Prime)
+Operator: System BBS (w im. Baltic Benefits)
 Użytkownik: {USER_NAME} (Akceptacja Elektroniczna)`;
 
 export const INITIAL_SYSTEM_CONFIG: SystemConfig = {
@@ -62,7 +62,7 @@ export const INITIAL_SYSTEM_CONFIG: SystemConfig = {
         id: 'TPL-002',
         name: 'Regulamin Platformy 2025',
         type: DocumentType.POLICY,
-        content: `REGULAMIN SYSTEMU BENEFITOWEGO ELITON (EBS)\n\n§1 Postanowienia Ogólne\n1. Operatorem systemu jest Stratton Prime S.A.\n2. Użytkownik zobowiązany jest do...`,
+        content: `REGULAMIN SYSTEMU BENEFITOWEGO BALTIC BENEFITS (BBS)\n\n§1 Postanowienia Ogólne\n1. Operatorem systemu jest Baltic Benefits Sp. z o.o.\n2. Użytkownik zobowiązany jest do...`,
         version: 2,
         lastModified: new Date().toISOString(),
         accessRoles: [Role.SUPERADMIN, Role.HR, Role.EMPLOYEE],
@@ -88,10 +88,10 @@ export const INITIAL_USERS: User[] = [
     id: 'ADM-001',
     role: Role.SUPERADMIN,
     name: 'System Administrator',
-    email: 'admin@eliton-benefits.com',
+    email: 'admin@balticbenefits.pl',
     voucherBalance: 0,
     status: 'ACTIVE',
-    identity: { firstName: 'System', lastName: 'Administrator', pesel: '', email: 'admin@eliton-benefits.com' },
+    identity: { firstName: 'System', lastName: 'Administrator', pesel: '', email: 'admin@balticbenefits.pl' },
     organization: { department: 'IT', position: 'Superadmin' },
     isTwoFactorEnabled: true // ENFORCE 2FA FOR ADMIN DEMO
   },
@@ -100,30 +100,30 @@ export const INITIAL_USERS: User[] = [
     id: ADVISOR_ID,
     role: Role.ADVISOR,
     name: 'Adam Doradca',
-    email: 'adam.d@eliton-benefits.com',
+    email: 'adam.d@balticbenefits.pl',
     voucherBalance: 0,
     status: 'ACTIVE',
-    identity: { firstName: 'Adam', lastName: 'Doradca', pesel: '', email: 'adam.d@eliton-benefits.com' },
+    identity: { firstName: 'Adam', lastName: 'Doradca', pesel: '', email: 'adam.d@balticbenefits.pl' },
     organization: { department: 'Sales', position: 'Advisor' }
   },
   {
     id: MANAGER_ID,
     role: Role.MANAGER,
     name: 'Marek Manager',
-    email: 'marek.m@eliton-benefits.com',
+    email: 'marek.m@balticbenefits.pl',
     voucherBalance: 0,
     status: 'ACTIVE',
-    identity: { firstName: 'Marek', lastName: 'Manager', pesel: '', email: 'marek.m@eliton-benefits.com' },
+    identity: { firstName: 'Marek', lastName: 'Manager', pesel: '', email: 'marek.m@balticbenefits.pl' },
     organization: { department: 'Sales', position: 'Manager' }
   },
   {
     id: DIRECTOR_ID,
     role: Role.DIRECTOR,
     name: 'Daria Dyrektor',
-    email: 'daria.d@eliton-benefits.com',
+    email: 'daria.d@balticbenefits.pl',
     voucherBalance: 0,
     status: 'ACTIVE',
-    identity: { firstName: 'Daria', lastName: 'Dyrektor', pesel: '', email: 'daria.d@eliton-benefits.com' },
+    identity: { firstName: 'Daria', lastName: 'Dyrektor', pesel: '', email: 'daria.d@balticbenefits.pl' },
     organization: { department: 'Sales', position: 'Director' }
   },
   // --- EMPLOYEES (New EPS Structure) ---
@@ -202,14 +202,14 @@ export const INITIAL_USERS: User[] = [
 export const INITIAL_COMPANIES: Company[] = [
   {
     id: 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1',
-    name: 'Stratton Prime S.A.',
+    name: 'Baltic Benefits Sp. z o.o.',
     nip: '521-000-00-01',
     balancePending: 0,
     balanceActive: 1000,
     advisorId: ADVISOR_ID,
     managerId: MANAGER_ID,
     directorId: DIRECTOR_ID,
-    email: 'biuro@strattonprime.pl',
+    email: 'biuro@balticbenefits.pl',
     phone: '+48 22 100 200 300',
     contactPersonName: 'Katarzyna Wiśniewska',
     voucherValidityDays: 7,

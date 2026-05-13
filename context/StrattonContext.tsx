@@ -105,13 +105,13 @@ const StrattonContext = createContext<StrattonContextType | undefined>(undefined
 
 export const StrattonProvider = ({ children }: { children?: ReactNode }) => {
   // --- AUTH SESSION STATE ---
-  const [currentUserId, setCurrentUserId] = usePersistedState<string | null>('ebs_session_user_v1', null);
+  const [currentUserId, setCurrentUserId] = usePersistedState<string | null>('bbs2_session_user_v1', null);
 
-  const [systemConfig, setSystemConfig] = usePersistedState<SystemConfig>('ebs_sys_config_v1', INITIAL_SYSTEM_CONFIG);
-  const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('ebs_audit_logs_v1', INITIAL_AUDIT_LOGS);
-  const [services, setServices] = usePersistedState<ServiceItem[]>('ebs_services_v15', INITIAL_SERVICES);
+  const [systemConfig, setSystemConfig] = usePersistedState<SystemConfig>('bbs2_sys_config_v1', INITIAL_SYSTEM_CONFIG);
+  const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('bbs2_audit_logs_v1', INITIAL_AUDIT_LOGS);
+  const [services, setServices] = usePersistedState<ServiceItem[]>('bbs2_services_v15', INITIAL_SERVICES);
   const [quarterlyStats, setQuarterlyStats] = useState<QuarterlyPerformance[]>([]);
-  const [tickets, setTickets] = usePersistedState<SupportTicket[]>('ebs_tickets_v1', INITIAL_TICKETS);
+  const [tickets, setTickets] = usePersistedState<SupportTicket[]>('bbs2_tickets_v1', INITIAL_TICKETS);
 
   // FORCE UPDATE SERVICES IF NEEDED
   React.useEffect(() => {

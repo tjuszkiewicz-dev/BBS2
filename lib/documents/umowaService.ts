@@ -98,7 +98,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
 <div class="preamble">
   <p>Zawarta w dniu <b>${date}</b> w Gdańsku pomiędzy:</p>
 
-  <p><b>Stratton Prime Sp. z o.o.</b> z siedzibą przy ul. Junony 23/11, 80-299 Gdańsk, wpisaną do rejestru
+  <p><b>Baltic Benefits Sp. z o.o.</b> z siedzibą przy ul. Junony 23/11, 80-299 Gdańsk, wpisaną do rejestru
   przedsiębiorców KRS pod numerem: <b>0001169520</b>, NIP: <b>5842867357</b>, REGON: <b>541537557</b>,
   reprezentowaną przez: Natalię Juszkiewicz – Prezesa Zarządu, zwaną dalej <b>„Sprzedawcą"</b></p>
 
@@ -178,7 +178,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
       </ul>
     </li>
     <li>Sprzedawca wystawia i przesyła oba dokumenty jednocześnie, drogą elektroniczną, na adresy e-mail:<br/>
-    Sprzedawca: <b>faktury@stratton-prime.pl</b><br/>
+    Sprzedawca: <b>faktury@balticbenefits.pl</b><br/>
     Kupujący: ${buyerEmail}</li>
     <li>Płatność za oba dokumenty dokonywana jest łącznie, przelewem na konto Sprzedawcy w Millennium Bank:<br/>
     <b>IBAN PL 66 1160 2202 0000 0006 6619 4064</b><br/>
@@ -197,7 +197,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
         <li>pocztą elektroniczną – z potwierdzeniem odbioru wiadomości przez adresata,</li>
         <li>listem poleconym na adresy wskazane w niniejszej Umowie.</li>
       </ul>
-      Sprzedawca: <b>biuro@stratton-prime.pl</b><br/>
+      Sprzedawca: <b>biuro@balticbenefits.pl</b><br/>
       Kupujący: ${buyerEmail}
     </li>
   </ol>
@@ -259,7 +259,7 @@ function buildUmowaHtml(ctx: UmowaContext): string {
     <div class="sign-line"></div>
     <div class="sign-label">
       <b>SPRZEDAWCA</b><br/>
-      Stratton Prime Sp. z o.o.<br/>
+      Baltic Benefits Sp. z o.o.<br/>
       Natalia Juszkiewicz – Prezes Zarządu
     </div>
   </div>
@@ -283,15 +283,15 @@ const UMOWA_PDF_OPTIONS: Record<string, unknown> = {
     '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;',
     'font-size:8px;font-family:Arial,sans-serif;color:#555;',
     'border-bottom:1px solid #ccc;padding:0 83px 4px 83px;box-sizing:border-box;">',
-    '<span><b>ELITON PRIME™</b> | UMOWA ZLECENIA NABYCIA VOUCHERÓW</span>',
-    '<span>Stratton Prime Sp. z o.o. | stratton-prime.pl</span>',
+    '<span><b>BALTIC BENEFITS™</b> | UMOWA ZLECENIA NABYCIA VOUCHERÓW</span>',
+    '<span>Baltic Benefits Sp. z o.o. | balticbenefits.pl</span>',
     '</div>',
   ].join(''),
   footerTemplate: [
     '<div style="width:100%;text-align:center;',
     'font-size:7px;font-family:Arial,sans-serif;color:#888;',
     'border-top:1px solid #ddd;padding:4px 83px 0 83px;box-sizing:border-box;">',
-    'Dokument poufny – przeznaczony dla klienta Stratton Prime. Wersja marzec 2026',
+    'Dokument poufny – przeznaczony dla klienta Baltic Benefits. Wersja marzec 2026',
     ' &nbsp;|  Strona <span class="pageNumber"></span> z <span class="totalPages"></span>',
     '</div>',
   ].join(''),

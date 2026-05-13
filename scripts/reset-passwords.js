@@ -22,7 +22,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 const accounts = [
-  { email: 'admin@eliton-benefits.com', role: 'superadmin' },
+  { email: 'biuro@balticbenefits.pl', role: 'superadmin' },
   { email: 't.juszkiewicz@gmail.com', role: 'pracodawca' },
   { email: 'vcx@wp.pl', role: 'pracownik' },
   { email: 'dlkso@wp.pl', role: 'pracownik' }
