@@ -35,10 +35,14 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    formats: ['image/webp', 'image/avif'],
+  },
   experimental: {
     serverActions: {
       allowedOrigins,
     },
+    optimizePackageImports: ['framer-motion', 'recharts', 'lucide-react'],
   },
   async headers() {
     return [
