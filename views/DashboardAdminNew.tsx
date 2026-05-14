@@ -7,35 +7,38 @@ import { AdminArchiwum } from '../components/adminNew/AdminArchiwum';
 import { AdminVouchery } from '../components/adminNew/AdminVouchery';
 import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
-import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock } from 'lucide-react';
+import { CrmKontakty } from '../components/adminNew/crm/CrmKontakty';
+import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock, UserRound } from 'lucide-react';
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
-  'admin-pulpit':    'pulpit',
-  'admin-klienci':   'klienci',
-  'admin-platnosci': 'platnosci',
-  'admin-archiwum':  'archiwum',
-  'admin-vouchery':  'vouchery',
-  'admin-buyback':   'buyback',
+  'admin-pulpit':       'pulpit',
+  'admin-klienci':      'klienci',
+  'admin-platnosci':    'platnosci',
+  'admin-archiwum':     'archiwum',
+  'admin-vouchery':     'vouchery',
+  'admin-buyback':      'buyback',
   'admin-uzytkowniczy': 'uzytkowniczy',
-  'crm-pipeline':    'crm-pipeline',
-  'crm-kalkulator':  'crm-kalkulator',
+  'crm-pipeline':       'crm-pipeline',
+  'crm-kalkulator':     'crm-kalkulator',
+  'crm-kontakty':       'crm-kontakty',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
-  pulpit:    'admin-pulpit',
-  klienci:   'admin-klienci',
-  platnosci: 'admin-platnosci',
-  archiwum:  'admin-archiwum',
-  vouchery:  'admin-vouchery',
-  buyback:   'admin-buyback',
-  uzytkowniczy: 'admin-uzytkowniczy',
-  'crm-pipeline':   'crm-pipeline',
-  'crm-kalkulator': 'crm-kalkulator',
+  pulpit:          'admin-pulpit',
+  klienci:         'admin-klienci',
+  platnosci:       'admin-platnosci',
+  archiwum:        'admin-archiwum',
+  vouchery:        'admin-vouchery',
+  buyback:         'admin-buyback',
+  uzytkowniczy:    'admin-uzytkowniczy',
+  'crm-pipeline':  'crm-pipeline',
+  'crm-kalkulator':'crm-kalkulator',
+  'crm-kontakty':  'crm-kontakty',
 };
 
 interface Props {
@@ -80,7 +83,8 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <span className="text-xs text-gray-500">
             {tabs.find(t => t.id === tab)?.label
               ?? (tab === 'crm-kalkulator' ? 'Kalkulator Prime™'
-              : tab === 'crm-pipeline' ? 'Pipeline CRM' : '')}
+              : tab === 'crm-pipeline' ? 'Pipeline CRM'
+              : tab === 'crm-kontakty' ? 'Kontakty CRM' : '')}
           </span>
         </div>
       </div>
@@ -104,6 +108,11 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
       {tab === 'crm-pipeline' && (
         <div className="-m-6">
           <PipelineKanban />
+        </div>
+      )}
+      {tab === 'crm-kontakty' && (
+        <div className="p-6">
+          <CrmKontakty />
         </div>
       )}
     </div>
