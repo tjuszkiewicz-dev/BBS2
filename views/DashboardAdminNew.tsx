@@ -69,7 +69,7 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <ShieldCheck size={16} className="text-blue-600" />
           <span className="font-semibold text-gray-800 text-sm">Panel Administracyjny</span>
           <span className="text-gray-300">|</span>
-          <span className="text-xs text-gray-500">Platforma Centralna</span>
+          <span className="text-xs text-gray-500">{tabs.find(t => t.id === tab)?.label}</span>
         </div>
       </div>
 
