@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Role, User } from '../types';
-import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: User;
@@ -45,7 +45,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'admin-platnosci', label: 'Płatności i faktury', icon: <CreditCard size={20} /> },
           { id: 'admin-archiwum',  label: 'Archiwum',            icon: <FolderOpen size={20} /> },
           { id: 'admin-vouchery',  label: 'Vouchery',                icon: <Ticket size={20} /> },
-          { id: 'admin-buyback',   label: 'Anulowanie subskrypcji', icon: <RefreshCw size={20} /> },
+          { id: 'admin-buyback',      label: 'Anulowanie subskrypcji', icon: <RefreshCw size={20} /> },
+          { id: 'admin-uzytkowniczy', label: 'Użytkownicy',             icon: <UserCog size={20} /> },
         ];
       case Role.HR:
         return [
