@@ -136,8 +136,7 @@ function EmployeeLayout() {
               onClick={() => setDesktopSidebarOpen(prev => !prev)}
               className="hidden md:flex self-stretch -ml-1 px-2 rounded-lg transition items-center justify-center overflow-visible hover:bg-white/10"
             >
-              {/* TODO: replace with BBS logo */}
-              <img src="/ebs-black.svg" alt="BBS" style={{ height: 62, width: 'auto', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
+              <img src="/bbs-logo.png" alt="Baltic Benefits System" style={{ height: 62, width: 'auto', objectFit: 'contain', display: 'block' }}
               />
             </button>
             <div className="hidden sm:block">

@@ -131,10 +131,9 @@ function HRLayout() {
               onClick={() => setDesktopSidebarOpen(prev => !prev)}
               className="self-stretch -ml-1 px-2 rounded-lg transition flex items-center justify-center overflow-visible hover:bg-slate-100"
             >
-              {/* TODO: replace with BBS logo */}
               <img
-                src="/ebs-black.svg"
-                alt="BBS"
+                src="/bbs-logo.png"
+                alt="Baltic Benefits System"
                 style={{ height: 62, width: 'auto', objectFit: 'contain', display: 'block' }}
               />
             </button>
