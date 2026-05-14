@@ -94,7 +94,7 @@ function HRLayout() {
 
   // ── Render (identyczny layout jak App.tsx) ────────────────────────────────
   return (
-    <div className="flex h-screen font-sans text-slate-900 relative overflow-hidden bg-slate-100">
+    <div className="flex h-screen font-sans text-slate-900 relative overflow-hidden" style={{ backgroundColor: '#deedf3' }}>
 
       <ToastContainer toasts={toasts} removeToast={actions.removeToast} />
 
