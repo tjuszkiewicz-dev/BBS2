@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Role, User } from '../types';
-import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, GitBranch, Calculator, UserRound } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: User;
@@ -47,6 +47,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'admin-vouchery',  label: 'Vouchery',                icon: <Ticket size={20} /> },
           { id: 'admin-buyback',      label: 'Anulowanie subskrypcji', icon: <RefreshCw size={20} /> },
           { id: 'admin-uzytkowniczy', label: 'Użytkownicy',             icon: <UserCog size={20} /> },
+          { id: '__crm_divider__',    label: '── CRM ──',               icon: null, divider: true },
+          { id: 'crm-pipeline',       label: 'Pipeline',                icon: <GitBranch size={20} style={{ color: '#f0a500' }} /> },
+          { id: 'crm-kalkulator',     label: 'Kalkulator Prime™',       icon: <Calculator size={20} style={{ color: '#f0a500' }} /> },
+          { id: 'crm-kontakty',       label: 'Kontakty',                icon: <UserRound size={20} style={{ color: '#f0a500' }} /> },
         ];
       case Role.HR:
         return [
@@ -109,12 +113,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isDesktopOpen && (
             <p className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 whitespace-nowrap ${currentUser.role === Role.EMPLOYEE ? 'text-slate-500' : 'text-slate-400'}`}>Menu Systemowe</p>
           )}
-          {menuItems.map((item) => (
+          {menuItems.map((item) => {
+            if ((item as any).divider) {
+              return isDesktopOpen ? (
+                <p key={item.id} className="px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap" style={{ color: '#f0a500' }}>
+                  CRM
+                </p>
+              ) : (
+                <div key={item.id} className="mx-2 my-2 border-t border-slate-300/50" />
+              );
+            }
+            return (
             <button
               key={item.id}
               onClick={() => {
                 onChangeView(item.id);
-                onClose(); 
+                onClose();
               }}
               title={!isDesktopOpen ? item.label : undefined}
               className={`w-full flex items-center py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${
@@ -135,7 +149,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {isDesktopOpen && <span className="whitespace-nowrap">{item.label}</span>}
               {isDesktopOpen && currentView === item.id && <ChevronRight size={16} className="ml-auto opacity-50" />}
             </button>
-          ))}
+            );
+          })}
         </nav>
 
         {/* Bottom / Collapse */}

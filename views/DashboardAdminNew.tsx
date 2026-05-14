@@ -6,28 +6,37 @@ import { AdminArchiwum } from '../components/adminNew/AdminArchiwum';
 import { AdminVouchery } from '../components/adminNew/AdminVouchery';
 import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
-import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock } from 'lucide-react';
+import { CrmPipeline } from '../components/adminNew/crm/CrmPipeline';
+import { CrmKalkulator } from '../components/adminNew/crm/CrmKalkulator';
+import { CrmKontakty } from '../components/adminNew/crm/CrmKontakty';
+import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock, GitBranch, Calculator, UserRound } from 'lucide-react';
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
-  'admin-pulpit':    'pulpit',
-  'admin-klienci':   'klienci',
-  'admin-platnosci': 'platnosci',
-  'admin-archiwum':  'archiwum',
-  'admin-vouchery':  'vouchery',
-  'admin-buyback':   'buyback',
+  'admin-pulpit':       'pulpit',
+  'admin-klienci':      'klienci',
+  'admin-platnosci':    'platnosci',
+  'admin-archiwum':     'archiwum',
+  'admin-vouchery':     'vouchery',
+  'admin-buyback':      'buyback',
   'admin-uzytkowniczy': 'uzytkowniczy',
+  'crm-pipeline':       'crm-pipeline',
+  'crm-kalkulator':     'crm-kalkulator',
+  'crm-kontakty':       'crm-kontakty',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
-  pulpit:    'admin-pulpit',
-  klienci:   'admin-klienci',
-  platnosci: 'admin-platnosci',
-  archiwum:  'admin-archiwum',
-  vouchery:  'admin-vouchery',
-  buyback:   'admin-buyback',
-  uzytkowniczy: 'admin-uzytkowniczy',
+  pulpit:          'admin-pulpit',
+  klienci:         'admin-klienci',
+  platnosci:       'admin-platnosci',
+  archiwum:        'admin-archiwum',
+  vouchery:        'admin-vouchery',
+  buyback:         'admin-buyback',
+  uzytkowniczy:    'admin-uzytkowniczy',
+  'crm-pipeline':  'crm-pipeline',
+  'crm-kalkulator':'crm-kalkulator',
+  'crm-kontakty':  'crm-kontakty',
 };
 
 interface Props {
@@ -48,14 +57,17 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
     onViewChange?.(TAB_TO_VIEW[t]);
   };
 
-  const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+  const tabs: { id: AdminTab; label: string; icon: React.ReactNode; section?: string }[] = [
     { id: 'pulpit',    label: 'Pulpit',              icon: <LayoutDashboard size={16} /> },
     { id: 'klienci',   label: 'Baza klientów',       icon: <Users size={16} /> },
     { id: 'platnosci', label: 'Płatności i faktury', icon: <CreditCard size={16} /> },
     { id: 'archiwum',  label: 'Archiwum',            icon: <Archive size={16} /> },
     { id: 'vouchery',  label: 'Vouchery',            icon: <Ticket size={16} /> },
-    { id: 'buyback',   label: 'Anulowanie subskrypcji', icon: <RefreshCw size={16} /> },
-    { id: 'uzytkowniczy', label: 'Użytkownicy',      icon: <Lock size={16} /> },
+    { id: 'buyback',       label: 'Anulowanie subskrypcji', icon: <RefreshCw size={16} /> },
+    { id: 'uzytkowniczy',  label: 'Użytkownicy',             icon: <Lock size={16} /> },
+    { id: 'crm-pipeline',  label: 'CRM Pipeline',            icon: <GitBranch size={16} />, section: 'CRM' },
+    { id: 'crm-kalkulator',label: 'CRM Kalkulator',          icon: <Calculator size={16} /> },
+    { id: 'crm-kontakty',  label: 'CRM Kontakty',            icon: <UserRound size={16} /> },
   ];
 
   return (
@@ -80,8 +92,11 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
         {tab === 'platnosci' && <AdminPlatnosci />}
         {tab === 'archiwum'  && <AdminArchiwum />}
         {tab === 'vouchery'  && <AdminVouchery />}
-        {tab === 'buyback'   && <AdminBuyback />}
-        {tab === 'uzytkowniczy' && <AdminUsers />}
+        {tab === 'buyback'        && <AdminBuyback />}
+        {tab === 'uzytkowniczy'   && <AdminUsers />}
+        {tab === 'crm-pipeline'   && <CrmPipeline />}
+        {tab === 'crm-kalkulator' && <CrmKalkulator />}
+        {tab === 'crm-kontakty'   && <CrmKontakty />}
       </div>
     </div>
   );

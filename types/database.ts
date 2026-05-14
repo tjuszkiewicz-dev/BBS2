@@ -1,880 +1,1954 @@
-// ── Typy TypeScript dla schematu Supabase ────────────────────────────────────
-// Odzwierciedlają dokładnie tabele z migracji 001_initial_schema.sql
-// Wzorzec zgodny z Supabase CLI v2 (wymaga Relationships i Views)
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export type DbRole =
-  | 'superadmin'
-  | 'pracodawca'
-  | 'pracownik'
-  | 'partner'
-  | 'menedzer'
-  | 'dyrektor';
-
-export type VoucherStatus =
-  | 'created'
-  | 'reserved'
-  | 'active'
-  | 'distributed'
-  | 'consumed'
-  | 'expired'
-  | 'buyback_pending'
-  | 'buyback_complete';
-
-export type OrderStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'cancelled';
-export type CommissionType = 'acquisition' | 'recurring' | 'renewal';
-export type TransactionType = 'zakup' | 'przekazanie' | 'wykorzystanie' | 'zwrot' | 'emisja' | 'odkup';
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      user_profiles: {
-        Row: {
-          id:                 string;
-          role:               DbRole;
-          full_name:          string | null;
-          company_name:       string | null;
-          company_id:         string | null;
-          pesel:              string | null;
-          phone_number:       string | null;
-          iban:               string | null;
-          iban_verified:      boolean;
-          iban_verified_at:   string | null;
-          department:         string | null;
-          position:           string | null;
-          hire_date:          string | null;
-          contract_type:      'UOP' | 'UZ' | null;
-          status:             'active' | 'inactive' | 'anonymized';
-          terms_accepted:     boolean;
-          terms_accepted_at:  string | null;
-          anonymized_at:      string | null;
-          two_fa_enabled:     boolean;
-          created_at:         string;
-          updated_at:         string;
-        };
-        Insert: {
-          id:                  string;
-          role:                DbRole;
-          full_name?:          string | null;
-          company_name?:       string | null;
-          company_id?:         string | null;
-          pesel?:              string | null;
-          phone_number?:       string | null;
-          iban?:               string | null;
-          iban_verified?:      boolean;
-          iban_verified_at?:   string | null;
-          department?:         string | null;
-          position?:           string | null;
-          hire_date?:          string | null;
-          contract_type?:      'UOP' | 'UZ' | null;
-          status?:             'active' | 'inactive' | 'anonymized';
-          terms_accepted?:     boolean;
-          terms_accepted_at?:  string | null;
-          anonymized_at?:      string | null;
-          two_fa_enabled?:     boolean;
-          created_at?:         string;
-          updated_at?:         string;
-        };
-        Update: {
-          id?:                 string;
-          role?:               DbRole;
-          full_name?:          string | null;
-          company_name?:       string | null;
-          company_id?:         string | null;
-          pesel?:              string | null;
-          phone_number?:       string | null;
-          iban?:               string | null;
-          iban_verified?:      boolean;
-          iban_verified_at?:   string | null;
-          department?:         string | null;
-          position?:           string | null;
-          hire_date?:          string | null;
-          contract_type?:      'UOP' | 'UZ' | null;
-          status?:             'active' | 'inactive' | 'anonymized';
-          terms_accepted?:     boolean;
-          terms_accepted_at?:  string | null;
-          anonymized_at?:      string | null;
-          two_fa_enabled?:     boolean;
-          created_at?:         string;
-          updated_at?:         string;
-        };
-        Relationships: [];
-      };
-
-      companies: {
-        Row: {
-          id:                           string;
-          name:                         string;
-          nip:                          string;
-          address_street:               string | null;
-          address_city:                 string | null;
-          address_zip:                  string | null;
-          balance_pending:              number;
-          balance_active:               number;
-          advisor_id:                   string | null;
-          manager_id:                   string | null;
-          director_id:                  string | null;
-          custom_voucher_validity_days: number | null;
-          custom_payment_terms_days:    number | null;
-          voucher_expiry_day:           number;
-          voucher_expiry_hour:          number;
-          voucher_expiry_minute:        number;
-          origin:                       'NATIVE' | 'CRM_SYNC';
-          external_crm_id:              string | null;
-          is_sync_managed:              boolean;
-          created_at:                   string;
-          updated_at:                   string;
-        };
-        Insert: {
-          id?:                           string;
-          name:                          string;
-          nip:                           string;
-          address_street?:               string | null;
-          address_city?:                 string | null;
-          address_zip?:                  string | null;
-          balance_pending?:              number;
-          balance_active?:               number;
-          advisor_id?:                   string | null;
-          manager_id?:                   string | null;
-          director_id?:                  string | null;
-          custom_voucher_validity_days?: number | null;
-          custom_payment_terms_days?:    number | null;
-          voucher_expiry_day?:           number;
-          voucher_expiry_hour?:          number;
-          voucher_expiry_minute?:        number;
-          origin?:                       'NATIVE' | 'CRM_SYNC';
-          external_crm_id?:              string | null;
-          is_sync_managed?:              boolean;
-          created_at?:                   string;
-          updated_at?:                   string;
-        };
-        Update: {
-          id?:                           string;
-          name?:                         string;
-          nip?:                          string;
-          address_street?:               string | null;
-          address_city?:                 string | null;
-          address_zip?:                  string | null;
-          balance_pending?:              number;
-          balance_active?:               number;
-          advisor_id?:                   string | null;
-          manager_id?:                   string | null;
-          director_id?:                  string | null;
-          custom_voucher_validity_days?: number | null;
-          custom_payment_terms_days?:    number | null;
-          voucher_expiry_day?:           number;
-          voucher_expiry_hour?:          number;
-          voucher_expiry_minute?:        number;
-          origin?:                       'NATIVE' | 'CRM_SYNC';
-          external_crm_id?:              string | null;
-          is_sync_managed?:              boolean;
-          created_at?:                   string;
-          updated_at?:                   string;
-        };
-        Relationships: [];
-      };
-
-      voucher_accounts: {
-        Row: {
-          id:         string;
-          user_id:    string;
-          balance:    number;
-          created_at: string;
-        };
-        Insert: {
-          id?:         string;
-          user_id:     string;
-          balance?:    number;
-          created_at?: string;
-        };
-        Update: {
-          id?:         string;
-          user_id?:    string;
-          balance?:    number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      voucher_orders: {
-        Row: {
-          id:                 string;
-          company_id:         string;
-          hr_user_id:         string | null;
-          amount_pln:         number;
-          amount_vouchers:    number;
-          fee_pln:            number;
-          total_pln:          number;
-          status:             OrderStatus;
-          is_first_invoice:   boolean;
-          doc_voucher_id:     string | null;
-          doc_fee_id:         string | null;
-          payroll_snapshots:  unknown | null;
-          distribution_plan:  unknown | null;
-          created_at:         string;
-          updated_at:         string;
-        };
-        Insert: {
-          id?:                string;
-          company_id:         string;
-          hr_user_id?:        string | null;
-          amount_pln:         number;
-          amount_vouchers:    number;
-          fee_pln:            number;
-          total_pln:          number;
-          status?:            OrderStatus;
-          is_first_invoice?:  boolean;
-          doc_voucher_id?:    string | null;
-          doc_fee_id?:        string | null;
-          payroll_snapshots?: unknown | null;
-          distribution_plan?: unknown | null;
-          created_at?:        string;
-          updated_at?:        string;
-        };
-        Update: {
-          id?:                string;
-          company_id?:        string;
-          hr_user_id?:        string | null;
-          amount_pln?:        number;
-          amount_vouchers?:   number;
-          fee_pln?:           number;
-          total_pln?:         number;
-          status?:            OrderStatus;
-          is_first_invoice?:  boolean;
-          doc_voucher_id?:    string | null;
-          doc_fee_id?:        string | null;
-          payroll_snapshots?: unknown | null;
-          distribution_plan?: unknown | null;
-          created_at?:        string;
-          updated_at?:        string;
-        };
-        Relationships: [];
-      };
-
-      vouchers: {
-        Row: {
-          id:                   string;
-          serial_number:        string;
-          face_value_pln:       number;
-          order_id:             string;
-          company_id:           string;
-          current_owner_id:     string;
-          status:               VoucherStatus;
-          issuer_name:          string;
-          issuer_nip:           string;
-          issuer_address:       string;
-          redemption_scope:     string;
-          legal_basis:          string;
-          issued_at:            string;
-          valid_until:          string;
-          redeemed_at:          string | null;
-          redeemed_by_user_id:  string | null;
-          redeemed_order_id:    string | null;
-          buyback_agreement_id: string | null;
-          metadata:             unknown | null;
-          created_at:           string;
-        };
-        Insert: {
-          id?:                   string;
-          serial_number:         string;
-          face_value_pln:        number;
-          order_id:              string;
-          company_id:            string;
-          current_owner_id:      string;
-          status?:               VoucherStatus;
-          issuer_name:           string;
-          issuer_nip:            string;
-          issuer_address:        string;
-          redemption_scope:      string;
-          legal_basis:           string;
-          issued_at?:            string;
-          valid_until:           string;
-          redeemed_at?:          string | null;
-          redeemed_by_user_id?:  string | null;
-          redeemed_order_id?:    string | null;
-          buyback_agreement_id?: string | null;
-          metadata?:             unknown | null;
-          created_at?:           string;
-        };
-        Update: {
-          id?:                   string;
-          serial_number?:        string;
-          face_value_pln?:       number;
-          order_id?:             string;
-          company_id?:           string;
-          current_owner_id?:     string;
-          status?:               VoucherStatus;
-          issuer_name?:          string;
-          issuer_nip?:           string;
-          issuer_address?:       string;
-          redemption_scope?:     string;
-          legal_basis?:          string;
-          issued_at?:            string;
-          valid_until?:          string;
-          redeemed_at?:          string | null;
-          redeemed_by_user_id?:  string | null;
-          redeemed_order_id?:    string | null;
-          buyback_agreement_id?: string | null;
-          metadata?:             unknown | null;
-          created_at?:           string;
-        };
-        Relationships: [];
-      };
-
-      voucher_transactions: {
-        Row: {
-          id:           string;
-          from_user_id: string | null;
-          to_user_id:   string;
-          amount:       number;
-          type:         TransactionType;
-          status:       'completed' | 'pending' | 'failed';
-          order_id:     string | null;
-          service_id:   string | null;
-          service_name: string | null;
-          metadata:     unknown | null;
-          created_at:   string;
-        };
-        // Tylko INSERT — immutable ledger: UPDATE zabroniony w kodzie aplikacji (enforced by DB trigger)
-        Insert: {
-          id?:           string;
-          from_user_id?: string | null;
-          to_user_id:    string;
-          amount:        number;
-          type:          TransactionType;
-          status?:       'completed' | 'pending' | 'failed';
-          order_id?:     string | null;
-          service_id?:   string | null;
-          service_name?: string | null;
-          metadata?:     unknown | null;
-          created_at?:   string;
-        };
-        Update: {
-          id?:           string;
-          from_user_id?: string | null;
-          to_user_id?:   string;
-          amount?:       number;
-          type?:         TransactionType;
-          status?:       'completed' | 'pending' | 'failed';
-          order_id?:     string | null;
-          service_id?:   string | null;
-          service_name?: string | null;
-          metadata?:     unknown | null;
-          created_at?:   string;
-        };
-        Relationships: [];
-      };
-
-      commissions: {
-        Row: {
-          id:              string;
-          agent_id:        string;
-          agent_name:      string;
-          agent_role:      'partner' | 'menedzer' | 'dyrektor';
-          commission_type: CommissionType;
-          order_id:        string | null;
-          amount_pln:      number;
-          rate:            string;
-          quarter:         string | null;
-          is_paid:         boolean;
-          paid_at:         string | null;
-          created_at:      string;
-        };
-        Insert: {
-          id?:             string;
-          agent_id:        string;
-          agent_name:      string;
-          agent_role:      'partner' | 'menedzer' | 'dyrektor';
-          commission_type: CommissionType;
-          order_id?:       string | null;
-          amount_pln:      number;
-          rate:            string;
-          quarter?:        string | null;
-          is_paid?:        boolean;
-          paid_at?:        string | null;
-          created_at?:     string;
-        };
-        Update: {
-          id?:              string;
-          agent_id?:        string;
-          agent_name?:      string;
-          agent_role?:      'partner' | 'menedzer' | 'dyrektor';
-          commission_type?: CommissionType;
-          order_id?:        string | null;
-          amount_pln?:      number;
-          rate?:            string;
-          quarter?:         string | null;
-          is_paid?:         boolean;
-          paid_at?:         string | null;
-          created_at?:      string;
-        };
-        Relationships: [];
-      };
-
-      buyback_agreements: {
-        Row: {
-          id:              string;
-          user_id:         string;
-          voucher_count:   number;
-          total_value_pln: number;
-          status:          'pending_approval' | 'approved' | 'paid';
-          snapshot:        unknown;
-          date_generated:  string;
-          approved_at:     string | null;
-          paid_at:         string | null;
-          created_at:      string;
-        };
-        Insert: {
-          id?:             string;
-          user_id:         string;
-          voucher_count:   number;
-          total_value_pln: number;
-          status?:         'pending_approval' | 'approved' | 'paid';
-          snapshot:        unknown;
-          date_generated?: string;
-          approved_at?:    string | null;
-          paid_at?:        string | null;
-          created_at?:     string;
-        };
-        Update: {
-          id?:              string;
-          user_id?:         string;
-          voucher_count?:   number;
-          total_value_pln?: number;
-          status?:          'pending_approval' | 'approved' | 'paid';
-          snapshot?:        unknown;
-          date_generated?:  string;
-          approved_at?:     string | null;
-          paid_at?:         string | null;
-          created_at?:      string;
-        };
-        Relationships: [];
-      };
-
-      support_tickets: {
-        Row: {
-          id:                  string;
-          subject:             string;
-          category:            'TECHNICAL' | 'FINANCIAL' | 'VOUCHER' | 'OTHER';
-          priority:            'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
-          status:              'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-          creator_id:          string;
-          creator_name:        string;
-          company_id:          string | null;
-          related_entity_id:   string | null;
-          related_entity_type: string | null;
-          created_at:          string;
-          updated_at:          string;
-        };
-        Insert: {
-          id?:                  string;
-          subject:              string;
-          category:             'TECHNICAL' | 'FINANCIAL' | 'VOUCHER' | 'OTHER';
-          priority?:            'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
-          status?:              'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-          creator_id:           string;
-          creator_name:         string;
-          company_id?:          string | null;
-          related_entity_id?:   string | null;
-          related_entity_type?: string | null;
-          created_at?:          string;
-          updated_at?:          string;
-        };
-        Update: {
-          id?:                  string;
-          subject?:             string;
-          category?:            'TECHNICAL' | 'FINANCIAL' | 'VOUCHER' | 'OTHER';
-          priority?:            'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
-          status?:              'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-          creator_id?:          string;
-          creator_name?:        string;
-          company_id?:          string | null;
-          related_entity_id?:   string | null;
-          related_entity_type?: string | null;
-          created_at?:          string;
-          updated_at?:          string;
-        };
-        Relationships: [];
-      };
-
-      notifications: {
-        // Schemat z 002_notifications.sql — user_id TEXT (nie UUID), kolumna `read` (nie is_read)
-        Row: {
-          id:                 string;
-          user_id:            string;   // TEXT: auth.uid()::text LUB 'ALL_ADMINS'
-          message:            string;
-          type:               'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
-          read:               boolean;
-          priority:           'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW' | null;
-          action:             Record<string, unknown> | null;  // JSONB
-          target_entity_id:   string | null;
-          target_entity_type: string | null;
-          date:               string;
-          created_at:         string;
-        };
-        Insert: {
-          id?:                 string;
-          user_id:             string;
-          message:             string;
-          type:                'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
-          read?:               boolean;
-          priority?:           'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW' | null;
-          action?:             Record<string, unknown> | null;
-          target_entity_id?:   string | null;
-          target_entity_type?: string | null;
-          date?:               string;
-          created_at?:         string;
-        };
-        Update: {
-          id?:                 string;
-          user_id?:            string;
-          message?:            string;
-          type?:               'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
-          read?:               boolean;
-          priority?:           'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW' | null;
-          action?:             Record<string, unknown> | null;
-          target_entity_id?:   string | null;
-          target_entity_type?: string | null;
-          date?:               string;
-          created_at?:         string;
-        };
-        Relationships: [];
-      };
-
-      services: {
-        Row: {
-          id:          string;
-          name:        string;
-          description: string;
-          price:       number;
-          type:        'SUBSCRIPTION' | 'ONE_TIME';
-          icon:        string;
-          image_url:   string | null;
-          is_active:   boolean;
-          created_at:  string;
-          updated_at:  string;
-        };
-        Insert: {
-          id:           string;
-          name:         string;
-          description:  string;
-          price:        number;
-          type:         'SUBSCRIPTION' | 'ONE_TIME';
-          icon:         string;
-          image_url?:   string | null;
-          is_active?:   boolean;
-          created_at?:  string;
-          updated_at?:  string;
-        };
-        Update: {
-          id?:          string;
-          name?:        string;
-          description?: string;
-          price?:       number;
-          type?:        'SUBSCRIPTION' | 'ONE_TIME';
-          icon?:        string;
-          image_url?:   string | null;
-          is_active?:   boolean;
-          created_at?:  string;
-          updated_at?:  string;
-        };
-        Relationships: [];
-      };
-
       audit_log: {
         Row: {
-          id:         string;
-          table_name: string;
-          operation:  'INSERT' | 'UPDATE' | 'DELETE';
-          row_id:     string;
-          changed_by: string | null;
-          old_data:   unknown | null;
-          new_data:   unknown | null;
-          created_at: string;
-        };
-        // Wypełniany tylko przez triggery bazy — nie insertuj z poziomu aplikacji
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          row_id: string
+          table_name: string
+        }
         Insert: {
-          id?:         string;
-          table_name:  string;
-          operation:   'INSERT' | 'UPDATE' | 'DELETE';
-          row_id:      string;
-          changed_by?: string | null;
-          old_data?:   unknown | null;
-          new_data?:   unknown | null;
-          created_at?: string;
-        };
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          row_id: string
+          table_name: string
+        }
         Update: {
-          id?:         string;
-          table_name?: string;
-          operation?:  'INSERT' | 'UPDATE' | 'DELETE';
-          row_id?:     string;
-          changed_by?: string | null;
-          old_data?:   unknown | null;
-          new_data?:   unknown | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      import_history: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          row_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      buyback_agreements: {
         Row: {
-          id:              string;
-          company_id:      string;
-          hr_user_id:      string | null;
-          hr_name:         string;
-          total_processed: number;
-          status:          'SUCCESS' | 'PARTIAL' | 'ERROR';
-          report_data:     unknown | null;
-          created_at:      string;
-        };
+          approved_at: string | null
+          created_at: string | null
+          date_generated: string | null
+          id: string
+          paid_at: string | null
+          snapshot: Json
+          status: string
+          total_value_pln: number
+          user_id: string
+          voucher_count: number
+        }
         Insert: {
-          id?:              string;
-          company_id:       string;
-          hr_user_id?:      string | null;
-          hr_name:          string;
-          total_processed?: number;
-          status?:          'SUCCESS' | 'PARTIAL' | 'ERROR';
-          report_data?:     unknown | null;
-          created_at?:      string;
-        };
+          approved_at?: string | null
+          created_at?: string | null
+          date_generated?: string | null
+          id?: string
+          paid_at?: string | null
+          snapshot: Json
+          status?: string
+          total_value_pln: number
+          user_id: string
+          voucher_count: number
+        }
         Update: {
-          id?:              string;
-          company_id?:      string;
-          hr_user_id?:      string | null;
-          hr_name?:         string;
-          total_processed?: number;
-          status?:          'SUCCESS' | 'PARTIAL' | 'ERROR';
-          report_data?:     unknown | null;
-          created_at?:      string;
-        };
-        Relationships: [];
-      };
-
-      distribution_batches: {
+          approved_at?: string | null
+          created_at?: string | null
+          date_generated?: string | null
+          id?: string
+          paid_at?: string | null
+          snapshot?: Json
+          status?: string
+          total_value_pln?: number
+          user_id?: string
+          voucher_count?: number
+        }
+        Relationships: []
+      }
+      buyback_batch_items: {
         Row: {
-          id:           string;
-          company_id:   string;
-          hr_user_id:   string | null;
-          hr_name:      string;
-          total_amount: number;
-          status:       'completed';
-          order_id:     string | null;
-          created_at:   string;
-        };
+          amount_pln: number
+          batch_id: string
+          employee_id: string
+          full_name: string
+          iban: string
+          id: string
+          voucher_count: number
+          voucher_ids: string[]
+        }
         Insert: {
-          id:            string;
-          company_id:    string;
-          hr_user_id?:   string | null;
-          hr_name:       string;
-          total_amount:  number;
-          status?:       'completed';
-          order_id?:     string | null;
-          created_at?:   string;
-        };
+          amount_pln: number
+          batch_id: string
+          employee_id: string
+          full_name: string
+          iban: string
+          id?: string
+          voucher_count: number
+          voucher_ids?: string[]
+        }
         Update: {
-          id?:           string;
-          company_id?:   string;
-          hr_user_id?:   string | null;
-          hr_name?:      string;
-          total_amount?: number;
-          status?:       'completed';
-          order_id?:     string | null;
-          created_at?:   string;
-        };
-        Relationships: [];
-      };
-
+          amount_pln?: number
+          batch_id?: string
+          employee_id?: string
+          full_name?: string
+          iban?: string
+          id?: string
+          voucher_count?: number
+          voucher_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyback_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "buyback_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyback_batch_items_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyback_batches: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          file_csv: string | null
+          format: string
+          id: string
+          period_label: string | null
+          status: string
+          total_amount: number
+          voucher_count: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          file_csv?: string | null
+          format?: string
+          id?: string
+          period_label?: string | null
+          status?: string
+          total_amount?: number
+          voucher_count?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          file_csv?: string | null
+          format?: string
+          id?: string
+          period_label?: string | null
+          status?: string
+          total_amount?: number
+          voucher_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyback_batches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyback_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculator_configs: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      commissions: {
+        Row: {
+          agent_id: string
+          agent_name: string
+          agent_role: string
+          amount_pln: number
+          commission_type: string
+          created_at: string | null
+          id: string
+          is_paid: boolean
+          order_id: string | null
+          paid_at: string | null
+          quarter: string | null
+          rate: number
+        }
+        Insert: {
+          agent_id: string
+          agent_name: string
+          agent_role: string
+          amount_pln: number
+          commission_type: string
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean
+          order_id?: string | null
+          paid_at?: string | null
+          quarter?: string | null
+          rate: number
+        }
+        Update: {
+          agent_id?: string
+          agent_name?: string
+          agent_role?: string
+          amount_pln?: number
+          commission_type?: string
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean
+          order_id?: string | null
+          paid_at?: string | null
+          quarter?: string | null
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          address_city: string | null
+          address_street: string | null
+          address_zip: string | null
+          advisor_id: string | null
+          archived_at: string | null
+          balance_active: number
+          balance_pending: number
+          created_at: string | null
+          custom_payment_terms_days: number | null
+          custom_voucher_validity_days: number | null
+          director_id: string | null
+          external_crm_id: string | null
+          fee_percent: number
+          id: string
+          is_sync_managed: boolean | null
+          krs: string | null
+          manager_id: string | null
+          name: string
+          nip: string
+          origin: string | null
+          regon: string | null
+          updated_at: string | null
+          voucher_expiry_day: number
+          voucher_expiry_hour: number
+          voucher_expiry_minute: number
+        }
+        Insert: {
+          address_city?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          advisor_id?: string | null
+          archived_at?: string | null
+          balance_active?: number
+          balance_pending?: number
+          created_at?: string | null
+          custom_payment_terms_days?: number | null
+          custom_voucher_validity_days?: number | null
+          director_id?: string | null
+          external_crm_id?: string | null
+          fee_percent?: number
+          id?: string
+          is_sync_managed?: boolean | null
+          krs?: string | null
+          manager_id?: string | null
+          name: string
+          nip: string
+          origin?: string | null
+          regon?: string | null
+          updated_at?: string | null
+          voucher_expiry_day?: number
+          voucher_expiry_hour?: number
+          voucher_expiry_minute?: number
+        }
+        Update: {
+          address_city?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          advisor_id?: string | null
+          archived_at?: string | null
+          balance_active?: number
+          balance_pending?: number
+          created_at?: string | null
+          custom_payment_terms_days?: number | null
+          custom_voucher_validity_days?: number | null
+          director_id?: string | null
+          external_crm_id?: string | null
+          fee_percent?: number
+          id?: string
+          is_sync_managed?: boolean | null
+          krs?: string | null
+          manager_id?: string | null
+          name?: string
+          nip?: string
+          origin?: string | null
+          regon?: string | null
+          updated_at?: string | null
+          voucher_expiry_day?: number
+          voucher_expiry_hour?: number
+          voucher_expiry_minute?: number
+        }
+        Relationships: []
+      }
+      company_contacts: {
+        Row: {
+          company_id: string
+          created_at: string
+          email: string | null
+          first_name: string
+          hr_temp_password: string | null
+          id: string
+          is_decision_maker: boolean
+          is_hr_operator: boolean
+          last_name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          email?: string | null
+          first_name: string
+          hr_temp_password?: string | null
+          id?: string
+          is_decision_maker?: boolean
+          is_hr_operator?: boolean
+          last_name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          hr_temp_password?: string | null
+          id?: string
+          is_decision_maker?: boolean
+          is_hr_operator?: boolean
+          last_name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_company_contacts_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_client_activities: {
+        Row: {
+          client_profile_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          client_profile_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          client_profile_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_client_activities_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_client_activities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_client_profiles: {
+        Row: {
+          assigned_to: string | null
+          avg_salary: number | null
+          company_id: string | null
+          created_at: string
+          fee_percent: number | null
+          id: string
+          last_contact_at: string | null
+          notes: string | null
+          num_employees: number | null
+          signed_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          avg_salary?: number | null
+          company_id?: string | null
+          created_at?: string
+          fee_percent?: number | null
+          id?: string
+          last_contact_at?: string | null
+          notes?: string | null
+          num_employees?: number | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          avg_salary?: number | null
+          company_id?: string | null
+          created_at?: string
+          fee_percent?: number | null
+          id?: string
+          last_contact_at?: string | null
+          notes?: string | null
+          num_employees?: number | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_client_profiles_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_client_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          assigned_to: string | null
+          company_id: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          is_primary: boolean
+          last_name: string
+          notes: string | null
+          phone: string | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          is_primary?: boolean
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_primary?: boolean
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tasks: {
+        Row: {
+          assigned_to: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          lead_id: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       distribution_batch_items: {
         Row: {
-          id:         string;
-          batch_id:   string;
-          user_id:    string;
-          user_name:  string;
-          amount:     number;
-          created_at: string;
-        };
+          amount: number
+          batch_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+          user_name: string
+        }
         Insert: {
-          id?:         string;
-          batch_id:    string;
-          user_id:     string;
-          user_name:   string;
-          amount:      number;
-          created_at?: string;
-        };
+          amount: number
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+          user_name: string
+        }
         Update: {
-          id?:         string;
-          batch_id?:   string;
-          user_id?:    string;
-          user_name?:  string;
-          amount?:     number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      iban_change_requests: {
+          amount?: number
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_batches: {
         Row: {
-          id:               string;
-          user_id:          string;
-          new_iban:         string;
-          reason:           string;
-          status:           'pending' | 'approved' | 'rejected';
-          rejection_reason: string | null;
-          resolved_at:      string | null;
-          created_at:       string;
-        };
+          company_id: string
+          created_at: string | null
+          hr_name: string
+          hr_user_id: string | null
+          id: string
+          order_id: string | null
+          status: string
+          total_amount: number
+        }
         Insert: {
-          id?:               string;
-          user_id:           string;
-          new_iban:          string;
-          reason:            string;
-          status?:           'pending' | 'approved' | 'rejected';
-          rejection_reason?: string | null;
-          resolved_at?:      string | null;
-          created_at?:       string;
-        };
+          company_id: string
+          created_at?: string | null
+          hr_name: string
+          hr_user_id?: string | null
+          id: string
+          order_id?: string | null
+          status?: string
+          total_amount: number
+        }
         Update: {
-          id?:               string;
-          user_id?:          string;
-          new_iban?:         string;
-          reason?:           string;
-          status?:           'pending' | 'approved' | 'rejected';
-          rejection_reason?: string | null;
-          resolved_at?:      string | null;
-          created_at?:       string;
-        };
-        Relationships: [];
-      };
-
+          company_id?: string
+          created_at?: string | null
+          hr_name?: string
+          hr_user_id?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_batches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_batches_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_purchases: {
+        Row: {
+          activated_at: string | null
+          cancelled_at: string | null
+          category: string
+          created_at: string | null
+          employee_id: string
+          id: string
+          next_billing_date: string | null
+          price_pkt: number
+          product_id: string
+          purchase_date: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          cancelled_at?: string | null
+          category: string
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          next_billing_date?: string | null
+          price_pkt: number
+          product_id: string
+          purchase_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          cancelled_at?: string | null
+          category?: string
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          next_billing_date?: string | null
+          price_pkt?: number
+          product_id?: string
+          purchase_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_vouchers: {
+        Row: {
+          assigned_at: string | null
+          company_id: string | null
+          employee_id: string
+          voucher_account_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          company_id?: string | null
+          employee_id: string
+          voucher_account_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          company_id?: string | null
+          employee_id?: string
+          voucher_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_vouchers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_vouchers_voucher_account_id_fkey"
+            columns: ["voucher_account_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_documents: {
         Row: {
-          id:                    string;
-          company_id:            string;
-          linked_order_id:       string | null;
-          type:                  'nota' | 'faktura_vat';
-          document_number:       string;
-          amount_net:            number;
-          vat_amount:            number;
-          amount_gross:          number;
-          status:                'pending' | 'paid';
-          issued_at:             string;
-          payment_due_date:      string | null;
-          payment_confirmed_at:  string | null;
-          external_payment_ref:  string | null;
-          pdf_url:               string | null;
-          created_at:            string;
-        };
+          amount_gross: number
+          amount_net: number
+          company_id: string
+          created_at: string
+          document_number: string | null
+          external_payment_ref: string | null
+          id: string
+          issued_at: string
+          linked_order_id: string | null
+          payment_confirmed_at: string | null
+          payment_due_date: string | null
+          pdf_url: string | null
+          status: string
+          type: string
+          updated_at: string
+          vat_amount: number
+        }
         Insert: {
-          id?:                   string;
-          company_id:            string;
-          linked_order_id?:      string | null;
-          type:                  'nota' | 'faktura_vat';
-          document_number:       string;
-          amount_net:            number;
-          vat_amount:            number;
-          amount_gross:          number;
-          status?:               'pending' | 'paid';
-          issued_at?:            string;
-          payment_due_date?:     string | null;
-          payment_confirmed_at?: string | null;
-          external_payment_ref?: string | null;
-          pdf_url?:              string | null;
-          created_at?:           string;
-        };
+          amount_gross?: number
+          amount_net?: number
+          company_id: string
+          created_at?: string
+          document_number?: string | null
+          external_payment_ref?: string | null
+          id?: string
+          issued_at?: string
+          linked_order_id?: string | null
+          payment_confirmed_at?: string | null
+          payment_due_date?: string | null
+          pdf_url?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          vat_amount?: number
+        }
         Update: {
-          id?:                   string;
-          company_id?:           string;
-          linked_order_id?:      string | null;
-          type?:                 'nota' | 'faktura_vat';
-          document_number?:      string;
-          amount_net?:           number;
-          vat_amount?:           number;
-          amount_gross?:         number;
-          status?:               'pending' | 'paid';
-          issued_at?:            string;
-          payment_due_date?:     string | null;
-          payment_confirmed_at?: string | null;
-          external_payment_ref?: string | null;
-          pdf_url?:              string | null;
-          created_at?:           string;
-        };
-        Relationships: [];
-      };
-
+          amount_gross?: number
+          amount_net?: number
+          company_id?: string
+          created_at?: string
+          document_number?: string | null
+          external_payment_ref?: string | null
+          id?: string
+          issued_at?: string
+          linked_order_id?: string | null
+          payment_confirmed_at?: string | null
+          payment_due_date?: string | null
+          pdf_url?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          vat_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_financial_docs_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_financial_docs_order"
+            columns: ["linked_order_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iban_change_requests: {
+        Row: {
+          created_at: string
+          id: string
+          new_iban: string
+          reason: string
+          rejection_reason: string | null
+          requested_at: string
+          resolved_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_iban: string
+          reason: string
+          rejection_reason?: string | null
+          requested_at?: string
+          resolved_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_iban?: string
+          reason?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      import_history: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          hr_name: string
+          hr_user_id: string | null
+          id: string
+          report_data: Json | null
+          status: string
+          total_processed: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          hr_name: string
+          hr_user_id?: string | null
+          id?: string
+          report_data?: Json | null
+          status?: string
+          total_processed?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          hr_name?: string
+          hr_user_id?: string | null
+          id?: string
+          report_data?: Json | null
+          status?: string
+          total_processed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          company_id: string | null
+          contact_person: string | null
+          converted_at: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          nip: string | null
+          notes: string | null
+          phone: string | null
+          qualification_notes: string | null
+          rejected_at: string | null
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_id?: string | null
+          contact_person?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          nip?: string | null
+          notes?: string | null
+          phone?: string | null
+          qualification_notes?: string | null
+          rejected_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company_id?: string | null
+          contact_person?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          nip?: string | null
+          notes?: string | null
+          phone?: string | null
+          qualification_notes?: string | null
+          rejected_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_configs: {
         Row: {
-          id:            string;
-          user_id:       string;
-          email_enabled: boolean;
-          push_enabled:  boolean;
-          types_enabled: string[];
-          created_at:    string;
-          updated_at:    string;
-        };
+          channels: Json | null
+          company_id: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          target: string
+          trigger: string
+          updated_at: string
+        }
         Insert: {
-          id?:            string;
-          user_id:        string;
-          email_enabled?: boolean;
-          push_enabled?:  boolean;
-          types_enabled?: string[];
-          created_at?:    string;
-          updated_at?:    string;
-        };
+          channels?: Json | null
+          company_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          id: string
+          target: string
+          trigger: string
+          updated_at?: string
+        }
         Update: {
-          id?:            string;
-          user_id?:       string;
-          email_enabled?: boolean;
-          push_enabled?:  boolean;
-          types_enabled?: string[];
-          created_at?:    string;
-          updated_at?:    string;
-        };
-        Relationships: [];
-      };
-    };
-
+          channels?: Json | null
+          company_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          target?: string
+          trigger?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_configs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          action: Json | null
+          created_at: string
+          date: string
+          id: string
+          message: string
+          priority: string | null
+          read: boolean
+          target_entity_id: string | null
+          target_entity_type: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action?: Json | null
+          created_at?: string
+          date?: string
+          id?: string
+          message: string
+          priority?: string | null
+          read?: boolean
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          action?: Json | null
+          created_at?: string
+          date?: string
+          id?: string
+          message?: string
+          priority?: string | null
+          read?: boolean
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payroll_calculations: {
+        Row: {
+          client_profile_id: string | null
+          company_name: string
+          config: Json | null
+          created_at: string
+          created_by: string | null
+          employees: Json
+          id: string
+          lead_id: string | null
+          nip: string | null
+          period: string
+          provision_percent: number | null
+          results: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_profile_id?: string | null
+          company_name: string
+          config?: Json | null
+          created_at?: string
+          created_by?: string | null
+          employees?: Json
+          id?: string
+          lead_id?: string | null
+          nip?: string | null
+          period: string
+          provision_percent?: number | null
+          results?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_profile_id?: string | null
+          company_name?: string
+          config?: Json | null
+          created_at?: string
+          created_by?: string | null
+          employees?: Json
+          id?: string
+          lead_id?: string | null
+          nip?: string | null
+          period?: string
+          provision_percent?: number | null
+          results?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_calculations_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_calculations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_calculations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_available: boolean | null
+          name: string
+          price_pkt: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          price_pkt: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          price_pkt?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          icon?: string
+          id: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price: number
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          company_id: string | null
+          created_at: string | null
+          creator_id: string
+          creator_name: string
+          id: string
+          priority: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          status: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          company_id?: string | null
+          created_at?: string | null
+          creator_id: string
+          creator_name: string
+          id?: string
+          priority?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          company_id?: string | null
+          created_at?: string | null
+          creator_id?: string
+          creator_name?: string
+          id?: string
+          priority?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_config: {
+        Row: {
+          audit_log_retention_days: number
+          default_voucher_validity_days: number
+          id: string
+          min_password_length: number
+          payment_terms_days: number
+          pdf_auto_scaling: boolean | null
+          platform_currency: string
+          session_timeout_minutes: number
+          updated_at: string | null
+        }
+        Insert: {
+          audit_log_retention_days?: number
+          default_voucher_validity_days?: number
+          id?: string
+          min_password_length?: number
+          payment_terms_days?: number
+          pdf_auto_scaling?: boolean | null
+          platform_currency?: string
+          session_timeout_minutes?: number
+          updated_at?: string | null
+        }
+        Update: {
+          audit_log_retention_days?: number
+          default_voucher_validity_days?: number
+          id?: string
+          min_password_length?: number
+          payment_terms_days?: number
+          pdf_auto_scaling?: boolean | null
+          platform_currency?: string
+          session_timeout_minutes?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_internal: boolean | null
+          message: string
+          sender_id: string
+          sender_name: string
+          sender_role: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message: string
+          sender_id: string
+          sender_name: string
+          sender_role: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message?: string
+          sender_id?: string
+          sender_name?: string
+          sender_role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          address_city: string | null
+          address_street: string | null
+          address_zip: string | null
+          anonymized_at: string | null
+          company_id: string | null
+          company_name: string | null
+          contract_type: string | null
+          created_at: string | null
+          department: string | null
+          full_name: string | null
+          hire_date: string | null
+          iban: string | null
+          iban_verified: boolean | null
+          iban_verified_at: string | null
+          id: string
+          pesel: string | null
+          pesel_encrypted: string | null
+          phone_number: string | null
+          position: string | null
+          role: string
+          status: string
+          temp_password: string | null
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
+          two_fa_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          address_city?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          anonymized_at?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          department?: string | null
+          full_name?: string | null
+          hire_date?: string | null
+          iban?: string | null
+          iban_verified?: boolean | null
+          iban_verified_at?: string | null
+          id: string
+          pesel?: string | null
+          pesel_encrypted?: string | null
+          phone_number?: string | null
+          position?: string | null
+          role: string
+          status?: string
+          temp_password?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          two_fa_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          address_city?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          anonymized_at?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          department?: string | null
+          full_name?: string | null
+          hire_date?: string | null
+          iban?: string | null
+          iban_verified?: boolean | null
+          iban_verified_at?: string | null
+          id?: string
+          pesel?: string | null
+          pesel_encrypted?: string | null
+          phone_number?: string | null
+          position?: string | null
+          role?: string
+          status?: string
+          temp_password?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          two_fa_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voucher_accounts: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voucher_orders: {
+        Row: {
+          amount_pln: number
+          amount_vouchers: number
+          company_id: string
+          created_at: string | null
+          distribution_plan: Json | null
+          doc_fee_id: string | null
+          doc_voucher_id: string | null
+          fee_pln: number
+          hr_user_id: string | null
+          id: string
+          is_first_invoice: boolean | null
+          payroll_snapshots: Json | null
+          status: string
+          total_pln: number
+          umowa_pdf_url: string | null
+          updated_at: string | null
+          voucher_valid_until: string | null
+        }
+        Insert: {
+          amount_pln: number
+          amount_vouchers: number
+          company_id: string
+          created_at?: string | null
+          distribution_plan?: Json | null
+          doc_fee_id?: string | null
+          doc_voucher_id?: string | null
+          fee_pln?: number
+          hr_user_id?: string | null
+          id?: string
+          is_first_invoice?: boolean | null
+          payroll_snapshots?: Json | null
+          status?: string
+          total_pln: number
+          umowa_pdf_url?: string | null
+          updated_at?: string | null
+          voucher_valid_until?: string | null
+        }
+        Update: {
+          amount_pln?: number
+          amount_vouchers?: number
+          company_id?: string
+          created_at?: string | null
+          distribution_plan?: Json | null
+          doc_fee_id?: string | null
+          doc_voucher_id?: string | null
+          fee_pln?: number
+          hr_user_id?: string | null
+          id?: string
+          is_first_invoice?: boolean | null
+          payroll_snapshots?: Json | null
+          status?: string
+          total_pln?: number
+          umowa_pdf_url?: string | null
+          updated_at?: string | null
+          voucher_valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voucher_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          metadata: Json | null
+          order_id: string | null
+          service_id: string | null
+          service_name: string | null
+          status: string
+          to_user_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          status?: string
+          to_user_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          status?: string
+          to_user_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          buyback_agreement_id: string | null
+          company_id: string
+          created_at: string | null
+          current_owner_id: string
+          face_value_pln: number
+          id: string
+          issued_at: string | null
+          issuer_address: string
+          issuer_name: string
+          issuer_nip: string
+          legal_basis: string
+          metadata: Json | null
+          order_id: string
+          redeemed_at: string | null
+          redeemed_by_user_id: string | null
+          redeemed_order_id: string | null
+          redemption_scope: string
+          serial_number: string
+          status: string
+          valid_until: string
+        }
+        Insert: {
+          buyback_agreement_id?: string | null
+          company_id: string
+          created_at?: string | null
+          current_owner_id: string
+          face_value_pln?: number
+          id?: string
+          issued_at?: string | null
+          issuer_address?: string
+          issuer_name?: string
+          issuer_nip?: string
+          legal_basis?: string
+          metadata?: Json | null
+          order_id: string
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          redeemed_order_id?: string | null
+          redemption_scope?: string
+          serial_number: string
+          status?: string
+          valid_until: string
+        }
+        Update: {
+          buyback_agreement_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          current_owner_id?: string
+          face_value_pln?: number
+          id?: string
+          issued_at?: string | null
+          issuer_address?: string
+          issuer_name?: string
+          issuer_nip?: string
+          legal_basis?: string
+          metadata?: Json | null
+          order_id?: string
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          redeemed_order_id?: string | null
+          redemption_scope?: string
+          serial_number?: string
+          status?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_vouchers_buyback"
+            columns: ["buyback_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "buyback_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
-
+      [_ in never]: never
+    }
     Functions: {
-      generate_voucher_serial: { Args: Record<PropertyKey, never>; Returns: string };
+      admin_voucher_tree: { Args: never; Returns: Json }
+      backfill_pesel_encrypted: { Args: { p_key: string }; Returns: number }
+      company_cleanup: { Args: { p_company_id: string }; Returns: Json }
+      compute_voucher_valid_until: {
+        Args: {
+          p_expiry_day: number
+          p_expiry_hour?: number
+          p_expiry_minute?: number
+        }
+        Returns: string
+      }
+      decrypt_pesel: {
+        Args: { p_ciphertext: string; p_key: string }
+        Returns: string
+      }
+      dev_cleanup_all: { Args: never; Returns: Json }
+      distribute_to_employee: {
+        Args: {
+          p_amount: number
+          p_company_id: string
+          p_from_user_id: string
+          p_order_id?: string
+          p_to_user_id: string
+          p_valid_until?: string
+        }
+        Returns: number
+      }
+      encrypt_pesel: {
+        Args: { p_key: string; p_pesel: string }
+        Returns: string
+      }
+      expire_overdue_vouchers: {
+        Args: { p_company_id?: string }
+        Returns: number
+      }
+      expire_vouchers_and_create_buybacks: {
+        Args: { p_company_id?: string }
+        Returns: {
+          buyback_count: number
+          expired_count: number
+        }[]
+      }
+      generate_voucher_serial: { Args: never; Returns: string }
+      get_employee_voucher_history: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_employee_vouchers: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: Json
+      }
+      get_expired_vouchers_by_employee: {
+        Args: { p_company_id: string }
+        Returns: {
+          employee_id: string
+          voucher_count: number
+        }[]
+      }
       mint_vouchers: {
         Args: {
-          p_order_id:      string;
-          p_company_id:    string;
-          p_owner_id:      string;
-          p_quantity:      number;
-          p_valid_months?: number;
-        };
-        Returns: undefined;
-      };
-      transfer_vouchers: {
-        Args: {
-          p_from_user_id: string;
-          p_to_user_id:   string;
-          p_amount:       number;
-          p_type:         string;
-          p_order_id?:    string;
-        };
-        Returns: undefined;
-      };
+          p_company_id: string
+          p_order_id: string
+          p_owner_id: string
+          p_quantity: number
+          p_valid_months?: number
+          p_valid_until?: string
+        }
+        Returns: undefined
+      }
       redeem_voucher: {
         Args: {
-          p_serial_number: string;
-          p_user_id:       string;
-          p_service_id?:   string;
-          p_service_name?: string;
-        };
-        Returns: string;
-      };
-    };
-
+          p_serial_number: string
+          p_service_id?: string
+          p_service_name?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      transfer_vouchers: {
+        Args: {
+          p_amount: number
+          p_from_user_id: string
+          p_order_id?: string
+          p_to_user_id: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+    }
     Enums: {
-      [_ in never]: never;
-    };
-
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
+
+// ── Legacy type re-exports (backwards compatibility) ─────────────────────────
+export type { VoucherStatus, OrderStatus, CommissionType } from './enums';
+export type { DbRole } from '../lib/roleMap';
+export type TransactionType = string;
