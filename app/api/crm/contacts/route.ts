@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserWithRole } from '@/lib/apiAuth';
-import { supabaseServer } from '@/lib/supabase';
+import { getVisibleUserIds, applyVisibilityFilter, admin } from '@/lib/crm/visibility';
 
 const CRM_ROLES = ['superadmin', 'partner', 'menedzer', 'dyrektor'];
 
@@ -13,14 +13,20 @@ export async function GET(req: NextRequest) {
   const url    = new URL(req.url);
   const search = url.searchParams.get('q');
 
-  const supabase = supabaseServer();
-  let query = supabase
+  const visibleIds = await getVisibleUserIds(auth.id, auth.role);
+
+  let query = admin()
     .from('crm_contacts')
     .select('*')
     .order('last_name');
 
+  // Kontakty: partner widzi tylko swoje, menedzer/dyrektor — całą grupę
+  // Kontakty nieprzypisane widzi każdy z CRM (przypisane do null = ogólne)
+  const includeUnassigned = true;
+  query = applyVisibilityFilter(query, visibleIds, includeUnassigned);
+
   if (search) {
-    query = query.or(
+    query = (query as any).or(
       `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`
     );
   }
@@ -42,7 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'first_name i last_name są wymagane' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseServer()
+  const { data, error } = await admin()
     .from('crm_contacts')
     .insert({
       first_name, last_name, email, phone, position,
