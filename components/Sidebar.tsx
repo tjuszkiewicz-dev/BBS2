@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Role, User } from '../types';
-import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, Calculator, KanbanSquare, Contact } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: User;
@@ -47,6 +47,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'admin-vouchery',  label: 'Vouchery',                icon: <Ticket size={20} /> },
           { id: 'admin-buyback',      label: 'Anulowanie subskrypcji', icon: <RefreshCw size={20} /> },
           { id: 'admin-uzytkowniczy', label: 'Użytkownicy',             icon: <UserCog size={20} /> },
+          { id: 'crm-divider', label: '── CRM ──', icon: null, divider: true },
+          { id: 'crm-pipeline',   label: 'Pipeline CRM',    icon: <KanbanSquare size={20} /> },
+          { id: 'crm-kalkulator', label: 'Kalkulator Prime', icon: <Calculator size={20} /> },
         ];
       case Role.HR:
         return [
@@ -72,8 +75,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       case Role.MANAGER:
       case Role.ADVISOR:
         return [
-          { id: 'sales-dashboard', label: 'Panel Sprzedaży', icon: <DollarSign size={20} /> },
-          { id: 'sales-commissions', label: 'Moje Prowizje', icon: <FileText size={20} /> },
+          { id: 'sales-dashboard',  label: 'Panel Sprzedaży', icon: <DollarSign size={20} /> },
+          { id: 'sales-commissions', label: 'Moje Prowizje',  icon: <FileText size={20} /> },
+          { id: 'crm-divider', label: '── CRM ──', icon: null, divider: true },
+          { id: 'crm-pipeline',    label: 'Pipeline',       icon: <KanbanSquare size={20} /> },
+          { id: 'crm-kalkulator',  label: 'Kalkulator',     icon: <Calculator size={20} /> },
         ];
       default:
         return [];
@@ -109,33 +115,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isDesktopOpen && (
             <p className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 whitespace-nowrap ${currentUser.role === Role.EMPLOYEE ? 'text-slate-500' : 'text-slate-400'}`}>Menu Systemowe</p>
           )}
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                onChangeView(item.id);
-                onClose(); 
-              }}
-              title={!isDesktopOpen ? item.label : undefined}
-              className={`w-full flex items-center py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${
-                isDesktopOpen ? 'gap-3 px-4' : 'justify-center px-0'
-              } ${
-                currentUser.role === Role.EMPLOYEE
-                  ? currentView === item.id ? 'text-white bg-slate-800 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
-                  : currentView === item.id ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-500 hover:bg-white/70 hover:text-slate-900'
-              }`}
-            >
-              <span className={`flex-shrink-0 ${
-                currentUser.role === Role.EMPLOYEE
-                  ? currentView === item.id ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'
-                  : currentView === item.id ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-900'
-              }`}>
-                {item.icon}
-              </span>
-              {isDesktopOpen && <span className="whitespace-nowrap">{item.label}</span>}
-              {isDesktopOpen && currentView === item.id && <ChevronRight size={16} className="ml-auto opacity-50" />}
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            // Divider rendering
+            if ((item as { divider?: boolean }).divider) {
+              return isDesktopOpen ? (
+                <div key={item.id} className="px-4 pt-4 pb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CRM</p>
+                  <div className="mt-1 h-px bg-slate-200/70" />
+                </div>
+              ) : (
+                <div key={item.id} className="my-2 mx-2 h-px bg-slate-200/70" />
+              );
+            }
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onChangeView(item.id);
+                  onClose();
+                }}
+                title={!isDesktopOpen ? item.label : undefined}
+                className={`w-full flex items-center py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${
+                  isDesktopOpen ? 'gap-3 px-4' : 'justify-center px-0'
+                } ${
+                  currentUser.role === Role.EMPLOYEE
+                    ? currentView === item.id ? 'text-white bg-slate-800 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                    : currentView === item.id ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-500 hover:bg-white/70 hover:text-slate-900'
+                }`}
+              >
+                <span className={`flex-shrink-0 ${
+                  currentUser.role === Role.EMPLOYEE
+                    ? currentView === item.id ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'
+                    : item.id.startsWith('crm-')
+                    ? currentView === item.id ? 'text-[#4a95a9]' : 'text-[#4a95a9]/60 group-hover:text-[#4a95a9]'
+                    : currentView === item.id ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-900'
+                }`}>
+                  {item.icon}
+                </span>
+                {isDesktopOpen && <span className="whitespace-nowrap">{item.label}</span>}
+                {isDesktopOpen && currentView === item.id && <ChevronRight size={16} className="ml-auto opacity-50" />}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Bottom / Collapse */}

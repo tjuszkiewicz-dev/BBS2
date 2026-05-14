@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { AdminPulpit } from '../components/adminNew/AdminPulpit';
 import { AdminBazaKlientow } from '../components/adminNew/AdminBazaKlientow';
 import { AdminPlatnosci } from '../components/adminNew/AdminPlatnosci';
@@ -8,7 +9,10 @@ import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
 import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock } from 'lucide-react';
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy';
+const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
+const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
+
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-pulpit':    'pulpit',
@@ -18,6 +22,8 @@ const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-vouchery':  'vouchery',
   'admin-buyback':   'buyback',
   'admin-uzytkowniczy': 'uzytkowniczy',
+  'crm-pipeline':    'crm-pipeline',
+  'crm-kalkulator':  'crm-kalkulator',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
@@ -28,6 +34,8 @@ const TAB_TO_VIEW: Record<AdminTab, string> = {
   vouchery:  'admin-vouchery',
   buyback:   'admin-buyback',
   uzytkowniczy: 'admin-uzytkowniczy',
+  'crm-pipeline':   'crm-pipeline',
+  'crm-kalkulator': 'crm-kalkulator',
 };
 
 interface Props {
@@ -69,7 +77,11 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <ShieldCheck size={16} className="text-blue-600" />
           <span className="font-semibold text-gray-800 text-sm">Panel Administracyjny</span>
           <span className="text-gray-300">|</span>
-          <span className="text-xs text-gray-500">{tabs.find(t => t.id === tab)?.label}</span>
+          <span className="text-xs text-gray-500">
+            {tabs.find(t => t.id === tab)?.label
+              ?? (tab === 'crm-kalkulator' ? 'Kalkulator Prime™'
+              : tab === 'crm-pipeline' ? 'Pipeline CRM' : '')}
+          </span>
         </div>
       </div>
 
@@ -83,6 +95,17 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
         {tab === 'buyback'   && <AdminBuyback />}
         {tab === 'uzytkowniczy' && <AdminUsers />}
       </div>
+      {/* CRM views — full-bleed, no padding wrapper */}
+      {tab === 'crm-kalkulator' && (
+        <div className="-m-6">
+          <CalculatorWizard />
+        </div>
+      )}
+      {tab === 'crm-pipeline' && (
+        <div className="-m-6">
+          <PipelineKanban />
+        </div>
+      )}
     </div>
   );
 };
