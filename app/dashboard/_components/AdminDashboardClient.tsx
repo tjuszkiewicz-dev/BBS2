@@ -46,7 +46,7 @@ function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen font-sans text-slate-900 overflow-hidden" style={{ backgroundColor: '#f1f5f9' }}>
+    <div className="flex h-screen font-sans text-slate-900 overflow-hidden" style={{ backgroundColor: '#deedf3' }}>
 
       <ToastContainer toasts={toasts} removeToast={actions.removeToast} />
 

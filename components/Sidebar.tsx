@@ -91,16 +91,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar Container */}
-      <aside className={`
+      <aside
+        className={`
         fixed inset-y-0 left-0 z-50 text-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col flex-shrink-0 overflow-hidden
-        ${currentUser.role === Role.EMPLOYEE ? 'bg-black' : 'bg-white border-r border-slate-200'}
-        ${isOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72'} 
+        ${currentUser.role === Role.EMPLOYEE ? 'bg-black' : 'border-r border-slate-200'}
+        ${isOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72'}
         md:translate-x-0 md:sticky md:top-0 md:h-screen md:shadow-none
         ${isDesktopOpen ? 'md:w-72' : 'md:w-16'}
-      `}>
+      `}
+        style={currentUser.role !== Role.EMPLOYEE ? { backgroundColor: '#deedf3' } : undefined}
+      >
         {/* Navigation */}
-        <nav className={`flex-1 py-6 space-y-1 overflow-y-auto no-scrollbar overflow-x-hidden ${currentUser.role === Role.EMPLOYEE ? 'bg-black' : 'bg-white'}`}
-          style={{ padding: isDesktopOpen ? undefined : '24px 0' }}
+        <nav
+          className={`flex-1 py-6 space-y-1 overflow-y-auto no-scrollbar overflow-x-hidden ${currentUser.role === Role.EMPLOYEE ? 'bg-black' : ''}`}
+          style={{ padding: isDesktopOpen ? undefined : '24px 0', backgroundColor: currentUser.role !== Role.EMPLOYEE ? '#deedf3' : undefined }}
         >
           {isDesktopOpen && (
             <p className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 whitespace-nowrap ${currentUser.role === Role.EMPLOYEE ? 'text-slate-500' : 'text-slate-400'}`}>Menu Systemowe</p>
@@ -118,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               } ${
                 currentUser.role === Role.EMPLOYEE
                   ? currentView === item.id ? 'text-white bg-slate-800 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
-                  : currentView === item.id ? 'text-slate-900 bg-slate-100 shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                  : currentView === item.id ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-500 hover:bg-white/70 hover:text-slate-900'
               }`}
             >
               <span className={`flex-shrink-0 ${
@@ -135,7 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Bottom / Collapse */}
-        <div className={`border-t ${currentUser.role === Role.EMPLOYEE ? 'bg-black border-white/10' : 'bg-white border-slate-200'} ${isDesktopOpen ? 'p-4' : 'p-2'}`}>
+        <div
+          className={`border-t ${currentUser.role === Role.EMPLOYEE ? 'bg-black border-white/10' : 'border-slate-200'} ${isDesktopOpen ? 'p-4' : 'p-2'}`}
+          style={currentUser.role !== Role.EMPLOYEE ? { backgroundColor: '#deedf3' } : undefined}
+        >
           <button 
             onClick={() => {
               if (window.innerWidth >= 768) {
@@ -144,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClose();
               }
             }}
-            className={`w-full flex items-center justify-center p-3 rounded-xl transition-colors group ${currentUser.role === Role.EMPLOYEE ? 'bg-slate-800/50 hover:bg-slate-700/60' : 'bg-slate-100 hover:bg-slate-200'}`}
+            className={`w-full flex items-center justify-center p-3 rounded-xl transition-colors group ${currentUser.role === Role.EMPLOYEE ? 'bg-slate-800/50 hover:bg-slate-700/60' : 'bg-white/70 hover:bg-white'}`}
           >
             {isDesktopOpen ? (
               <div className="flex items-center gap-3 w-full">
