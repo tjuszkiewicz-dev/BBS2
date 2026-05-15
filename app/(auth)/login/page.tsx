@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import MagicRings from '@/components/ui/MagicRings';
+import { Vortex } from '@/components/ui/vortex';
 import { supabaseBrowser } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -143,10 +143,20 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <div style={{ height:'100vh', position:'relative', background:'#030712', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0, overflow:'hidden' }}>
-          <MagicRings />
-        </div>
+      <div style={{ height:'100vh', position:'relative', background:'#060b14', overflow:'hidden' }}>
+        <Vortex
+          containerClassName="absolute inset-0"
+          particleCount={700}
+          baseHue={195}
+          backgroundColor="#060b14"
+          rangeY={120}
+          baseSpeed={0.0}
+          rangeSpeed={1.5}
+          baseRadius={1}
+          rangeRadius={2}
+        >
+          <div style={{ display:'none' }} />
+        </Vortex>
 
         <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:10, padding:'16px', overflowY:'auto' }}>
 
