@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import { Vortex } from '@/components/ui/Vortex';
+import { Vortex } from '@/components/ui/vortex';
 import { supabaseBrowser } from '@/lib/supabase';
 
 export default function LoginPage() {
