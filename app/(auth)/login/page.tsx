@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import MagicRings from '@/components/ui/MagicRings';
+import { Vortex } from '@/components/ui/Vortex';
 import { supabaseBrowser } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -143,11 +143,17 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <div style={{ height:'100vh', position:'relative', background:'#030712', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0, overflow:'hidden' }}>
-          <MagicRings />
-        </div>
-
+      <Vortex
+        backgroundColor="#030712"
+        baseHue={185}
+        rangeY={300}
+        particleCount={700}
+        baseSpeed={0.0}
+        rangeSpeed={1.5}
+        baseRadius={1}
+        rangeRadius={2}
+        containerClassName="h-screen overflow-hidden"
+      >
         <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:10, padding:'16px', overflowY:'auto' }}>
 
           <div className="ebs-up" style={{ width:'100%', maxWidth:264, animationDelay:'.05s' }}>
@@ -260,7 +266,7 @@ export default function LoginPage() {
             &copy; {new Date().getFullYear()} Stratton Prime S.A. Wszystkie prawa zastrzeżone.
           </p>
         </div>
-      </div>
+      </Vortex>
     </>
   );
 }
