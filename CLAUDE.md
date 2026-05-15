@@ -10,7 +10,7 @@ npx next dev --port 3010   # Start Next.js dev server (PRIMARY - deploys to Verc
 node server/app.js          # Start PDF generation server on port 3015 (required for document export)
 
 # Build & preview
-npm run build   # next build only (Vite removed)
+npm run build   # next build only
 npm run preview
 
 # Tests
@@ -19,21 +19,28 @@ npx jest services/payrollService.test.ts   # Run payroll service unit tests
 
 ## Architecture
 
-**STRATTON PRIME: Eliton Benefits System (EBS)** — enterprise benefits management platform with role-based portals.
+**BBS — Baltic Benefits System** — enterprise benefits management platform with role-based portals.
+
+- **Live URL**: https://bbs2.vercel.app
+- **Supabase project**: `vogyfffzlucppmddqsqw` (`vogyfffzlucppmddqsqw.supabase.co`)
 
 ### Framework
 
-**Next.js 15 (App Router)** is the sole frontend framework. Vite has been removed (`index.html`, `App.tsx`, `vite.config.ts` deleted). The project deploys to **Vercel** on every push to `main`.
+**Next.js 15 (App Router)** is the sole frontend framework. The project deploys to **Vercel** on every push to `main`.
 
 - Next.js dev: port `3010`
-- PDF server: port `3015` (changed from 3001/3012)
+- PDF server: port `3015`
 
 ### Auth
 
 Supabase SSR (`@supabase/ssr`) + Server Actions + cookie-based sessions.
-- Supabase project: `ramedybmybcpqvelsmxd.supabase.co`
+- Supabase project: `vogyfffzlucppmddqsqw.supabase.co`
 - Login action: `app/actions/auth.ts` — reads role from `user_profiles`, returns `{ ok, redirectUrl }`
-- Roles: `pracodawca` → `Role.HR`, `pracownik` → `Role.EMPLOYEE`, `superadmin` → `Role.SUPERADMIN`
+- Role → redirect mapping:
+  - `pracodawca` → `/dashboard/employer`
+  - `pracownik` → `/dashboard/employee`
+  - `superadmin` → `/dashboard/admin`
+  - `dyrektor`, `menedzer`, `partner` → `/dashboard/admin` (CRM panel)
 
 ### Routing (Next.js App Router)
 
@@ -64,7 +71,7 @@ Initial demo data is seeded from `services/mockData.ts`.
 ### Employee Dashboard Layout (`EmployeeDashboardClient.tsx`)
 
 `app/dashboard/_components/EmployeeDashboardClient.tsx` — full layout with:
-- Black header (`bg-black`) with EBS logo (`/ebs-black.svg` + CSS `brightness(0) invert(1)` for white), search bar, balance widget, expiry widget, notifications, logout
+- Black header (`bg-black`) with BBS logo (`/logo.png`), search bar, balance widget, expiry widget, notifications, logout
 - Hamburger `<Menu>` button (mobile only, `md:hidden`) → opens sidebar drawer (`isMobileSidebarOpen`)
 - Desktop sidebar toggle (`hidden md:flex`) → `isDesktopSidebarOpen`
 - `Sidebar` component (black theme)
@@ -93,25 +100,68 @@ Initial demo data is seeded from `services/mockData.ts`.
 ### New Admin Panel (`DashboardAdminNew.tsx` + `components/adminNew/`)
 
 `views/DashboardAdminNew.tsx` — tab-based admin UI:
-- Tabs: **Pulpit**, **Baza klientów**, **Płatności i faktury**, **Archiwum**, **Vouchery**
+- Tabs: **Pulpit**, **Baza klientów**, **Płatności i faktury**, **Archiwum**, **Vouchery**, **CRM Pipeline**, **CRM Kalkulator**, **CRM Kontakty**
 - `VIEW_TO_TAB` mapping syncs Sidebar navigation with tab state
 - `-m-4 md:-m-8` to compensate parent padding
-- Each tab is a standalone component in `components/adminNew/` — fetches own data from API routes (`/api/companies`, `/api/vouchers`, etc.)
+- Each tab is a standalone component in `components/adminNew/` — fetches own data from API routes
 
 ### Sidebar (`components/Sidebar.tsx`)
 
 Auto-themes based on role:
 - `EMPLOYEE` → black theme (`bg-black`, white text)
-- Other roles → white/light theme
+- Other roles → white/light theme with BBS blue accent (`#deedf3`)
 
-**SUPERADMIN menu items**:
+**SUPERADMIN / CRM menu items**:
 ```
-admin-pulpit     Pulpit              LayoutDashboard
-admin-klienci    Baza klientów       Users
-admin-platnosci  Płatności i faktury CreditCard
-admin-archiwum   Archiwum            FolderOpen
-admin-vouchery   Vouchery            Ticket
+admin-pulpit      Pulpit               LayoutDashboard
+admin-klienci     Baza klientów        Users
+admin-platnosci   Płatności i faktury  CreditCard
+admin-archiwum    Archiwum             FolderOpen
+admin-vouchery    Vouchery             Ticket
+--- CRM section ---
+crm-pipeline      Pipeline CRM         Target
+crm-kalkulator    Kalkulator Prime      Calculator
+crm-kontakty      Kontakty             UserRound
 ```
+
+### CRM Module
+
+**Dostęp:** role `superadmin`, `dyrektor`, `menedzer`, `partner` (nie: `pracodawca`, `pracownik`).
+
+**Hierarchia widoczności** (tabela `user_profiles.manager_id`):
+- `superadmin` → widzi wszystko
+- `dyrektor` → widzi siebie + menedzerzy z `manager_id = self` + partnerzy pod tymi menedzerami
+- `menedzer` → widzi siebie + partnerzy z `manager_id = self`
+- `partner` → widzi tylko swoje rekordy
+
+**Pliki:**
+- `lib/crm/visibility.ts` — `getVisibleUserIds()` + `applyVisibilityFilter()`
+- `lib/crm/tax-engine/` — silnik ZUS/PIT/gross-up (port z Stratton Prime)
+
+**API routes** (`app/api/crm/`):
+- `leads/` — GET/POST; `leads/[id]/` — GET/PATCH/DELETE
+- `contacts/` — GET/POST; `contacts/[id]/` — GET/PUT/DELETE
+- `activities/` — GET/POST (filtr `?lead_id=`); `activities/[id]/` — PATCH/DELETE
+- `kalkulator/calculate/` — POST (kalkulacja ZUS/PIT); `kalkulator/sessions/` — GET
+
+**Komponenty UI** (`components/adminNew/crm/`):
+- `CrmPipeline.tsx` — widok lista + kanban (9 statusów pipeline), panel szczegółów z 4 zakładkami:
+  - *Szczegóły*: dane firmy, SLA warning (>3 dni bez aktywności), rezerwacja NIP, edycja inline
+  - *Kontakty*: lista + dodawanie kontaktów, flaga osoby decyzyjnej
+  - *Aktywność*: timeline CALL/MEETING/EMAIL/NOTE, toggle ukończenia
+  - *Oferty*: link do kalkulatora
+- `CrmKalkulator.tsx` — 5-krokowy wizard kalkulacji Prime: Firma → Pracownicy → Standard → Prime → Business Case
+- `CrmKontakty.tsx` — tabela + karty mobile, dodawanie/edycja kontaktów
+
+**Pipeline statusy** (pole `leads.status`):
+`NEW` → `IN_TALKS` → `OFFER_PREPARING` → `OFFER_GENERATED` → `CALCULATION_SENT` → `SPECIAL_OFFER` → `SIGNED` / `RESIGNED` / `TERMINATED`
+
+**Supabase tabele CRM:**
+- `leads` — leady (NIP, assigned_to, status, last_activity_at, city, industry, itp.)
+- `crm_contacts` — kontakty powiązane z leadem przez `company_id`
+- `crm_client_activities` — aktywności (CALL/MEETING/EMAIL/NOTE, lead_id, occurred_at, is_completed)
+- `calculator_configs` — konfiguracje kalkulatora
+- `payroll_calculations` — zapisane kalkulacje
 
 ### CSS (`index.css`)
 
@@ -119,14 +169,21 @@ Custom classes:
 - `.main-zoom` — `zoom: 1` default, `zoom: 0.9` on `@media (min-width: 768px)` → desktop-only scaling
 - `.pb-safe` — safe area padding for mobile
 
-### Accounts (Supabase)
+### Accounts (Supabase — projekt vogyfffzlucppmddqsqw)
 
-| Email | Password | Role | Redirect |
+| Email | Hasło | Rola | Redirect |
 |---|---|---|---|
-| `admin@eliton-benefits.com` | `Password123!` | `superadmin` | `/dashboard/admin` |
+| `biuro@balticbenefits.pl` | `123456` | `superadmin` | `/dashboard/admin` |
+| `dyrektor@bbs.test` | `Test1234!` | `dyrektor` | `/dashboard/admin` (CRM) |
+| `menedzer@bbs.test` | `Test1234!` | `menedzer` | `/dashboard/admin` (CRM) |
+| `partner@bbs.test` | `Test1234!` | `partner` | `/dashboard/admin` (CRM) |
 | `t.juszkiewicz@gmail.com` | — | `pracodawca` | `/dashboard/employer` |
-| `vcx@wp.pl` | — | `pracownik` | `/dashboard/employee` |
-| `dlkso@wp.pl` | — | `pracownik` | `/dashboard/employee` |
+| `pracownik@bbs.test` | `Test1234!` | `pracownik` | `/dashboard/employee` |
+
+**Hierarchia CRM (manager_id):**
+- `partner@bbs.test` → manager: `menedzer@bbs.test`
+- `menedzer@bbs.test` → manager: `dyrektor@bbs.test`
+- `dyrektor@bbs.test` → brak managera (top)
 
 ### Key Types
 
@@ -180,7 +237,7 @@ Available in `components/ui/` and `components/bits/`:
 ### Known Issues / Gotchas
 
 - Browser-only libraries (`html2pdf.js`, `ogl`/SoftAurora) must be loaded with `next/dynamic` + `{ ssr: false }`
-- `ebs-black.svg` exists in `public/`; white version achieved via CSS `filter: brightness(0) invert(1)` — do NOT rely on `ebs-white.svg`
+- Logo BBS: `/public/logo.png` — białe tło, używaj CSS filter jeśli potrzeba inwersji
 - `zoom` CSS property is in `.main-zoom` CSS class (not inline style) — applies desktop-only via media query
 - All UI changes must work identically on **localhost:3010** AND **Vercel** — no localStorage-gated visibility
-
+- CRM routes wymagają roli CRM — `pracodawca`/`pracownik` dostaną 401/403
