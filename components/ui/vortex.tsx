@@ -90,7 +90,7 @@ export const Vortex = ({
       ctx.save();
       ctx.lineCap = "round";
       ctx.lineWidth = radius;
-      ctx.strokeStyle = `hsla(${hue},100%,60%,${fadeInOut(life, ttl)})`;
+      ctx.strokeStyle = `hsla(${hue},100%,85%,${fadeInOut(life, ttl) * 1.4})`;
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x2, y2);
@@ -131,6 +131,26 @@ export const Vortex = ({
         initParticle(i);
     };
 
+    const renderGlow = () => {
+      ctx.save();
+      ctx.filter = "blur(12px) brightness(400%)";
+      ctx.globalCompositeOperation = "lighter";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.filter = "blur(6px) brightness(300%)";
+      ctx.globalCompositeOperation = "lighter";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.filter = "blur(2px) brightness(150%)";
+      ctx.globalCompositeOperation = "lighter";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+    };
+
     const draw = () => {
       tick++;
       ctx.fillStyle = backgroundColor;
@@ -142,6 +162,7 @@ export const Vortex = ({
       ) {
         updateParticle(i);
       }
+      renderGlow();
       animId = requestAnimationFrame(draw);
     };
 
