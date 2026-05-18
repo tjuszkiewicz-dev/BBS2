@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Role, User } from '../types';
-import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, Calculator, KanbanSquare, UserRound } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, Calculator, KanbanSquare, UserRound, Briefcase } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: User;
@@ -30,14 +30,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const roleLabel = useMemo(() => {
     switch(currentUser.role) {
       case Role.SUPERADMIN: return 'Administrator';
-      case Role.HR: return 'Księgowość / HR';
-      case Role.EMPLOYEE: return 'Pracownik';
-      default: return 'Partner / Sprzedaż';
+      case Role.HR:         return 'Księgowość / HR';
+      case Role.HR_PANEL:   return 'Panel HR';
+      case Role.EMPLOYEE:   return 'Pracownik';
+      default:              return 'Partner / Sprzedaż';
     }
   }, [currentUser.role]);
 
   const menuItems = useMemo(() => {
     switch (currentUser.role) {
+      case Role.HR_PANEL:
+        return [
+          { id: 'hr-divider',     label: '── Panel HR ──',  icon: null, divider: true, section: 'HR' },
+          { id: 'hr-pracownicy',  label: 'Pracownicy',      icon: <Users size={20} /> },
+          { id: 'hr-umowy',       label: 'Umowy',           icon: <FileText size={20} /> },
+          { id: 'hr-raporty',     label: 'Raporty HR',      icon: <BarChart3 size={20} /> },
+        ];
       case Role.SUPERADMIN:
         return [
           { id: 'admin-pulpit',    label: 'Pulpit',              icon: <LayoutDashboard size={20} /> },
@@ -51,6 +59,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'crm-pipeline',   label: 'Pipeline CRM',    icon: <KanbanSquare size={20} /> },
           { id: 'crm-kalkulator', label: 'Kalkulator Prime', icon: <Calculator size={20} /> },
           { id: 'crm-kontakty',   label: 'Kontakty',         icon: <UserRound size={20} /> },
+          { id: 'hr-divider',     label: '── HR ──',        icon: null, divider: true, section: 'HR' },
+          { id: 'hr-pracownicy',  label: 'Pracownicy',      icon: <Users size={20} /> },
+          { id: 'hr-umowy',       label: 'Umowy',           icon: <Briefcase size={20} /> },
+          { id: 'hr-raporty',     label: 'Raporty HR',      icon: <BarChart3 size={20} /> },
         ];
       case Role.HR:
         return [
@@ -119,9 +131,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {menuItems.map((item) => {
             // Divider rendering
             if ((item as { divider?: boolean }).divider) {
+              const sectionLabel = (item as { section?: string }).section ?? 'CRM';
               return isDesktopOpen ? (
                 <div key={item.id} className="px-4 pt-4 pb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">CRM</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{sectionLabel}</p>
                   <div className="mt-1 h-px bg-slate-200/70" />
                 </div>
               ) : (
@@ -147,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className={`flex-shrink-0 ${
                   currentUser.role === Role.EMPLOYEE
                     ? currentView === item.id ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'
-                    : item.id.startsWith('crm-')
+                    : (item.id.startsWith('crm-') || item.id.startsWith('hr-'))
                     ? currentView === item.id ? 'text-[#4a95a9]' : 'text-[#4a95a9]/60 group-hover:text-[#4a95a9]'
                     : currentView === item.id ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-900'
                 }`}>
