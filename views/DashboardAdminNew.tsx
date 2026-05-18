@@ -8,13 +8,15 @@ import { AdminVouchery } from '../components/adminNew/AdminVouchery';
 import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
 import { CrmKontakty } from '../components/adminNew/crm/CrmKontakty';
+import { CrmLeaderboard } from '../components/adminNew/crm/CrmLeaderboard';
 import { HrDashboard } from '../components/adminNew/hr/HrDashboard';
 import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock, UserRound } from 'lucide-react';
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
+const OrgChartView = dynamic(() => import('@/components/adminNew/org/OrgChartView').then(m => ({ default: m.OrgChartView })), { ssr: false });
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'hr-pracownicy' | 'hr-umowy' | 'hr-raporty';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'crm-leaderboard' | 'org-chart' | 'hr-pracownicy' | 'hr-umowy' | 'hr-raporty';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-pulpit':       'pulpit',
@@ -27,6 +29,8 @@ const VIEW_TO_TAB: Record<string, AdminTab> = {
   'crm-pipeline':       'crm-pipeline',
   'crm-kalkulator':     'crm-kalkulator',
   'crm-kontakty':       'crm-kontakty',
+  'crm-leaderboard':    'crm-leaderboard',
+  'org-chart':          'org-chart',
   'hr-pracownicy':      'hr-pracownicy',
   'hr-umowy':           'hr-umowy',
   'hr-raporty':         'hr-raporty',
@@ -43,6 +47,8 @@ const TAB_TO_VIEW: Record<AdminTab, string> = {
   'crm-pipeline':   'crm-pipeline',
   'crm-kalkulator': 'crm-kalkulator',
   'crm-kontakty':   'crm-kontakty',
+  'crm-leaderboard': 'crm-leaderboard',
+  'org-chart':      'org-chart',
   'hr-pracownicy':  'hr-pracownicy',
   'hr-umowy':       'hr-umowy',
   'hr-raporty':     'hr-raporty',
@@ -93,6 +99,8 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
               ?? (tab === 'crm-kalkulator'  ? 'Kalkulator Prime™'
               : tab === 'crm-pipeline'      ? 'Pipeline CRM'
               : tab === 'crm-kontakty'      ? 'Kontakty CRM'
+              : tab === 'crm-leaderboard'   ? 'Leaderboard'
+              : tab === 'org-chart'         ? 'Org-chart'
               : tab === 'hr-pracownicy'     ? 'Panel HR — Pracownicy'
               : tab === 'hr-umowy'          ? 'Panel HR — Umowy'
               : tab === 'hr-raporty'        ? 'Panel HR — Raporty'
@@ -127,6 +135,12 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <CrmKontakty />
         </div>
       )}
+      {tab === 'crm-leaderboard' && (
+        <div className="p-6">
+          <CrmLeaderboard />
+        </div>
+      )}
+      {tab === 'org-chart' && <OrgChartView />}
       {isHrTab(tab) && (
         <div className="p-6">
           <HrDashboard activeSubTab={tab === 'hr-pracownicy' ? 'pracownicy' : tab === 'hr-umowy' ? 'umowy' : 'raporty'} />
