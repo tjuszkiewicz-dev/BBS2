@@ -143,17 +143,21 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <Vortex
-        backgroundColor="#030712"
-        baseHue={185}
-        rangeY={300}
-        particleCount={700}
-        baseSpeed={0.0}
-        rangeSpeed={1.5}
-        baseRadius={1}
-        rangeRadius={2}
-        containerClassName="h-screen overflow-hidden"
-      >
+      <div style={{ height:'100vh', position:'relative', background:'#060b14', overflow:'hidden' }}>
+        <Vortex
+          containerClassName="absolute inset-0"
+          particleCount={700}
+          baseHue={195}
+          backgroundColor="#060b14"
+          rangeY={120}
+          baseSpeed={0.0}
+          rangeSpeed={1.5}
+          baseRadius={1}
+          rangeRadius={2}
+        >
+          <div style={{ display:'none' }} />
+        </Vortex>
+
         <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:10, padding:'16px', overflowY:'auto' }}>
 
           <div className="ebs-up" style={{ width:'100%', maxWidth:264, animationDelay:'.05s' }}>
@@ -263,10 +267,10 @@ export default function LoginPage() {
           </div>
 
           <p style={{ marginTop:16, color:'rgba(255,255,255,0.12)', fontSize:10 }}>
-            &copy; {new Date().getFullYear()} Stratton Prime S.A. Wszystkie prawa zastrzeżone.
+            &copy; {new Date().getFullYear()} Baltic Benefits Sp. z o.o. Wszystkie prawa zastrzeżone.
           </p>
         </div>
-      </Vortex>
+      </div>
     </>
   );
 }

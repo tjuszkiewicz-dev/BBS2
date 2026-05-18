@@ -16,7 +16,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   const bankAccount = "PL 12 1020 3040 0000 9999 8888 7777";
-  const recipientName = "Stratton Prime S.A.";
+  const recipientName = "Baltic Benefits Sp. z o.o.";
   const transferTitle = `Zasilenie BBS - Zamówienie ${order.id}`;
   const totalAmount = order.totalValue.toFixed(2);
   

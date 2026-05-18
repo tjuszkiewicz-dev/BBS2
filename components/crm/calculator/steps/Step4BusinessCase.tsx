@@ -87,7 +87,7 @@ export function Step4BusinessCase({ wyniki, firma, provisionPct, onProvisionChan
           </div>
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span style={{ color: TEAL }}>Eliton Prime™</span>
+              <span style={{ color: TEAL }}>Stratton Prime™</span>
               <span className="font-bold" style={{ color: TEAL }}>{fmt(p.sumaKosztSplit)}</span>
             </div>
             <div className="h-3 bg-slate-100 rounded-full overflow-hidden">

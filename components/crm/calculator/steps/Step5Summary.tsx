@@ -75,7 +75,7 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
           { label: 'Liczba pracowników', value: pracownicy.length.toString() },
           { label: 'Prowizja BBS', value: provisionPct + '%' },
           { label: 'Koszt Standard / mies.', value: fmt(p.sumaKosztStandard) },
-          { label: 'Koszt Eliton Prime™ / mies.', value: fmt(p.sumaKosztSplit) },
+          { label: 'Koszt Stratton Prime™ / mies.', value: fmt(p.sumaKosztSplit) },
           { label: 'Oszczędność brutto / mies.', value: fmt(p.oszczednoscBrutto) },
           { label: 'Prowizja / mies.', value: fmt(p.prowizja) },
           { label: 'Oszczędność netto / mies.', value: fmt(p.oszczednoscNetto) },
