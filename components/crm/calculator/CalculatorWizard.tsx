@@ -15,7 +15,7 @@ const STEPS = [
   { id: 0, label: 'Firma' },
   { id: 1, label: 'Pracownicy' },
   { id: 2, label: 'Model Standard' },
-  { id: 3, label: 'Eliton Prime™' },
+  { id: 3, label: 'Stratton Prime™' },
   { id: 4, label: 'Oszczędności' },
   { id: 5, label: 'Podsumowanie' },
 ];
@@ -82,7 +82,7 @@ export default function CalculatorWizard() {
           <Calculator size={18} className="text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-slate-800">Kalkulator Eliton Prime™</h1>
+          <h1 className="text-lg font-bold text-slate-800">Kalkulator Stratton Prime™</h1>
           <p className="text-xs text-slate-500">Symulacja optymalizacji kosztów zatrudnienia</p>
         </div>
       </div>
