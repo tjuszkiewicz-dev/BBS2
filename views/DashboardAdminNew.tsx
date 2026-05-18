@@ -8,12 +8,13 @@ import { AdminVouchery } from '../components/adminNew/AdminVouchery';
 import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
 import { CrmKontakty } from '../components/adminNew/crm/CrmKontakty';
+import { CrmLeaderboard } from '../components/adminNew/crm/CrmLeaderboard';
 import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock, UserRound } from 'lucide-react';
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'crm-leaderboard';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-pulpit':       'pulpit',
@@ -26,6 +27,7 @@ const VIEW_TO_TAB: Record<string, AdminTab> = {
   'crm-pipeline':       'crm-pipeline',
   'crm-kalkulator':     'crm-kalkulator',
   'crm-kontakty':       'crm-kontakty',
+  'crm-leaderboard':    'crm-leaderboard',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
@@ -39,6 +41,7 @@ const TAB_TO_VIEW: Record<AdminTab, string> = {
   'crm-pipeline':  'crm-pipeline',
   'crm-kalkulator':'crm-kalkulator',
   'crm-kontakty':  'crm-kontakty',
+  'crm-leaderboard': 'crm-leaderboard',
 };
 
 interface Props {
@@ -84,7 +87,8 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
             {tabs.find(t => t.id === tab)?.label
               ?? (tab === 'crm-kalkulator' ? 'Kalkulator Prime™'
               : tab === 'crm-pipeline' ? 'Pipeline CRM'
-              : tab === 'crm-kontakty' ? 'Kontakty CRM' : '')}
+              : tab === 'crm-kontakty' ? 'Kontakty CRM'
+              : tab === 'crm-leaderboard' ? 'Leaderboard' : '')}
           </span>
         </div>
       </div>
@@ -113,6 +117,11 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
       {tab === 'crm-kontakty' && (
         <div className="p-6">
           <CrmKontakty />
+        </div>
+      )}
+      {tab === 'crm-leaderboard' && (
+        <div className="p-6">
+          <CrmLeaderboard />
         </div>
       )}
     </div>
