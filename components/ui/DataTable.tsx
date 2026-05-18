@@ -122,7 +122,7 @@ export function DataTable<T extends { id: string | number }>({
       {/* --- CONTENT --- */}
       
       {/* DESKTOP: Table View */}
-      <div className="hidden md:block overflow-x-auto custom-scrollbar rounded-b-xl">
+      <div className="hidden sm:block overflow-x-auto custom-scrollbar rounded-b-xl">
         <table className="w-full text-left border-collapse">
           <thead className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-200">
             <tr>
@@ -178,7 +178,7 @@ export function DataTable<T extends { id: string | number }>({
       </div>
 
       {/* MOBILE: Stacked List View */}
-      <div className="md:hidden bg-slate-50/50 p-4 space-y-3">
+      <div className="sm:hidden bg-slate-50/50 p-4 space-y-3">
          {paginatedData.length > 0 ? (
            paginatedData.map((item) => (
              <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">

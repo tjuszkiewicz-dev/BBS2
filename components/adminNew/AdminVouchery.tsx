@@ -593,8 +593,8 @@ export const AdminVouchery: React.FC = () => {
           </button>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ background: '#1e3a5f' }}>
@@ -636,8 +636,72 @@ export const AdminVouchery: React.FC = () => {
           </table>
         </div>
 
+        {/* Mobile cards */}
+        <div className="sm:hidden p-3 space-y-3">
+          {loading && (
+            <div className="flex items-center justify-center py-10 gap-2 text-gray-400">
+              <Loader2 size={20} className="animate-spin text-blue-400" />
+              <span className="text-sm">Ladowanie...</span>
+            </div>
+          )}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              <AlertCircle size={14} /> {error}
+            </div>
+          )}
+          {!loading && !error && companies.length === 0 && (
+            <div className="text-center py-10 text-gray-400 text-sm">
+              <Ticket size={28} className="mx-auto mb-2 text-gray-200" />
+              Brak voucherow w systemie
+            </div>
+          )}
+          {!loading && !error && companies.map(company => (
+            <div key={company.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Building2 size={14} className="text-slate-500 shrink-0" />
+                  <p className="font-semibold text-slate-800 text-sm truncate">{company.name}</p>
+                </div>
+                <span className="text-sm font-bold text-blue-600 font-mono shrink-0">{company.total.toLocaleString('pl-PL')} aktywnych</span>
+              </div>
+              {company.nip && <p className="text-xs text-gray-400 mt-0.5 ml-5">NIP {company.nip}</p>}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {company.pending > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-medium">
+                    <Clock size={10} /> {company.pending.toLocaleString('pl-PL')} w poczekalni
+                  </span>
+                )}
+                {company.pool > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-medium">
+                    <Layers size={10} /> {company.pool.toLocaleString('pl-PL')} pula HR
+                  </span>
+                )}
+                <span className="text-xs text-gray-500">{company.employees?.length ?? 0} pracowników</span>
+              </div>
+              {company.employees && company.employees.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {company.employees.map(emp => (
+                    <div key={emp.id} className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-3 py-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <User size={11} className="text-blue-400 shrink-0" />
+                        <span className="text-xs text-gray-700 truncate">{emp.full_name || 'Nieznany'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {emp.active > 0 && <span className="text-xs font-mono text-blue-600">{emp.active.toLocaleString('pl-PL')} akt.</span>}
+                        <button onClick={() => setHistoryEmp(emp)} className="text-[10px] text-blue-500 hover:text-blue-700 flex items-center gap-0.5">
+                          <BookOpen size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
         {/* Legend */}
-        <div className="px-5 py-2.5 border-t border-gray-100 flex items-center gap-4 flex-wrap">
+        <div className="px-5 py-2.5 border-t border-gray-100 hidden sm:flex items-center gap-4 flex-wrap">
           <span className="text-xs text-gray-400 flex items-center gap-1">
             <Building2 size={11} className="text-slate-500" /> Firma
           </span>
