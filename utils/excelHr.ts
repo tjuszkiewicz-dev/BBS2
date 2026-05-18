@@ -37,7 +37,7 @@ function validatePesel(pesel: string): boolean {
 
 export async function generateExcelTemplate(): Promise<void> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'EBS — Eliton Benefits System';
+  wb.creator = 'BBS — Baltic Benefits System';
   wb.created = new Date();
 
   const ws = wb.addWorksheet('Lista pracowników', {
@@ -120,7 +120,7 @@ function getKartotekaColor(idx: number): string {
 
 export async function generateKartotekaTemplate(): Promise<void> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'EBS — Eliton Benefits System';
+  wb.creator = 'BBS — Baltic Benefits System';
   wb.created = new Date();
 
   const ws = wb.addWorksheet('Kartoteka pracowników', {
@@ -248,7 +248,7 @@ export async function exportActiveEmployees(
   companyName: string,
 ): Promise<void> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'EBS — Eliton Benefits System';
+  wb.creator = 'BBS — Baltic Benefits System';
   wb.created = new Date();
 
   const ws = wb.addWorksheet('Aktywni pracownicy', {
@@ -291,14 +291,6 @@ export async function exportActiveEmployees(
     const exRow = ws.addRow(rowData);
     exRow.height = 18;
     rowData.forEach((_, idx) => {
-      // Przypisz kolory w oparciu o kolumnę
-      // Kolumny:
-      // 0-4 (A-E): Imię, Nazwisko, PESEL, Kwota, Email (Zielone) 
-      //    (Z czego indeks 3 czyli 'Kwota' jasnozielona)
-      // 5-8 (F-I): Ulica, Kod, Miasto, Telefon (Zwykłe zielone z poprzedniego adresu)
-      // 9-12 (J-M): Dział, Stanow., Umowa, Data (Niebieskie)
-      // 13-14 (N-O): IBAN (Pomarańczowe)
-      
       let color = COLOR_GREEN;
       if (idx === 3) color = COLOR_GREEN_LITE;
       else if (idx >= 9 && idx <= 12) color = COLOR_BLUE;
@@ -367,7 +359,7 @@ export function exportEmployeeCredentials(employees: EmployeeCredentialRow[], co
 function normalizeHeader(value: string): string {
   return value
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
@@ -435,14 +427,14 @@ function normalizeHireDate(value: unknown): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
   // DD.MM.YYYY or DD/MM/YYYY
-  const dmy = str.match(/^(\d{1,2})[./\-](\d{1,2})[./\-](\d{4})$/);
+  const dmy = str.match(/^(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{4})$/);
   if (dmy) {
     const [, d, m, y] = dmy;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
   // YYYY.MM.DD or YYYY/MM/DD (already handled above for YYYY-MM-DD)
-  const ymd = str.match(/^(\d{4})[./](\d{2})[./](\d{2})$/);
+  const ymd = str.match(/^(\d{4})[.\/](\d{2})[.\/](\d{2})$/);
   if (ymd) {
     const [, y, m, d] = ymd;
     return `${y}-${m}-${d}`;
@@ -546,7 +538,7 @@ export async function parseExcelFile(file: File): Promise<HrExcelRow[]> {
   });
 }
 
-// ── Parser szablonu kartoteki (14 kolumn, bez "Zamówienie voucherów") ─────────
+// ── Parser szablonu kartoteki (14 kolumn, bez "Zamówienie voucherów") ─────────────
 export async function parseKartotekaFile(file: File): Promise<HrExcelRow[]> {
   const buffer = await file.arrayBuffer();
   const wb = XLSX.read(buffer, { type: 'array' });
