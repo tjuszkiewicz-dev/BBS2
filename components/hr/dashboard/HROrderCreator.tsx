@@ -220,7 +220,7 @@ export const HROrderCreator: React.FC<HROrderCreatorProps> = ({
                       </p>
                   </div>
                   <div className="text-right font-sans">
-                      <p className="font-bold text-sm text-slate-900">Stratton Prime S.A.</p>
+                      <p className="font-bold text-sm text-slate-900">Baltic Benefits Sp. z o.o.</p>
                       <p className="text-slate-500 text-[10px]">Data wystawienia: {new Date().toLocaleDateString()}</p>
                   </div>
               </div>
@@ -228,7 +228,7 @@ export const HROrderCreator: React.FC<HROrderCreatorProps> = ({
               <div className="relative z-10 grid grid-cols-2 gap-10 mb-10 font-sans">
                   <div className="space-y-1">
                       <p className="font-bold uppercase text-[9px] text-slate-400 mb-2 border-b border-slate-200 pb-1">Sprzedawca</p>
-                      <p className="font-bold text-sm text-slate-800">Stratton Prime S.A.</p>
+                      <p className="font-bold text-sm text-slate-800">Baltic Benefits Sp. z o.o.</p>
                       <p className="text-slate-600 text-[11px]">ul. Finansowa 12</p>
                       <p className="text-slate-600 text-[11px]">00-001 Warszawa</p>
                       <p className="text-slate-600 text-[11px]">NIP: 521-333-44-55</p>
