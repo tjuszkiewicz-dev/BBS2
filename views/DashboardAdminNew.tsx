@@ -12,8 +12,9 @@ import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, Refre
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
+const OrgChartView = dynamic(() => import('@/components/adminNew/org/OrgChartView').then(m => ({ default: m.OrgChartView })), { ssr: false });
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'org-chart';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-pulpit':       'pulpit',
@@ -26,6 +27,7 @@ const VIEW_TO_TAB: Record<string, AdminTab> = {
   'crm-pipeline':       'crm-pipeline',
   'crm-kalkulator':     'crm-kalkulator',
   'crm-kontakty':       'crm-kontakty',
+  'org-chart':          'org-chart',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
@@ -39,6 +41,7 @@ const TAB_TO_VIEW: Record<AdminTab, string> = {
   'crm-pipeline':  'crm-pipeline',
   'crm-kalkulator':'crm-kalkulator',
   'crm-kontakty':  'crm-kontakty',
+  'org-chart':     'org-chart',
 };
 
 interface Props {
@@ -84,7 +87,8 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
             {tabs.find(t => t.id === tab)?.label
               ?? (tab === 'crm-kalkulator' ? 'Kalkulator Prime™'
               : tab === 'crm-pipeline' ? 'Pipeline CRM'
-              : tab === 'crm-kontakty' ? 'Kontakty CRM' : '')}
+              : tab === 'crm-kontakty' ? 'Kontakty CRM'
+              : tab === 'org-chart' ? 'Org-chart' : '')}
           </span>
         </div>
       </div>
@@ -115,6 +119,7 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <CrmKontakty />
         </div>
       )}
+      {tab === 'org-chart' && <OrgChartView />}
     </div>
   );
 };
