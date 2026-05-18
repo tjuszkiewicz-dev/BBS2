@@ -9,12 +9,13 @@ import { AdminBuyback } from '../components/adminNew/AdminBuyback';
 import { AdminUsers } from '../components/adminNew/AdminUsers';
 import { CrmKontakty } from '../components/adminNew/crm/CrmKontakty';
 import { CrmLeaderboard } from '../components/adminNew/crm/CrmLeaderboard';
+import { HrDashboard } from '../components/adminNew/hr/HrDashboard';
 import { LayoutDashboard, Users, CreditCard, ShieldCheck, Archive, Ticket, RefreshCw, Lock, UserRound } from 'lucide-react';
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
 
-type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'crm-leaderboard';
+type AdminTab = 'pulpit' | 'klienci' | 'platnosci' | 'archiwum' | 'vouchery' | 'buyback' | 'uzytkowniczy' | 'crm-pipeline' | 'crm-kalkulator' | 'crm-kontakty' | 'crm-leaderboard' | 'hr-pracownicy' | 'hr-umowy' | 'hr-raporty';
 
 const VIEW_TO_TAB: Record<string, AdminTab> = {
   'admin-pulpit':       'pulpit',
@@ -28,20 +29,26 @@ const VIEW_TO_TAB: Record<string, AdminTab> = {
   'crm-kalkulator':     'crm-kalkulator',
   'crm-kontakty':       'crm-kontakty',
   'crm-leaderboard':    'crm-leaderboard',
+  'hr-pracownicy':      'hr-pracownicy',
+  'hr-umowy':           'hr-umowy',
+  'hr-raporty':         'hr-raporty',
 };
 
 const TAB_TO_VIEW: Record<AdminTab, string> = {
-  pulpit:          'admin-pulpit',
-  klienci:         'admin-klienci',
-  platnosci:       'admin-platnosci',
-  archiwum:        'admin-archiwum',
-  vouchery:        'admin-vouchery',
-  buyback:         'admin-buyback',
-  uzytkowniczy:    'admin-uzytkowniczy',
-  'crm-pipeline':  'crm-pipeline',
-  'crm-kalkulator':'crm-kalkulator',
-  'crm-kontakty':  'crm-kontakty',
+  pulpit:           'admin-pulpit',
+  klienci:          'admin-klienci',
+  platnosci:        'admin-platnosci',
+  archiwum:         'admin-archiwum',
+  vouchery:         'admin-vouchery',
+  buyback:          'admin-buyback',
+  uzytkowniczy:     'admin-uzytkowniczy',
+  'crm-pipeline':   'crm-pipeline',
+  'crm-kalkulator': 'crm-kalkulator',
+  'crm-kontakty':   'crm-kontakty',
   'crm-leaderboard': 'crm-leaderboard',
+  'hr-pracownicy':  'hr-pracownicy',
+  'hr-umowy':       'hr-umowy',
+  'hr-raporty':     'hr-raporty',
 };
 
 interface Props {
@@ -50,6 +57,7 @@ interface Props {
 }
 
 export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }) => {
+  const isHrTab = (t: AdminTab) => t === 'hr-pracownicy' || t === 'hr-umowy' || t === 'hr-raporty';
   const [tab, setTab] = useState<AdminTab>(() => VIEW_TO_TAB[currentView] ?? 'pulpit');
 
   useEffect(() => {
@@ -85,10 +93,14 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <span className="text-gray-300">|</span>
           <span className="text-xs text-gray-500">
             {tabs.find(t => t.id === tab)?.label
-              ?? (tab === 'crm-kalkulator' ? 'Kalkulator Prime™'
-              : tab === 'crm-pipeline' ? 'Pipeline CRM'
-              : tab === 'crm-kontakty' ? 'Kontakty CRM'
-              : tab === 'crm-leaderboard' ? 'Leaderboard' : '')}
+              ?? (tab === 'crm-kalkulator'  ? 'Kalkulator Prime™'
+              : tab === 'crm-pipeline'      ? 'Pipeline CRM'
+              : tab === 'crm-kontakty'      ? 'Kontakty CRM'
+              : tab === 'crm-leaderboard'   ? 'Leaderboard'
+              : tab === 'hr-pracownicy'     ? 'Panel HR — Pracownicy'
+              : tab === 'hr-umowy'          ? 'Panel HR — Umowy'
+              : tab === 'hr-raporty'        ? 'Panel HR — Raporty'
+              : '')}
           </span>
         </div>
       </div>
@@ -122,6 +134,11 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
       {tab === 'crm-leaderboard' && (
         <div className="p-6">
           <CrmLeaderboard />
+        </div>
+      )}
+      {isHrTab(tab) && (
+        <div className="p-6">
+          <HrDashboard activeSubTab={tab === 'hr-pracownicy' ? 'pracownicy' : tab === 'hr-umowy' ? 'umowy' : 'raporty'} />
         </div>
       )}
     </div>
