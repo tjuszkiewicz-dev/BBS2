@@ -8,6 +8,7 @@ import { Role } from '../types';
 const VIEW_PREFIX: Record<Role, string> = {
   [Role.SUPERADMIN]: 'admin-',
   [Role.HR]:         'hr-',
+  [Role.HR_PANEL]:   'hr-',
   [Role.EMPLOYEE]:   'emp-',
   [Role.DIRECTOR]:   'sales-',
   [Role.MANAGER]:    'sales-',
