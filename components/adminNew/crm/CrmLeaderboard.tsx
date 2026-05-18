@@ -52,7 +52,7 @@ function PodiumCard({ entry, isFirst }: PodiumCardProps) {
       }`}
       style={{ borderColor, backgroundColor: bgColor }}
     >
-      <span className="text-3xl mb-1">{MEDAL[badge]}</span>
+      <span className="text-3xl mb-1" role="img" aria-label={badge === 'gold' ? '1 miejsce' : badge === 'silver' ? '2 miejsce' : '3 miejsce'}>{MEDAL[badge]}</span>
       <span className="text-xs font-semibold text-gray-400 mb-1">#{entry.rank}</span>
       <p className="font-bold text-sm text-gray-900 leading-tight mb-3 line-clamp-2">
         {entry.full_name || '—'}
@@ -71,7 +71,7 @@ function PodiumCard({ entry, isFirst }: PodiumCardProps) {
         <div className="flex justify-between text-xs">
           <span className="text-gray-500">Konwersja</span>
           <span className="font-semibold" style={{ color: '#c9a227' }}>
-            {entry.conversion_rate}%
+            {Math.min(100, entry.conversion_rate).toFixed(2)}%
           </span>
         </div>
       </div>
@@ -90,9 +90,13 @@ export function CrmLeaderboard() {
     setError(null);
     try {
       const res = await fetch(`/api/crm/leaderboard?period=${p}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: LeaderboardEntry[] = await res.json();
-      setEntries(data);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error(data?.error ?? 'Unexpected response');
+      setEntries(data as LeaderboardEntry[]);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Błąd ładowania danych');
     } finally {
@@ -128,6 +132,7 @@ export function CrmLeaderboard() {
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value as Period)}
+              aria-label="Wybierz okres"
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
             >
               <option value="month">Miesiąc</option>
@@ -180,7 +185,7 @@ export function CrmLeaderboard() {
                   Pozostałe miejsca
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm" aria-label="Ranking sprzedawców">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">
@@ -219,7 +224,7 @@ export function CrmLeaderboard() {
                             {entry.deals_closed}
                           </td>
                           <td className="px-4 py-3 text-right font-semibold" style={{ color: '#c9a227' }}>
-                            {entry.conversion_rate}%
+                            {Math.min(100, entry.conversion_rate).toFixed(2)}%
                           </td>
                         </tr>
                       ))}
