@@ -139,7 +139,7 @@ export const CrmKontakty: React.FC = () => {
       )}
 
       {/* Desktop Table */}
-      <div className="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
@@ -207,7 +207,7 @@ export const CrmKontakty: React.FC = () => {
       </div>
 
       {/* Mobile Cards */}
-      <div className="md:hidden space-y-2">
+      <div className="sm:hidden space-y-2">
         {loading && <p className="text-center text-slate-400 py-6 text-sm">Ładowanie...</p>}
         {!loading && contacts.length === 0 && <p className="text-center text-slate-400 py-6 text-sm">Brak kontaktów</p>}
         {contacts.map(c => (

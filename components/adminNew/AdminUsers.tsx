@@ -211,9 +211,9 @@ export const AdminUsers: React.FC = () => {
 
       {/* Users Table */}
       {!loading && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <>
           {filtered.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
               <Users size={32} className="mx-auto text-slate-200 mb-3" />
               <p className="text-slate-400 text-sm">
                 {search || roleFilter !== 'all' || statusFilter !== 'all'
@@ -222,141 +222,211 @@ export const AdminUsers: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Rola</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Imię i Nazwisko</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Stanowisko</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Firma</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Utworzony</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Ostatnie logowanie</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Akcje</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {filtered.map((user) => (
-                    <React.Fragment key={user.id}>
-                      <tr className="hover:bg-slate-50 transition">
-                        <td className="px-4 py-3 text-sm text-slate-700 font-medium">{user.email}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-1 rounded border text-xs font-medium ${ROLE_COLORS[user.role]}`}>
-                            {ROLE_LABELS[user.role]}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{user.full_name || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{user.position || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{user.company_name || '—'}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-1 rounded border text-xs font-medium ${STATUS_COLORS[user.status]}`}>
-                            {user.status === 'active' ? 'Aktywny' : user.status === 'inactive' ? 'Nieaktywny' : 'Anonimizowany'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {new Date(user.created_at).toLocaleDateString('pl-PL')}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {user.last_signed_in
-                            ? new Date(user.last_signed_in).toLocaleDateString('pl-PL')
-                            : '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() =>
-                              setExpandedUserId(expandedUserId === user.id ? null : user.id)
-                            }
-                            className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-300 rounded hover:bg-slate-100 transition"
-                          >
-                            <span>Akcje</span>
-                            <ChevronDown
-                              size={12}
-                              className={`transition ${expandedUserId === user.id ? 'rotate-180' : ''}`}
-                            />
-                          </button>
-                        </td>
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Rola</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Imię i Nazwisko</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Stanowisko</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Firma</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Utworzony</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Ostatnie logowanie</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Akcje</th>
                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {filtered.map((user) => (
+                        <React.Fragment key={user.id}>
+                          <tr className="hover:bg-slate-50 transition">
+                            <td className="px-4 py-3 text-sm text-slate-700 font-medium">{user.email}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-block px-2 py-1 rounded border text-xs font-medium ${ROLE_COLORS[user.role]}`}>
+                                {ROLE_LABELS[user.role]}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{user.full_name || '—'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{user.position || '—'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{user.company_name || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-block px-2 py-1 rounded border text-xs font-medium ${STATUS_COLORS[user.status]}`}>
+                                {user.status === 'active' ? 'Aktywny' : user.status === 'inactive' ? 'Nieaktywny' : 'Anonimizowany'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-600">
+                              {new Date(user.created_at).toLocaleDateString('pl-PL')}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-600">
+                              {user.last_signed_in
+                                ? new Date(user.last_signed_in).toLocaleDateString('pl-PL')
+                                : '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() =>
+                                  setExpandedUserId(expandedUserId === user.id ? null : user.id)
+                                }
+                                className="flex items-center gap-1 px-2 py-1 text-xs border border-slate-300 rounded hover:bg-slate-100 transition"
+                              >
+                                <span>Akcje</span>
+                                <ChevronDown
+                                  size={12}
+                                  className={`transition ${expandedUserId === user.id ? 'rotate-180' : ''}`}
+                                />
+                              </button>
+                            </td>
+                          </tr>
 
-                      {/* Expanded Actions Row */}
-                      {expandedUserId === user.id && (
-                        <tr className="bg-slate-50 border-t border-slate-200">
-                          <td colSpan={9} className="px-4 py-3">
-                            <div className="space-y-3">
-                              {/* Reset Password */}
-                              {resetPasswordUserId === user.id ? (
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="text"
-                                    value={resetPasswordValue}
-                                    onChange={(e) => setResetPasswordValue(e.target.value)}
-                                    placeholder="Wpisz nowe hasło..."
-                                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                                  />
-                                  <button
-                                    onClick={() => handleResetPassword(user.id, user.email)}
-                                    disabled={resetPasswordLoading || !resetPasswordValue}
-                                    className="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 disabled:opacity-50"
-                                  >
-                                    {resetPasswordLoading ? '...' : 'Resetuj'}
-                                  </button>
-                                  <button
-                                    onClick={() => setResetPasswordUserId(null)}
-                                    className="px-3 py-2 border border-slate-200 rounded-lg text-xs hover:bg-slate-100"
-                                  >
-                                    Anuluj
-                                  </button>
+                          {expandedUserId === user.id && (
+                            <tr className="bg-slate-50 border-t border-slate-200">
+                              <td colSpan={9} className="px-4 py-3">
+                                <div className="space-y-3">
+                                  {resetPasswordUserId === user.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        value={resetPasswordValue}
+                                        onChange={(e) => setResetPasswordValue(e.target.value)}
+                                        placeholder="Wpisz nowe hasło..."
+                                        className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                                      />
+                                      <button
+                                        onClick={() => handleResetPassword(user.id, user.email)}
+                                        disabled={resetPasswordLoading || !resetPasswordValue}
+                                        className="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 disabled:opacity-50"
+                                      >
+                                        {resetPasswordLoading ? '...' : 'Resetuj'}
+                                      </button>
+                                      <button
+                                        onClick={() => setResetPasswordUserId(null)}
+                                        className="px-3 py-2 border border-slate-200 rounded-lg text-xs hover:bg-slate-100"
+                                      >
+                                        Anuluj
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setResetPasswordUserId(user.id)}
+                                      className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-100 transition"
+                                    >
+                                      <Lock size={12} />
+                                      Resetuj hasło
+                                    </button>
+                                  )}
+                                  <div className="flex flex-wrap gap-2">
+                                    {user.status !== 'active' && (
+                                      <button
+                                        onClick={() => handleAction(user.id, 'activate')}
+                                        disabled={actionLoading === user.id}
+                                        className="px-3 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 disabled:opacity-50 transition"
+                                      >
+                                        {actionLoading === user.id ? '...' : 'Aktywuj'}
+                                      </button>
+                                    )}
+                                    {user.status === 'active' && (
+                                      <button
+                                        onClick={() => handleAction(user.id, 'deactivate')}
+                                        disabled={actionLoading === user.id}
+                                        className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-50 transition"
+                                      >
+                                        {actionLoading === user.id ? '...' : 'Dezaktywuj'}
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleAction(user.id, 'anonymize')}
+                                      disabled={actionLoading === user.id}
+                                      className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50 transition"
+                                    >
+                                      {actionLoading === user.id ? '...' : <><Trash2 size={12} className="inline mr-1" /> Anonimizuj</>}
+                                    </button>
+                                  </div>
                                 </div>
-                              ) : (
-                                <button
-                                  onClick={() => setResetPasswordUserId(user.id)}
-                                  className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-100 transition"
-                                >
-                                  <Lock size={12} />
-                                  Resetuj hasło
-                                </button>
-                              )}
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-                              {/* Status Actions */}
-                              <div className="flex flex-wrap gap-2">
-                                {user.status !== 'active' && (
-                                  <button
-                                    onClick={() => handleAction(user.id, 'activate')}
-                                    disabled={actionLoading === user.id}
-                                    className="px-3 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 disabled:opacity-50 transition"
-                                  >
-                                    {actionLoading === user.id ? '...' : 'Aktywuj'}
-                                  </button>
-                                )}
-                                {user.status === 'active' && (
-                                  <button
-                                    onClick={() => handleAction(user.id, 'deactivate')}
-                                    disabled={actionLoading === user.id}
-                                    className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-50 transition"
-                                  >
-                                    {actionLoading === user.id ? '...' : 'Dezaktywuj'}
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleAction(user.id, 'anonymize')}
-                                  disabled={actionLoading === user.id}
-                                  className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50 transition"
-                                >
-                                  {actionLoading === user.id ? '...' : <><Trash2 size={12} className="inline mr-1" /> Anonimizuj</>}
-                                </button>
-                              </div>
+              {/* Mobile cards */}
+              <div className="sm:hidden space-y-3">
+                {filtered.map((user) => (
+                  <div key={user.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 text-sm truncate">{user.full_name || user.email}</p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-semibold ${ROLE_COLORS[user.role]}`}>
+                          {ROLE_LABELS[user.role]}
+                        </span>
+                        <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-semibold ${STATUS_COLORS[user.status]}`}>
+                          {user.status === 'active' ? 'Aktywny' : user.status === 'inactive' ? 'Nieaktywny' : 'Anon.'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
+                      {user.company_name && <span>Firma: <span className="text-slate-700">{user.company_name}</span></span>}
+                      {user.position && <span>Stanowisko: <span className="text-slate-700">{user.position}</span></span>}
+                      <span>Dodany: <span className="text-slate-700">{new Date(user.created_at).toLocaleDateString('pl-PL')}</span></span>
+                      <span>Logowanie: <span className="text-slate-700">{user.last_signed_in ? new Date(user.last_signed_in).toLocaleDateString('pl-PL') : '—'}</span></span>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <button
+                        onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
+                        className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 transition"
+                      >
+                        <ChevronDown size={12} className={`transition ${expandedUserId === user.id ? 'rotate-180' : ''}`} />
+                        Akcje
+                      </button>
+                      {expandedUserId === user.id && (
+                        <div className="mt-2 space-y-2">
+                          {resetPasswordUserId === user.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={resetPasswordValue}
+                                onChange={(e) => setResetPasswordValue(e.target.value)}
+                                placeholder="Nowe hasło..."
+                                className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs"
+                              />
+                              <button onClick={() => handleResetPassword(user.id, user.email)} disabled={resetPasswordLoading || !resetPasswordValue} className="px-2 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium disabled:opacity-50">Resetuj</button>
+                              <button onClick={() => setResetPasswordUserId(null)} className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs">Anuluj</button>
                             </div>
-                          </td>
-                        </tr>
+                          ) : (
+                            <button onClick={() => setResetPasswordUserId(user.id)} className="flex items-center gap-1.5 px-2 py-1.5 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium">
+                              <Lock size={11} /> Resetuj hasło
+                            </button>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {user.status !== 'active' && (
+                              <button onClick={() => handleAction(user.id, 'activate')} disabled={actionLoading === user.id} className="px-2 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-medium disabled:opacity-50">Aktywuj</button>
+                            )}
+                            {user.status === 'active' && (
+                              <button onClick={() => handleAction(user.id, 'deactivate')} disabled={actionLoading === user.id} className="px-2 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium disabled:opacity-50">Dezaktywuj</button>
+                            )}
+                            <button onClick={() => handleAction(user.id, 'anonymize')} disabled={actionLoading === user.id} className="px-2 py-1.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium disabled:opacity-50">
+                              <Trash2 size={11} className="inline mr-1" />Anonimizuj
+                            </button>
+                          </div>
+                        </div>
                       )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
-        </div>
+        </>
       )}
     </div>
   );

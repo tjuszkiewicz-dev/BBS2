@@ -295,38 +295,54 @@ export function AdminBuyback() {
                               Brak pracowników z przeterminowanymi voucherami.
                             </p>
                           ) : (
-                            <div className="rounded-lg overflow-hidden border border-gray-200">
-                              <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 13 }}>
-                                <thead>
-                                  <tr style={{ background: '#1e3a5f' }}>
-                                    {['LP', 'Imię i nazwisko', 'Vouchery po terminie'].map((h, i) => (
-                                      <th key={i} style={{
-                                        padding: '8px 12px', color: '#fff', fontWeight: 600,
-                                        fontSize: 11, textAlign: i === 0 ? 'center' : i === 2 ? 'right' : 'left',
-                                        whiteSpace: 'nowrap', width: i === 0 ? 44 : undefined,
-                                      }}>
-                                        {h}
-                                      </th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {state.expiredEmployees.map((emp, idx) => (
-                                    <tr key={emp.employeeId} style={{ background: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
-                                      <td style={{ padding: '7px 12px', textAlign: 'center', color: '#9ca3af', borderBottom: '1px solid #f3f4f6' }}>
-                                        {idx + 1}
-                                      </td>
-                                      <td style={{ padding: '7px 12px', fontWeight: 500, color: '#111827', borderBottom: '1px solid #f3f4f6' }}>
-                                        {emp.fullName}
-                                      </td>
-                                      <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 700, color: '#b45309', borderBottom: '1px solid #f3f4f6', whiteSpace: 'nowrap' }}>
-                                        {emp.count} szt.
-                                      </td>
+                            <>
+                              {/* Desktop table */}
+                              <div className="hidden sm:block rounded-lg overflow-hidden border border-gray-200">
+                                <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 13 }}>
+                                  <thead>
+                                    <tr style={{ background: '#1e3a5f' }}>
+                                      {['LP', 'Imię i nazwisko', 'Vouchery po terminie'].map((h, i) => (
+                                        <th key={i} style={{
+                                          padding: '8px 12px', color: '#fff', fontWeight: 600,
+                                          fontSize: 11, textAlign: i === 0 ? 'center' : i === 2 ? 'right' : 'left',
+                                          whiteSpace: 'nowrap', width: i === 0 ? 44 : undefined,
+                                        }}>
+                                          {h}
+                                        </th>
+                                      ))}
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                  </thead>
+                                  <tbody>
+                                    {state.expiredEmployees.map((emp, idx) => (
+                                      <tr key={emp.employeeId} style={{ background: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                        <td style={{ padding: '7px 12px', textAlign: 'center', color: '#9ca3af', borderBottom: '1px solid #f3f4f6' }}>
+                                          {idx + 1}
+                                        </td>
+                                        <td style={{ padding: '7px 12px', fontWeight: 500, color: '#111827', borderBottom: '1px solid #f3f4f6' }}>
+                                          {emp.fullName}
+                                        </td>
+                                        <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 700, color: '#b45309', borderBottom: '1px solid #f3f4f6', whiteSpace: 'nowrap' }}>
+                                          {emp.count} szt.
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              {/* Mobile cards */}
+                              <div className="sm:hidden space-y-2">
+                                {state.expiredEmployees.map((emp, idx) => (
+                                  <div key={emp.employeeId} className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2.5">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-400 w-5 text-center">{idx + 1}</span>
+                                      <p className="text-sm font-medium text-gray-800">{emp.fullName}</p>
+                                    </div>
+                                    <span className="text-sm font-bold text-amber-700">{emp.count} szt.</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
                           )}
                         </div>
 
@@ -369,40 +385,50 @@ export function AdminBuyback() {
                                     </button>
 
                                     {isBatchOpen && batch.buyback_batch_items && batch.buyback_batch_items.length > 0 && (
-                                      <div className="border-t border-gray-100 overflow-x-auto">
-                                        <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 12 }}>
-                                          <thead>
-                                            <tr style={{ background: '#f8fafc' }}>
-                                              {['Pracownik', 'IBAN', 'Vouchery', 'Kwota'].map((h, i) => (
-                                                <th key={i} style={{
-                                                  padding: '6px 12px', color: '#6b7280', fontWeight: 600,
-                                                  fontSize: 10, textAlign: i >= 2 ? 'right' : 'left',
-                                                  borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap',
-                                                }}>
-                                                  {h}
-                                                </th>
-                                              ))}
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {batch.buyback_batch_items.map((item, i) => (
-                                              <tr key={item.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
-                                                <td style={{ padding: '6px 12px', color: '#111827', fontWeight: 500, borderBottom: '1px solid #f3f4f6' }}>
-                                                  {item.full_name}
-                                                </td>
-                                                <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#6b7280', fontSize: 11, borderBottom: '1px solid #f3f4f6' }}>
-                                                  {item.iban || '—'}
-                                                </td>
-                                                <td style={{ padding: '6px 12px', textAlign: 'right', color: '#374151', borderBottom: '1px solid #f3f4f6' }}>
-                                                  {item.voucher_count}
-                                                </td>
-                                                <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 600, color: '#1d4ed8', borderBottom: '1px solid #f3f4f6', whiteSpace: 'nowrap' }}>
-                                                  {item.amount_pln?.toFixed(2)} PLN
-                                                </td>
+                                      <div className="border-t border-gray-100">
+                                        {/* Desktop table */}
+                                        <div className="hidden sm:block overflow-x-auto">
+                                          <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 12 }}>
+                                            <thead>
+                                              <tr style={{ background: '#f8fafc' }}>
+                                                {['Pracownik', 'IBAN', 'Vouchery', 'Kwota'].map((h, i) => (
+                                                  <th key={i} style={{
+                                                    padding: '6px 12px', color: '#6b7280', fontWeight: 600,
+                                                    fontSize: 10, textAlign: i >= 2 ? 'right' : 'left',
+                                                    borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap',
+                                                  }}>
+                                                    {h}
+                                                  </th>
+                                                ))}
                                               </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
+                                            </thead>
+                                            <tbody>
+                                              {batch.buyback_batch_items.map((item, i) => (
+                                                <tr key={item.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                                  <td style={{ padding: '6px 12px', color: '#111827', fontWeight: 500, borderBottom: '1px solid #f3f4f6' }}>{item.full_name}</td>
+                                                  <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#6b7280', fontSize: 11, borderBottom: '1px solid #f3f4f6' }}>{item.iban || '—'}</td>
+                                                  <td style={{ padding: '6px 12px', textAlign: 'right', color: '#374151', borderBottom: '1px solid #f3f4f6' }}>{item.voucher_count}</td>
+                                                  <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 600, color: '#1d4ed8', borderBottom: '1px solid #f3f4f6', whiteSpace: 'nowrap' }}>{item.amount_pln?.toFixed(2)} PLN</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                        {/* Mobile cards */}
+                                        <div className="sm:hidden p-3 space-y-2">
+                                          {batch.buyback_batch_items.map(item => (
+                                            <div key={item.id} className="bg-white border border-gray-100 rounded-lg px-3 py-2">
+                                              <div className="flex justify-between items-start">
+                                                <p className="text-sm font-medium text-gray-800">{item.full_name}</p>
+                                                <span className="text-sm font-bold text-blue-700">{item.amount_pln?.toFixed(2)} PLN</span>
+                                              </div>
+                                              <div className="mt-1 text-xs text-gray-500 flex items-center gap-3">
+                                                <span className="font-mono truncate max-w-[140px]">{item.iban || '—'}</span>
+                                                <span>{item.voucher_count} voucherów</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
                                       </div>
                                     )}
                                   </div>
