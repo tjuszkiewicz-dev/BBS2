@@ -56,7 +56,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
        <div className="grid grid-cols-2 gap-8 mb-8" style={{ fontSize: '10pt' }}>
            {/* Seller */}
            <div>
-               <p className="font-bold uppercase mb-1 tracking-widest border-b border-gray-300 pb-0.5" style={{ fontSize: '8pt' }}>SPRZEDAJĄCY (UŻYTKOWNIK)</p>
+               <p className="font-bold uppercase mb-1 tracking-widest border-b border-gray-300 pb-0.5" style={{ fontSize: '8pt' }}>SPRZEDAJĄCY (UżYTKOWNIK)</p>
                <div className="leading-snug">
                    <p className="font-bold">{displayName}</p>
                    <p>ID Systemowe: {data.userId}</p>
@@ -70,7 +70,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
            <div>
                <p className="font-bold uppercase mb-1 tracking-widest border-b border-gray-300 pb-0.5" style={{ fontSize: '8pt' }}>KUPUJĄCY (OPERATOR)</p>
                <div className="leading-snug">
-                   <p className="font-bold">STRATTON PRIME S.A.</p>
+                   <p className="font-bold">BALTIC BENEFITS SP. Z O.O.</p>
                    <p>ul. Finansowa 12, 00-001 Warszawa</p>
                    <p>NIP: 521-333-44-55</p>
                    <p>Reprezentacja: System (BBS)</p>
@@ -112,7 +112,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
             <strong>§2. Warunki Płatności.</strong><br/>
             1. Strony ustalają łączną cenę odkupu na kwotę <strong>{formatCurrency(data.totalValue)}</strong>.<br/>
             2. Płatność nastąpi w terminie 7 dni od daty wygenerowania niniejszego dokumentu.<br/>
-            3. Środki zostaną przekazane na rachunek bankowy Sprzedającego:
+            3. Środnki zostaną przekazane na rachunek bankowy Sprzedającego:
          </p>
          
          {/* IBAN Display */}
@@ -143,7 +143,7 @@ export const BuybackAgreementTemplate: React.FC<Props> = ({ data, user }) => {
             </div>
             <div className="text-center">
                 <div className="h-16 border-b border-black mb-1 flex flex-col justify-end pb-1 relative">
-                    <p className="font-script text-xl text-slate-400 absolute bottom-2 left-0 right-0 transform -rotate-2 opacity-50">Stratton Prime S.A.</p>
+                    <p className="font-script text-xl text-slate-400 absolute bottom-2 left-0 right-0 transform -rotate-2 opacity-50">Baltic Benefits Sp. z o.o.</p>
                 </div>
                 <p className="font-bold uppercase tracking-widest" style={{ fontSize: '8pt' }}>Kupujący</p>
                 <p className="text-gray-500 uppercase" style={{ fontSize: '7pt' }}>(Pieczęć Systemowa)</p>
