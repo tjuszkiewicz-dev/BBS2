@@ -1759,7 +1759,7 @@ export const DashboardNewHR: React.FC<Props> = ({
               onImportSuccess={() => void refreshEmployees()}
             />
 
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d1d5db' }}>
+            <div className="hidden sm:block bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d1d5db' }}>
               <div className="overflow-x-auto">
                 <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
@@ -2097,6 +2097,73 @@ export const DashboardNewHR: React.FC<Props> = ({
                 </table>
               </div>
             </div>
+
+            {/* Mobile cards — lista pracowników */}
+            <div className="sm:hidden space-y-3">
+              {filteredEmployees.length === 0 ? (
+                <div className="text-center py-10 text-gray-400 text-sm">
+                  Brak pracowników. Dodaj pracowników lub zaimportuj przez Excel.
+                </div>
+              ) : (
+                filteredEmployees.map((emp) => {
+                  const isExpanded = expandedEmployeeId === emp.id;
+                  const isActive   = emp.status === 'ACTIVE';
+                  const firstName  = emp.identity?.firstName ?? emp.name.split(' ')[0] ?? emp.name;
+                  const lastName   = emp.identity?.lastName  ?? emp.name.split(' ').slice(1).join(' ') ?? '';
+                  const phone      = emp.identity?.phoneNumber ?? '';
+                  const dept       = emp.organization?.department || emp.department || '';
+                  const pos        = emp.organization?.position   || emp.position   || '';
+                  const contract   = emp.contract?.type === ContractType.UZ ? 'Umowa Zlecenie' : 'Umowa o Pracę';
+                  const balance    = emp.voucherBalance ?? emp.finance?.voucherBalance ?? 0;
+                  return (
+                    <div
+                      key={emp.id}
+                      className={`bg-white rounded-xl border shadow-sm transition ${isExpanded ? 'border-blue-300' : 'border-gray-200'}`}
+                    >
+                      <div
+                        onClick={() => setExpandedEmployeeId(isExpanded ? null : emp.id)}
+                        className="p-4 cursor-pointer active:bg-gray-50"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm">{firstName} {lastName}</p>
+                            <p className="text-xs text-gray-500 truncate">{emp.email ?? '—'}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', fontSize: 10,
+                              fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                              background: isActive ? '#d1fae5' : '#f3f4f6',
+                              color:      isActive ? '#065f46' : '#6b7280',
+                            }}>
+                              {isActive ? 'Aktywny' : 'Nieaktywny'}
+                            </span>
+                            {isExpanded ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-gray-400" />}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-2 text-xs text-gray-500">
+                          {dept && <span>Dział: <span className="text-gray-700">{dept}</span></span>}
+                          {pos  && <span>Stanow.: <span className="text-gray-700">{pos}</span></span>}
+                          <span className="col-span-2 flex items-center gap-2">
+                            <Wallet size={11} className={balance > 0 ? 'text-emerald-600' : 'text-gray-300'} />
+                            <span className={`font-semibold ${balance > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>{formatCurrency(balance)}</span>
+                            <span className="text-gray-400">· {contract}</span>
+                          </span>
+                        </div>
+                      </div>
+                      {isExpanded && (
+                        <div className="border-t border-blue-100 px-4 pb-4 pt-3 bg-blue-50/50 rounded-b-xl space-y-2">
+                          <div className="grid grid-cols-1 gap-0.5 text-xs">
+                            {emp.pesel && <span className="text-gray-500">PESEL: <span className="font-mono text-gray-700">{emp.pesel}</span></span>}
+                            {phone     && <span className="text-gray-500">Tel: <span className="text-gray-700">{phone}</span></span>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
@@ -2186,99 +2253,157 @@ export const DashboardNewHR: React.FC<Props> = ({
                 </div>
               );
               return (
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Nr dokumentu</th>
-                        <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Data wystawienia</th>
-                        <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          {docsTab === 'nota' ? 'Kwota (VAT 0%)' : 'Netto'}
-                        </th>
-                        {docsTab === 'faktura_vat' && (
-                          <>
-                            <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">VAT 23%</th>
-                            <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Brutto</th>
-                          </>
-                        )}
-                        <th className="text-center py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-                        <th className="text-center py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">PDF</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {docs.map(doc => {
-                        const isPaid = doc.status === 'paid';
-                        return (
-                          <tr key={doc.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 font-mono text-xs text-gray-800 font-semibold">
-                              {doc.document_number ?? '—'}
-                              {doc.linked_order_id && (
-                                <p className="text-gray-400 font-normal mt-0.5 truncate max-w-[180px]">
-                                  Zam.: {doc.linked_order_id.slice(-8).toUpperCase()}
-                                </p>
+                <>
+                  <div className="hidden sm:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Nr dokumentu</th>
+                          <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Data wystawienia</th>
+                          <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            {docsTab === 'nota' ? 'Kwota (VAT 0%)' : 'Netto'}
+                          </th>
+                          {docsTab === 'faktura_vat' && (
+                            <>
+                              <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">VAT 23%</th>
+                              <th className="text-right py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Brutto</th>
+                            </>
+                          )}
+                          <th className="text-center py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                          <th className="text-center py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">PDF</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {docs.map(doc => {
+                          const isPaid = doc.status === 'paid';
+                          return (
+                            <tr key={doc.id} className="hover:bg-gray-50">
+                              <td className="py-3 px-4 font-mono text-xs text-gray-800 font-semibold">
+                                {doc.document_number ?? '—'}
+                                {doc.linked_order_id && (
+                                  <p className="text-gray-400 font-normal mt-0.5 truncate max-w-[180px]">
+                                    Zam.: {doc.linked_order_id.slice(-8).toUpperCase()}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-gray-500 text-xs whitespace-nowrap">
+                                {formatDate(doc.issued_at)}
+                                {isPaid && doc.payment_confirmed_at && (
+                                  <p className="text-emerald-600 mt-0.5">Opłacono: {formatDate(doc.payment_confirmed_at)}</p>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-right font-semibold text-gray-800">
+                                {formatCurrency(Number(doc.amount_net))}
+                              </td>
+                              {docsTab === 'faktura_vat' && (
+                                <>
+                                  <td className="py-3 px-4 text-right text-gray-600">
+                                    {formatCurrency(Number(doc.vat_amount))}
+                                  </td>
+                                  <td className="py-3 px-4 text-right font-bold text-gray-900">
+                                    {formatCurrency(Number(doc.amount_gross))}
+                                  </td>
+                                </>
                               )}
-                            </td>
-                            <td className="py-3 px-4 text-gray-500 text-xs whitespace-nowrap">
-                              {formatDate(doc.issued_at)}
-                              {isPaid && doc.payment_confirmed_at && (
-                                <p className="text-emerald-600 mt-0.5">Opłacono: {formatDate(doc.payment_confirmed_at)}</p>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-right font-semibold text-gray-800">
-                              {formatCurrency(Number(doc.amount_net))}
-                            </td>
-                            {docsTab === 'faktura_vat' && (
-                              <>
-                                <td className="py-3 px-4 text-right text-gray-600">
-                                  {formatCurrency(Number(doc.vat_amount))}
-                                </td>
-                                <td className="py-3 px-4 text-right font-bold text-gray-900">
-                                  {formatCurrency(Number(doc.amount_gross))}
-                                </td>
-                              </>
-                            )}
-                            <td className="py-3 px-4 text-center">
-                              <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${
-                                isPaid
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}>
-                                {isPaid ? <CheckCircle2 size={11}/> : <Clock size={11}/>}
-                                {isPaid ? 'Opłacone' : 'Oczekuje'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              {doc.pdf_url ? (
-                                <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                  <Download size={13}/> Pobierz
-                                </a>
-                              ) : pdfGenerating[doc.id] ? (
-                                <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                                  <Loader2 size={12} className="animate-spin"/> Generowanie…
+                              <td className="py-3 px-4 text-center">
+                                <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${
+                                  isPaid
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
+                                  {isPaid ? <CheckCircle2 size={11}/> : <Clock size={11}/>}
+                                  {isPaid ? 'Opłacone' : 'Oczekuje'}
                                 </span>
-                              ) : (
-                                <div className="flex flex-col items-center gap-0.5">
-                                  <button
-                                    onClick={() => generateDocPdf(doc.id)}
-                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium underline"
-                                  >
-                                    <RefreshCw size={11}/> Generuj PDF
-                                  </button>
-                                  {pdfError[doc.id] && (
-                                    <span className="text-xs text-red-500 max-w-[120px] text-center leading-tight">
-                                      {pdfError[doc.id]}
-                                    </span>
-                                  )}
-                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {doc.pdf_url ? (
+                                  <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                    <Download size={13}/> Pobierz
+                                  </a>
+                                ) : pdfGenerating[doc.id] ? (
+                                  <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                    <Loader2 size={12} className="animate-spin"/> Generowanie…
+                                  </span>
+                                ) : (
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <button
+                                      onClick={() => generateDocPdf(doc.id)}
+                                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                                    >
+                                      <RefreshCw size={11}/> Generuj PDF
+                                    </button>
+                                    {pdfError[doc.id] && (
+                                      <span className="text-xs text-red-500 max-w-[120px] text-center leading-tight">
+                                        {pdfError[doc.id]}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Mobile cards — dokumenty finansowe */}
+                  <div className="sm:hidden space-y-3">
+                    {docs.map(doc => {
+                      const isPaid = doc.status === 'paid';
+                      return (
+                        <div key={doc.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-800 text-sm font-mono">{doc.document_number ?? '—'}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">{formatDate(doc.issued_at)}</p>
+                              {doc.linked_order_id && (
+                                <p className="text-xs text-gray-400 mt-0.5">Zam.: {doc.linked_order_id.slice(-8).toUpperCase()}</p>
                               )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                              {isPaid ? <CheckCircle2 size={11}/> : <Clock size={11}/>}
+                              {isPaid ? 'Opłacone' : 'Oczekuje'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs text-gray-500">
+                            <span>{docsTab === 'nota' ? 'Kwota' : 'Netto'}: <span className="font-semibold text-gray-800">{formatCurrency(Number(doc.amount_net))}</span></span>
+                            {docsTab === 'faktura_vat' && doc.amount_gross && (
+                              <span>Brutto: <span className="font-bold text-gray-900">{formatCurrency(Number(doc.amount_gross))}</span></span>
+                            )}
+                            {isPaid && doc.payment_confirmed_at && (
+                              <span className="text-emerald-600 col-span-2">Opłacono: {formatDate(doc.payment_confirmed_at)}</span>
+                            )}
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            {doc.pdf_url ? (
+                              <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 font-medium">
+                                <Download size={13}/> Pobierz PDF
+                              </a>
+                            ) : pdfGenerating[doc.id] ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                <Loader2 size={12} className="animate-spin"/> Generowanie…
+                              </span>
+                            ) : (
+                              <div className="flex flex-col gap-0.5">
+                                <button
+                                  onClick={() => generateDocPdf(doc.id)}
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 font-medium underline"
+                                >
+                                  <RefreshCw size={11}/> Generuj PDF
+                                </button>
+                                {pdfError[doc.id] && (
+                                  <span className="text-xs text-red-500 leading-tight">{pdfError[doc.id]}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               );
             })()}
           </div>

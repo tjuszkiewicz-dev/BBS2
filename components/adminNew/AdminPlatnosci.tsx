@@ -170,7 +170,7 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
       </div>
 
       {/* Content */}
-      <div className="overflow-x-auto">
+      <div>
         {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 size={24} className="animate-spin text-blue-500" />
@@ -184,92 +184,118 @@ const FinancialDocsPanel: React.FC<{ company: Company; onClose: () => void; onPa
             Brak dokumentów tego typu
           </div>
         ) : (
-          <table className="w-full text-xs">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                {(tab === 'nota'
-                  ? ['Data', 'Numer noty', 'Wartość', 'Status płatności', 'Potwierdzenie', 'PDF', 'Umowa', 'Akcja']
-                  : ['Data', 'Nr faktury', 'Netto', 'VAT', 'Brutto', 'Status', 'Potwierdzenie', 'PDF', 'Akcja']
-                ).map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-slate-500 font-semibold whitespace-nowrap">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
+          <>
+            {/* Desktop table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    {(tab === 'nota'
+                      ? ['Data', 'Numer noty', 'Wartość', 'Status płatności', 'Potwierdzenie', 'PDF', 'Umowa', 'Akcja']
+                      : ['Data', 'Nr faktury', 'Netto', 'VAT', 'Brutto', 'Status', 'Potwierdzenie', 'PDF', 'Akcja']
+                    ).map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-slate-500 font-semibold whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filtered.map((doc) => (
+                    <tr key={doc.id} className="hover:bg-slate-50/50 transition">
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-600">{formatDate(doc.issued_at)}</td>
+                      <td className="px-4 py-3 font-mono text-slate-500">{doc.document_number ?? '—'}</td>
+                      {tab === 'faktura_vat' && (
+                        <>
+                          <td className="px-4 py-3 whitespace-nowrap">{formatCurrency(doc.amount_net)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-slate-500">{formatCurrency(doc.vat_amount)}</td>
+                        </>
+                      )}
+                      <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">{formatCurrency(doc.amount_gross)}</td>
+                      <td className="px-4 py-3"><PaymentBadge status={doc.status} /></td>
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-400">{doc.payment_confirmed_at ? formatDate(doc.payment_confirmed_at) : '—'}</td>
+                      <td className="px-4 py-3 text-center">
+                        {doc.pdf_url ? (
+                          <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-semibold hover:bg-blue-100 transition">
+                            <Download size={10} /> PDF
+                          </a>
+                        ) : (
+                          <button onClick={() => generatePdf(doc.id)} disabled={pdfGenId === doc.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold hover:bg-amber-100 transition disabled:opacity-50">
+                            {pdfGenId === doc.id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+                            Generuj PDF
+                          </button>
+                        )}
+                      </td>
+                      {tab === 'nota' && (
+                        <td className="px-4 py-3 text-center">
+                          {doc.umowa_pdf_url ? (
+                            <a href={doc.umowa_pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-semibold hover:bg-indigo-100 transition">
+                              <Download size={10} /> Umowa
+                            </a>
+                          ) : (
+                            <span className="text-slate-300 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        {doc.status === 'pending' ? (
+                          <button onClick={() => markPaid(doc.id)} disabled={busyId === doc.id} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 transition disabled:opacity-60">
+                            {busyId === doc.id ? <Loader2 size={10} className="animate-spin" /> : <CheckCircle2 size={10} />}
+                            Oznacz jako opłacone
+                          </button>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">Opłacone</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden p-3 space-y-3">
               {filtered.map((doc) => (
-                <tr key={doc.id} className="hover:bg-slate-50/50 transition">
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">{formatDate(doc.issued_at)}</td>
-                  <td className="px-4 py-3 font-mono text-slate-500">{doc.document_number ?? '—'}</td>
-                  {tab === 'faktura_vat' && (
-                    <>
-                      <td className="px-4 py-3 whitespace-nowrap">{formatCurrency(doc.amount_net)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-500">{formatCurrency(doc.vat_amount)}</td>
-                    </>
-                  )}
-                  <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
-                    {formatCurrency(doc.amount_gross)}
-                  </td>
-                  <td className="px-4 py-3"><PaymentBadge status={doc.status} /></td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-400">
-                    {doc.payment_confirmed_at ? formatDate(doc.payment_confirmed_at) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-center">
+                <div key={doc.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-slate-800 text-sm">{doc.document_number ?? '—'}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{formatDate(doc.issued_at)}</p>
+                    </div>
+                    <PaymentBadge status={doc.status} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
+                    <span>Brutto: <span className="font-semibold text-slate-800">{formatCurrency(doc.amount_gross)}</span></span>
+                    {tab === 'faktura_vat' && <span>Netto: <span className="text-slate-700">{formatCurrency(doc.amount_net)}</span></span>}
+                    {doc.payment_confirmed_at && <span>Zapłacono: <span className="text-slate-700">{formatDate(doc.payment_confirmed_at)}</span></span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 flex-wrap">
                     {doc.pdf_url ? (
-                      <a
-                        href={doc.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-semibold hover:bg-blue-100 transition"
-                      >
-                        <Download size={10} /> PDF
+                      <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">
+                        <Download size={11} /> PDF
                       </a>
                     ) : (
-                      <button
-                        onClick={() => generatePdf(doc.id)}
-                        disabled={pdfGenId === doc.id}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold hover:bg-amber-100 transition disabled:opacity-50"
-                      >
-                        {pdfGenId === doc.id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+                      <button onClick={() => generatePdf(doc.id)} disabled={pdfGenId === doc.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100 transition disabled:opacity-50">
+                        {pdfGenId === doc.id ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
                         Generuj PDF
                       </button>
                     )}
-                  </td>
-                  {tab === 'nota' && (
-                    <td className="px-4 py-3 text-center">
-                      {doc.umowa_pdf_url ? (
-                        <a
-                          href={doc.umowa_pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-semibold hover:bg-indigo-100 transition"
-                        >
-                          <Download size={10} /> Umowa
-                        </a>
-                      ) : (
-                        <span className="text-slate-300 text-[11px]">—</span>
-                      )}
-                    </td>
-                  )}
-                  <td className="px-4 py-3">
-                    {doc.status === 'pending' ? (
-                      <button
-                        onClick={() => markPaid(doc.id)}
-                        disabled={busyId === doc.id}
-                        className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 transition disabled:opacity-60"
-                      >
-                        {busyId === doc.id ? <Loader2 size={10} className="animate-spin" /> : <CheckCircle2 size={10} />}
-                        Oznacz jako opłacone
-                      </button>
-                    ) : (
-                      <span className="text-slate-400 text-[11px]">Opłacone</span>
+                    {tab === 'nota' && doc.umowa_pdf_url && (
+                      <a href={doc.umowa_pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition">
+                        <Download size={11} /> Umowa
+                      </a>
                     )}
-                  </td>
-                </tr>
+                    {doc.status === 'pending' && (
+                      <button onClick={() => markPaid(doc.id)} disabled={busyId === doc.id} className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-60">
+                        {busyId === doc.id ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />}
+                        Opłacone
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
     </div>

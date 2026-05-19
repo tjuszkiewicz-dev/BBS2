@@ -11,12 +11,14 @@ export type DbRole =
   | 'pracownik'
   | 'partner'
   | 'menedzer'
-  | 'dyrektor';
+  | 'dyrektor'
+  | 'hr';
 
 /** TypeScript Role → wartość w kolumnie user_profiles.role */
 export const ROLE_TO_DB: Record<Role, DbRole> = {
   [Role.SUPERADMIN]: 'superadmin',
   [Role.HR]:         'pracodawca',
+  [Role.HR_PANEL]:   'hr',
   [Role.EMPLOYEE]:   'pracownik',
   [Role.ADVISOR]:    'partner',
   [Role.MANAGER]:    'menedzer',
@@ -27,6 +29,7 @@ export const ROLE_TO_DB: Record<Role, DbRole> = {
 export const DB_TO_ROLE: Record<DbRole, Role> = {
   superadmin: Role.SUPERADMIN,
   pracodawca: Role.HR,
+  hr:         Role.HR_PANEL,
   pracownik:  Role.EMPLOYEE,
   partner:    Role.ADVISOR,
   menedzer:   Role.MANAGER,
@@ -37,6 +40,7 @@ export const DB_TO_ROLE: Record<DbRole, Role> = {
 export const ROLE_LABEL: Record<Role, string> = {
   [Role.SUPERADMIN]: 'Administrator',
   [Role.HR]:         'Pracodawca',
+  [Role.HR_PANEL]:   'Panel HR',
   [Role.EMPLOYEE]:   'Pracownik',
   [Role.ADVISOR]:    'Doradca',
   [Role.MANAGER]:    'Manager',
@@ -47,6 +51,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const ROLE_DASHBOARD: Record<Role, string> = {
   [Role.SUPERADMIN]: '/dashboard/admin',
   [Role.HR]:         '/dashboard/employer',
+  [Role.HR_PANEL]:   '/dashboard/admin',
   [Role.EMPLOYEE]:   '/dashboard/employee',
   [Role.ADVISOR]:    '/dashboard/network',
   [Role.MANAGER]:    '/dashboard/network',

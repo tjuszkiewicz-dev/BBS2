@@ -267,7 +267,7 @@ export default function LoginPage() {
           </div>
 
           <p style={{ marginTop:16, color:'rgba(255,255,255,0.12)', fontSize:10 }}>
-            &copy; {new Date().getFullYear()} Stratton Prime S.A. Wszystkie prawa zastrzeżone.
+            &copy; {new Date().getFullYear()} Baltic Benefits Sp. z o.o. Wszystkie prawa zastrzeżone.
           </p>
         </div>
       </div>

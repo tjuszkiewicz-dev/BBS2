@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Role, User } from '../types';
-import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, Calculator, KanbanSquare, UserRound, Briefcase, Trophy } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Wallet, ShieldCheck, DollarSign, X, ChevronRight, LogOut, BarChart3, Settings2, FolderOpen, HelpCircle, Grid, CreditCard, Plus, ChevronLeft, Smartphone, HeartPulse, Shield, TrendingUp, Brain, BookOpen, History, Ticket, RefreshCw, UserCog, Calculator, KanbanSquare, UserRound, Briefcase, Trophy, Network } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: User;
@@ -56,10 +56,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'admin-buyback',      label: 'Anulowanie subskrypcji', icon: <RefreshCw size={20} /> },
           { id: 'admin-uzytkowniczy', label: 'Użytkownicy',             icon: <UserCog size={20} /> },
           { id: 'crm-divider', label: '── CRM ──', icon: null, divider: true },
-          { id: 'crm-pipeline',   label: 'Pipeline CRM',    icon: <KanbanSquare size={20} /> },
-          { id: 'crm-kalkulator', label: 'Kalkulator Prime', icon: <Calculator size={20} /> },
-          { id: 'crm-kontakty',   label: 'Kontakty',         icon: <UserRound size={20} /> },
-          { id: 'crm-leaderboard', label: 'Leaderboard',     icon: <Trophy size={20} /> },
+          { id: 'crm-pipeline',    label: 'Pipeline CRM',    icon: <KanbanSquare size={20} /> },
+          { id: 'crm-kalkulator',  label: 'Kalkulator Prime', icon: <Calculator size={20} /> },
+          { id: 'crm-kontakty',    label: 'Kontakty',         icon: <UserRound size={20} /> },
+          { id: 'crm-leaderboard', label: 'Leaderboard',      icon: <Trophy size={20} /> },
+          { id: 'org-chart',       label: 'Org-chart',        icon: <Network size={20} /> },
           { id: 'hr-divider',     label: '── HR ──',        icon: null, divider: true, section: 'HR' },
           { id: 'hr-pracownicy',  label: 'Pracownicy',      icon: <Users size={20} /> },
           { id: 'hr-umowy',       label: 'Umowy',           icon: <Briefcase size={20} /> },
@@ -95,6 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'crm-pipeline',    label: 'Pipeline',       icon: <KanbanSquare size={20} /> },
           { id: 'crm-kalkulator',  label: 'Kalkulator',     icon: <Calculator size={20} /> },
           { id: 'crm-leaderboard', label: 'Leaderboard',    icon: <Trophy size={20} /> },
+          { id: 'org-chart',       label: 'Org-chart',      icon: <Network size={20} /> },
         ];
       default:
         return [];

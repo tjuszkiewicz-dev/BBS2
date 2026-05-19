@@ -25,7 +25,7 @@ export function Step3Split({ wyniki, pracownicy }: Props) {
           <Zap size={20} style={{ color: TEAL }} />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Model Eliton Prime™ — podział wynagrodzenia</h2>
+          <h2 className="text-lg font-bold text-slate-800">Model Stratton Prime™ — podział wynagrodzenia</h2>
           <p className="text-sm text-slate-500">Optymalizacja przez podział na zasadnicze + świadczenie</p>
         </div>
       </div>

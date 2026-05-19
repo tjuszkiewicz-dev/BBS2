@@ -41,7 +41,8 @@ export default async function AdminDashboardPage() {
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'superadmin') redirect('/login');
+  const ALLOWED_ROLES = ['superadmin', 'dyrektor', 'menedzer', 'partner', 'hr'];
+  if (!profile?.role || !ALLOWED_ROLES.includes(profile.role)) redirect('/login');
 
   return <AdminDashboardClient />;
 }

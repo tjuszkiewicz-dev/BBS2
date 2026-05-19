@@ -244,8 +244,8 @@ export const AdminEmployeeTable: React.FC<Props> = ({ employees, onRefresh }) =>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d1d5db' }}>
+      {/* Desktop table */}
+      <div className="hidden sm:block bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d1d5db' }}>
         <div className="overflow-x-auto">
           <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
@@ -323,95 +323,50 @@ export const AdminEmployeeTable: React.FC<Props> = ({ employees, onRefresh }) =>
                               {isEditing ? (
                                 <div className="bg-white border border-blue-200 rounded-lg p-4 mb-3">
                                   <p className="text-xs font-bold text-blue-700 mb-3">Edytuj dane pracownika</p>
-                                  <EditForm
-                                    emp={emp}
-                                    onSaved={() => { setEditingId(null); onRefresh(); }}
-                                    onCancel={() => setEditingId(null)}
-                                  />
+                                  <EditForm emp={emp} onSaved={() => { setEditingId(null); onRefresh(); }} onCancel={() => setEditingId(null)} />
                                 </div>
                               ) : (
                                 <div className="grid grid-cols-3 gap-3 mb-3">
-
-                                  {/* Dane kontaktowe */}
                                   <div className="bg-white border border-blue-100 rounded-lg p-3">
-                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5">
-                                      <Mail size={11} /> Kontakt
-                                    </p>
+                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5"><Mail size={11} /> Kontakt</p>
                                     <EmpDetailRow label="E-mail"  value={emp.email} />
                                     <EmpDetailRow label="Telefon" value={emp.phone_number} />
                                     <EmpDetailRow label="PESEL"   value={emp.pesel} mono />
                                   </div>
-
-                                  {/* Konto bankowe */}
                                   <div className="bg-white border border-blue-100 rounded-lg p-3">
-                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5">
-                                      <CreditCard size={11} /> Konto bankowe
-                                    </p>
+                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5"><CreditCard size={11} /> Konto bankowe</p>
                                     <EmpDetailRow label="IBAN"   value={emp.iban} mono />
-                                    <EmpDetailRow label="Status" value={
-                                      emp.iban
-                                        ? (emp.iban_verified ? 'Zweryfikowane ✓' : 'Niezweryfikowane')
-                                        : null
-                                    } />
+                                    <EmpDetailRow label="Status" value={emp.iban ? (emp.iban_verified ? 'Zweryfikowane ✓' : 'Niezweryfikowane') : null} />
                                   </div>
-
-                                  {/* Zatrudnienie */}
                                   <div className="bg-white border border-blue-100 rounded-lg p-3">
-                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5">
-                                      <FileText size={11} /> Zatrudnienie
-                                    </p>
+                                    <p className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide mb-2.5"><FileText size={11} /> Zatrudnienie</p>
                                     <EmpDetailRow label="Typ umowy" value={contractLabel(emp.contract_type)} />
                                     <EmpDetailRow label="Data zatrud." value={formatDate(emp.hire_date)} />
                                     <EmpDetailRow label="ID konta"   value={emp.id} mono small />
                                   </div>
                                 </div>
                               )}
-
-                              {/* Action buttons */}
                               <div className="flex items-center gap-2 pt-2.5 border-t border-blue-100">
                                 {!isEditing && !isAnon && (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); setEditingId(emp.id); }}
-                                    className="flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded font-medium transition-colors"
-                                  >
+                                  <button onClick={e => { e.stopPropagation(); setEditingId(emp.id); }} className="flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded font-medium transition-colors">
                                     <Pencil size={12} /> Edytuj dane
                                   </button>
                                 )}
                                 {isActive && !isEditing ? (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); doAction(emp.id, 'deactivate'); }}
-                                    disabled={isBusy}
-                                    className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60"
-                                  >
+                                  <button onClick={e => { e.stopPropagation(); doAction(emp.id, 'deactivate'); }} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60">
                                     <UserX size={12} /> Dezaktywuj pracownika
                                   </button>
                                 ) : !isActive && !isAnon && !isEditing ? (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); doAction(emp.id, 'activate'); }}
-                                    disabled={isBusy}
-                                    className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60"
-                                  >
+                                  <button onClick={e => { e.stopPropagation(); doAction(emp.id, 'activate'); }} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60">
                                     <UserCheck size={12} /> Reaktywuj pracownika
                                   </button>
                                 ) : null}
                                 {!isAnon && !isEditing && (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      if (confirm(`Czy na pewno anonimizować dane ${emp.full_name ?? emp.email}? Tej operacji nie można cofnąć.`)) {
-                                        doAction(emp.id, 'anonymize');
-                                      }
-                                    }}
-                                    disabled={isBusy}
-                                    className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60"
-                                  >
+                                  <button onClick={e => { e.stopPropagation(); if (confirm(`Czy na pewno anonimizować dane ${emp.full_name ?? emp.email}? Tej operacji nie można cofnąć.`)) { doAction(emp.id, 'anonymize'); } }} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-60">
                                     <ShieldOff size={12} /> Anonimizacja RODO
                                   </button>
                                 )}
-                                <button
-                                  onClick={e => { e.stopPropagation(); setExpandedId(null); setEditingId(null); }}
-                                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
-                                >
+                                <button onClick={e => { e.stopPropagation(); setExpandedId(null); setEditingId(null); }} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">
                                   <ChevronUp size={12} /> Zwiń
                                 </button>
                               </div>
@@ -426,6 +381,95 @@ export const AdminEmployeeTable: React.FC<Props> = ({ employees, onRefresh }) =>
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <p className="text-center py-8 text-gray-400 text-sm">Brak pracowników.</p>
+        ) : (
+          filtered.map((emp) => {
+            const isExpanded = expandedId === emp.id;
+            const isEditing  = editingId  === emp.id;
+            const isBusy     = actionId   === emp.id;
+            const isActive   = emp.status === 'active';
+            const isAnon     = emp.status === 'anonymized';
+            return (
+              <div key={emp.id} className={`bg-white rounded-xl border shadow-sm transition ${isExpanded ? 'border-blue-300' : 'border-gray-200'}`}>
+                <div
+                  onClick={() => { setExpandedId(isExpanded ? null : emp.id); setEditingId(null); }}
+                  className="p-4 cursor-pointer active:bg-gray-50"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm">{emp.full_name ?? '—'}</p>
+                      <p className="text-xs text-gray-500 truncate">{emp.email}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', fontSize: 10,
+                        fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                        background: isActive ? '#d1fae5' : isAnon ? '#fee2e2' : '#f3f4f6',
+                        color:      isActive ? '#065f46' : isAnon ? '#991b1b' : '#6b7280',
+                      }}>
+                        {isActive ? 'Aktywny' : isAnon ? 'Zanonimizowany' : 'Nieaktywny'}
+                      </span>
+                      {isExpanded ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-gray-400" />}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-2 text-xs text-gray-500">
+                    {emp.department && <span>Dział: <span className="text-gray-700">{emp.department}</span></span>}
+                    {emp.position && <span>Stanowisko: <span className="text-gray-700">{emp.position}</span></span>}
+                    <span>{contractLabel(emp.contract_type)}</span>
+                    {emp.phone_number && <span>{emp.phone_number}</span>}
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="border-t border-blue-100 px-4 pb-4 pt-3 bg-blue-50/50 rounded-b-xl">
+                    {isEditing ? (
+                      <div className="bg-white border border-blue-200 rounded-lg p-3 mb-3">
+                        <p className="text-xs font-bold text-blue-700 mb-3">Edytuj dane pracownika</p>
+                        <EditForm emp={emp} onSaved={() => { setEditingId(null); onRefresh(); }} onCancel={() => setEditingId(null)} />
+                      </div>
+                    ) : (
+                      <div className="space-y-2 mb-3">
+                        <div className="grid grid-cols-1 gap-1 text-xs">
+                          <EmpDetailRow label="PESEL"  value={emp.pesel} mono />
+                          <EmpDetailRow label="IBAN"   value={emp.iban} mono />
+                          {emp.iban && <EmpDetailRow label="Status IBAN" value={emp.iban_verified ? 'Zweryfikowane ✓' : 'Niezweryfikowane'} />}
+                          <EmpDetailRow label="Data zatrud." value={formatDate(emp.hire_date)} />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {!isEditing && !isAnon && (
+                        <button onClick={e => { e.stopPropagation(); setEditingId(emp.id); }} className="flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1.5 rounded font-medium">
+                          <Pencil size={11} /> Edytuj
+                        </button>
+                      )}
+                      {isActive && !isEditing && (
+                        <button onClick={() => doAction(emp.id, 'deactivate')} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded font-medium disabled:opacity-60">
+                          <UserX size={11} /> Dezaktywuj
+                        </button>
+                      )}
+                      {!isActive && !isAnon && !isEditing && (
+                        <button onClick={() => doAction(emp.id, 'activate')} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded font-medium disabled:opacity-60">
+                          <UserCheck size={11} /> Reaktywuj
+                        </button>
+                      )}
+                      {!isAnon && !isEditing && (
+                        <button onClick={() => { if (confirm(`Anonimizować dane ${emp.full_name ?? emp.email}? Tej operacji nie można cofnąć.`)) { doAction(emp.id, 'anonymize'); } }} disabled={isBusy} className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 px-2.5 py-1.5 rounded font-medium disabled:opacity-60">
+                          <ShieldOff size={11} /> RODO
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

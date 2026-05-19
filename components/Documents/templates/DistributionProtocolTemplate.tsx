@@ -39,7 +39,7 @@ export const DistributionProtocolTemplate: React.FC<Props> = ({ batch, company }
                 <div className="bg-slate-900 text-white px-3 py-1 text-xs font-bold font-sans inline-block mb-2">
                     BBS-SECURE
                 </div>
-                <p className="text-[10pt] font-bold text-slate-900 font-sans">Stratton Prime S.A.</p>
+                <p className="text-[10pt] font-bold text-slate-900 font-sans">Baltic Benefits Sp. z o.o.</p>
             </div>
         </div>
 

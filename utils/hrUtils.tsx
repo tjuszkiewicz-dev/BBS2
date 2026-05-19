@@ -92,7 +92,7 @@ export function buildOrderReportHtml(orders: HrOrder[], company: Company, title:
     <tbody>${allRows}</tbody>
   </table>
   <div class="total">Łącznie: ${total.toFixed(2)} zł (${orders.length} zamówień)</div>
-  <div class="footer">Raport wygenerowany przez EBS — Eliton Benefits System | ${company.name} | ${new Date().toLocaleDateString('pl-PL')}</div>
+  <div class="footer">Raport wygenerowany przez BBS — Baltic Benefits System | ${company.name} | ${new Date().toLocaleDateString('pl-PL')}</div>
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 }

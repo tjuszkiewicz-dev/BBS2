@@ -135,7 +135,7 @@ export const CrmKalkulator: React.FC = () => {
           <Calculator size={20} className="text-white" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Kalkulator Eliton Prime™</h2>
+          <h2 className="text-lg font-bold text-slate-800">Kalkulator Stratton Prime™</h2>
           <p className="text-xs text-slate-500">Pokaż klientowi ile zaoszczędzi na poodziale wynagrodzenia</p>
         </div>
       </div>
@@ -168,7 +168,7 @@ export const CrmKalkulator: React.FC = () => {
         </div>
       )}
 
-      {/* ─── STEP 0: FIRMA ─────────────────────────────────────────────────── */}
+      {/* ─── STEP 0: FIRMA ──────────────────────────────────────────────────── */}
       {step === 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
           <h3 className="font-semibold text-slate-700">Dane firmy klienta</h3>
@@ -207,7 +207,7 @@ export const CrmKalkulator: React.FC = () => {
         </div>
       )}
 
-      {/* ─── STEP 1: PRACOWNICY ────────────────────────────────────────────── */}
+      {/* ─── STEP 1: PRACOWNICY ────────────────────────────────────────── */}
       {step === 1 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -354,13 +354,13 @@ export const CrmKalkulator: React.FC = () => {
         </div>
       )}
 
-      {/* ─── STEP 3: PRIME ──────────────────────────────────────────────────── */}
+      {/* ─── STEP 3: PRIME ───────────────────────────────────────────────────── */}
       {step === 3 && results && (
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-200" style={{ backgroundColor: '#f0fdf4' }}>
               <TrendingUp size={16} style={{ color: '#16a34a' }} />
-              <h3 className="font-semibold text-sm" style={{ color: '#16a34a' }}>Model Eliton Prime™ — UOP + UZ split</h3>
+              <h3 className="font-semibold text-sm" style={{ color: '#16a34a' }}>Model Stratton Prime™ — UOP + UZ split</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -411,7 +411,7 @@ export const CrmKalkulator: React.FC = () => {
         </div>
       )}
 
-      {/* ─── STEP 4: BUSINESS CASE ──────────────────────────────────────────── */}
+      {/* ─── STEP 4: BUSINESS CASE ───────────────────────────────────────────── */}
       {step === 4 && results && P && (
         <div className="space-y-4">
           {/* KPI Cards */}
@@ -488,7 +488,7 @@ export const CrmKalkulator: React.FC = () => {
         </div>
       )}
 
-      {/* ─── NAVIGATION ────────────────────────────────────────────────────── */}
+      {/* ─── NAVIGATION ──────────────────────────────────────────────────────────────── */}
       <div className="flex justify-between pt-2">
         <button
           onClick={() => setStep(s => Math.max(s - 1, 0))}
