@@ -110,34 +110,24 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
       </div>
 
       {/* ── CONTENT ──────────────────────────────────────────────────────── */}
-      <div className="p-6">
-        {tab === 'pulpit'    && <AdminPulpit />}
-        {tab === 'klienci'   && <AdminBazaKlientow />}
-        {tab === 'platnosci' && <AdminPlatnosci />}
-        {tab === 'archiwum'  && <AdminArchiwum />}
-        {tab === 'vouchery'  && <AdminVouchery />}
-        {tab === 'buyback'   && <AdminBuyback />}
-        {tab === 'uzytkowniczy' && <AdminUsers />}
-      </div>
-      {/* CRM views — full-bleed, no padding wrapper */}
+      {tab !== 'crm-kalkulator' && tab !== 'org-chart' && (
+        <div className="p-6">
+          {tab === 'pulpit'          && <AdminPulpit />}
+          {tab === 'klienci'         && <AdminBazaKlientow />}
+          {tab === 'platnosci'       && <AdminPlatnosci />}
+          {tab === 'archiwum'        && <AdminArchiwum />}
+          {tab === 'vouchery'        && <AdminVouchery />}
+          {tab === 'buyback'         && <AdminBuyback />}
+          {tab === 'uzytkowniczy'    && <AdminUsers />}
+          {tab === 'crm-pipeline'    && <PipelineKanban />}
+          {tab === 'crm-kontakty'    && <CrmKontakty />}
+          {tab === 'crm-leaderboard' && <CrmLeaderboard />}
+          {isHrTab(tab) && <HrDashboard activeSubTab={tab === 'hr-pracownicy' ? 'pracownicy' : tab === 'hr-umowy' ? 'umowy' : 'raporty'} />}
+        </div>
+      )}
+      {/* Full-bleed views */}
       {tab === 'crm-kalkulator' && <CalculatorWizard />}
-      {tab === 'crm-pipeline' && <PipelineKanban />}
-      {tab === 'crm-kontakty' && (
-        <div className="p-6">
-          <CrmKontakty />
-        </div>
-      )}
-      {tab === 'crm-leaderboard' && (
-        <div className="p-6">
-          <CrmLeaderboard />
-        </div>
-      )}
-      {tab === 'org-chart' && <OrgChartView />}
-      {isHrTab(tab) && (
-        <div className="p-6">
-          <HrDashboard activeSubTab={tab === 'hr-pracownicy' ? 'pracownicy' : tab === 'hr-umowy' ? 'umowy' : 'raporty'} />
-        </div>
-      )}
+      {tab === 'org-chart'      && <OrgChartView />}
     </div>
   );
 };

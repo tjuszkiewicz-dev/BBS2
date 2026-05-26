@@ -246,7 +246,7 @@ export default function PipelineKanban() {
   const getColumn = (status: LeadStatus) => filtered.filter(l => l.status === status);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
+    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-3 flex-1">
