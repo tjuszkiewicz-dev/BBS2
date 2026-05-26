@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle } from 'lucide-react';
+import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle, X, Building2, Hash, User, FileText, Trash2 } from 'lucide-react';
 
 const TEAL = '#4a95a9';
 
@@ -27,14 +27,177 @@ const COLUMNS: { id: LeadStatus; label: string; color: string; bg: string }[] = 
   { id: 'rejected',   label: 'Odrzucony',       color: '#ef4444', bg: '#fef2f2' },
 ];
 
-function LeadCard({
+const STATUS_LABELS: Record<LeadStatus, string> = {
+  new:       'Nowy',
+  qualified: 'Zakwalifikowany',
+  converted: 'Pozyskany',
+  rejected:  'Odrzucony',
+};
+
+// ─── Lead Detail Panel ────────────────────────────────────────────────────────
+
+function LeadDetailPanel({
   lead,
-  onQualify,
-  onConvert,
-  onReject,
-  onEdit,
+  onClose,
+  onSaved,
+  onDeleted,
+}: {
+  lead: Lead | null;
+  onClose: () => void;
+  onSaved: () => void;
+  onDeleted: () => void;
+}) {
+  const [form, setForm] = useState<Partial<Lead>>({});
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  useEffect(() => {
+    if (lead) setForm({ name: lead.name, nip: lead.nip, contact_person: lead.contact_person, phone: lead.phone, email: lead.email, notes: lead.notes });
+  }, [lead]);
+
+  const showToast = (ok: boolean, msg: string) => {
+    setToast({ ok, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSave = async () => {
+    if (!lead) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? 'Błąd');
+      }
+      showToast(true, 'Zapisano');
+      onSaved();
+    } catch (e) {
+      showToast(false, e instanceof Error ? e.message : 'Błąd zapisu');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!lead || !confirm(`Usunąć lead "${lead.name}"? Tej operacji nie można cofnąć.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${lead.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Błąd usuwania');
+      onDeleted();
+      onClose();
+    } catch (e) {
+      showToast(false, e instanceof Error ? e.message : 'Błąd');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const isVisible = lead !== null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      {isVisible && (
+        <div className="fixed inset-0 bg-slate-900/20 z-40" onClick={onClose} />
+      )}
+
+      {/* Panel */}
+      <div className={`fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ${isVisible ? 'translate-x-0' : 'translate-x-full'}`}>
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between flex-shrink-0" style={{ backgroundColor: TEAL }}>
+          <div className="min-w-0">
+            <p className="font-bold text-white text-sm leading-tight truncate">{lead?.name ?? ''}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {lead ? STATUS_LABELS[lead.status] : ''} · {lead?.source ?? ''}
+            </p>
+          </div>
+          <button onClick={onClose} className="ml-3 p-1 rounded hover:bg-white/20 transition-colors flex-shrink-0">
+            <X size={16} className="text-white" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {[
+            { key: 'name',           label: 'Nazwa firmy',        icon: <Building2 size={14} />, required: true },
+            { key: 'nip',            label: 'NIP',                icon: <Hash size={14} /> },
+            { key: 'contact_person', label: 'Osoba kontaktowa',   icon: <User size={14} /> },
+            { key: 'phone',          label: 'Telefon',            icon: <Phone size={14} /> },
+            { key: 'email',          label: 'Email',              icon: <Mail size={14} /> },
+          ].map(f => (
+            <div key={f.key}>
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                {f.icon} {f.label}
+              </label>
+              <input
+                value={(form as Record<string, string>)[f.key] ?? ''}
+                onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a95a9]"
+              />
+            </div>
+          ))}
+
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+              <FileText size={14} /> Notatki
+            </label>
+            <textarea
+              value={form.notes ?? ''}
+              onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
+              rows={4}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a95a9] resize-none"
+            />
+          </div>
+
+          {lead && (
+            <p className="text-[10px] text-slate-400">
+              Dodano: {new Date(lead.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </p>
+          )}
+
+          {toast && (
+            <div className={`rounded-xl px-3 py-2 text-sm font-medium ${toast.ok ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {toast.msg}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="p-4 border-t border-slate-100 space-y-2 flex-shrink-0">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: TEAL }}
+          >
+            {saving ? 'Zapisuję…' : 'Zapisz zmiany'}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting || saving}
+            className="w-full py-2.5 rounded-xl text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Trash2 size={14} /> Usuń lead
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Lead Card ────────────────────────────────────────────────────────────────
+
+function LeadCard({
+  lead, selected, onQualify, onConvert, onReject, onEdit,
 }: {
   lead: Lead;
+  selected: boolean;
   onQualify: () => void;
   onConvert: () => void;
   onReject: () => void;
@@ -42,7 +205,7 @@ function LeadCard({
 }) {
   return (
     <div
-      className="bg-white rounded-xl border border-slate-200 p-3.5 cursor-pointer hover:shadow-md transition-all"
+      className={`bg-white rounded-xl border p-3.5 cursor-pointer hover:shadow-md transition-all ${selected ? 'border-[#4a95a9] shadow-md ring-1 ring-[#4a95a9]/30' : 'border-slate-200'}`}
       onClick={onEdit}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -72,7 +235,6 @@ function LeadCard({
         )}
       </div>
 
-      {/* Quick actions */}
       {lead.status !== 'converted' && lead.status !== 'rejected' && (
         <div className="flex gap-1.5 mt-3 pt-3 border-t border-slate-100">
           {lead.status === 'new' && (
@@ -108,12 +270,9 @@ function LeadCard({
   );
 }
 
-interface AddLeadModalProps {
-  onClose: () => void;
-  onSave: (data: Partial<Lead>) => Promise<void>;
-}
+// ─── Add Lead Modal ───────────────────────────────────────────────────────────
 
-function AddLeadModal({ onClose, onSave }: AddLeadModalProps) {
+function AddLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (data: Partial<Lead>) => Promise<void> }) {
   const [form, setForm] = useState({ name: '', nip: '', contact_person: '', phone: '', email: '', notes: '', source: 'manual' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,9 +325,7 @@ function AddLeadModal({ onClose, onSave }: AddLeadModalProps) {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">
-              Anuluj
-            </button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">Anuluj</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all" style={{ backgroundColor: TEAL }}>
               {loading ? 'Zapisuję…' : 'Dodaj lead'}
             </button>
@@ -179,11 +336,14 @@ function AddLeadModal({ onClose, onSave }: AddLeadModalProps) {
   );
 }
 
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
 export default function PipelineKanban() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -236,6 +396,10 @@ export default function PipelineKanban() {
     await fetchLeads();
   };
 
+  const handleEdit = (lead: Lead) => {
+    setSelectedLead(prev => (prev?.id === lead.id ? null : lead));
+  };
+
   const filtered = leads.filter(l =>
     !search || l.name.toLowerCase().includes(search.toLowerCase()) ||
     (l.nip ?? '').includes(search) ||
@@ -285,7 +449,6 @@ export default function PipelineKanban() {
             const colLeads = getColumn(col.id);
             return (
               <div key={col.id} className="w-60 flex-shrink-0">
-                {/* Column header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: col.color }} />
@@ -296,7 +459,6 @@ export default function PipelineKanban() {
                   </span>
                 </div>
 
-                {/* Cards */}
                 <div
                   className="min-h-48 rounded-xl p-2 space-y-2"
                   style={{ backgroundColor: col.bg, border: `1px solid ${col.color}20` }}
@@ -305,16 +467,15 @@ export default function PipelineKanban() {
                     <LeadCard
                       key={lead.id}
                       lead={lead}
+                      selected={selectedLead?.id === lead.id}
                       onQualify={() => qualify(lead.id)}
                       onConvert={() => convert(lead.id)}
                       onReject={() => reject(lead.id)}
-                      onEdit={() => {/* future: open detail modal */}}
+                      onEdit={() => handleEdit(lead)}
                     />
                   ))}
                   {colLeads.length === 0 && (
-                    <div className="text-center py-6 text-xs text-slate-400">
-                      Brak leadów
-                    </div>
+                    <div className="text-center py-6 text-xs text-slate-400">Brak leadów</div>
                   )}
                 </div>
               </div>
@@ -326,6 +487,13 @@ export default function PipelineKanban() {
       {showAddModal && (
         <AddLeadModal onClose={() => setShowAddModal(false)} onSave={addLead} />
       )}
+
+      <LeadDetailPanel
+        lead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onSaved={fetchLeads}
+        onDeleted={fetchLeads}
+      />
     </div>
   );
 }
