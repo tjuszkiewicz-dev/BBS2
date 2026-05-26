@@ -246,7 +246,7 @@ export default function PipelineKanban() {
   const getColumn = (status: LeadStatus) => filtered.filter(l => l.status === status);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
+    <div className="w-full rounded-xl overflow-hidden" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-3 flex-1">
@@ -280,12 +280,12 @@ export default function PipelineKanban() {
       </div>
 
       {/* Kanban board */}
-      <div className="p-6 overflow-x-auto">
-        <div className="flex gap-4 min-w-max">
+      <div className="p-4 md:p-6">
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {COLUMNS.map(col => {
             const colLeads = getColumn(col.id);
             return (
-              <div key={col.id} className="w-64 flex-shrink-0">
+              <div key={col.id} className="min-w-0">
                 {/* Column header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

@@ -137,7 +137,7 @@ function AdminLayout() {
         </header>
 
         {/* MAIN */}
-        <main className="flex-1 overflow-y-auto scroll-smooth">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden scroll-smooth">
           <DashboardAdminNew
             currentView={currentView}
             onViewChange={setCurrentView}

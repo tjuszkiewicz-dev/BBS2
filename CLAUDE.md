@@ -100,7 +100,7 @@ Initial demo data is seeded from `services/mockData.ts`.
 ### New Admin Panel (`DashboardAdminNew.tsx` + `components/adminNew/`)
 
 `views/DashboardAdminNew.tsx` — tab-based admin UI:
-- Tabs: **Pulpit**, **Baza klientów**, **Płatności i faktury**, **Archiwum**, **Vouchery**, **CRM Pipeline**, **CRM Kalkulator**, **CRM Kontakty**
+- Tabs: **Pulpit**, **Baza klientów**, **Płatności i faktury**, **Archiwum**, **Vouchery**, **CRM Pipeline**, **CRM Kalkulator**, **CRM Kontakty**, **CRM Leaderboard**, **Org-chart**
 - `VIEW_TO_TAB` mapping syncs Sidebar navigation with tab state
 - `-m-4 md:-m-8` to compensate parent padding
 - Each tab is a standalone component in `components/adminNew/` — fetches own data from API routes
@@ -122,6 +122,9 @@ admin-vouchery    Vouchery             Ticket
 crm-pipeline      Pipeline CRM         Target
 crm-kalkulator    Kalkulator Prime      Calculator
 crm-kontakty      Kontakty             UserRound
+crm-leaderboard   Leaderboard          Trophy          (superadmin/dyrektor/menedzer)
+--- Admin/Org section ---
+admin-org-chart   Org-chart            Network         (superadmin/dyrektor/menedzer)
 ```
 
 ### CRM Module
@@ -162,6 +165,27 @@ crm-kontakty      Kontakty             UserRound
 - `crm_client_activities` — aktywności (CALL/MEETING/EMAIL/NOTE, lead_id, occurred_at, is_completed)
 - `calculator_configs` — konfiguracje kalkulatora
 - `payroll_calculations` — zapisane kalkulacje
+
+### CRM Leaderboard (Gamification)
+
+**Pliki:**
+- `lib/crm/leaderboard.ts` — `fetchLeaderboard()`, typy `LeaderboardEntry`, `Period`
+- `app/api/crm/leaderboard/route.ts` — GET `/api/crm/leaderboard?period=month|quarter|year`, widoczność hierarchiczna
+- `app/api/crm/leaderboard/export/route.ts` — CSV eksport z medalami złoto/srebro/brąz
+- `components/adminNew/crm/CrmLeaderboard.tsx` — podium top 3, tabela rankingowa, selektor okresu, eksport CSV
+
+**Dostęp:** role `superadmin`, `dyrektor`, `menedzer` (partner nie widzi rankingu innych).
+
+### Org-chart (D3)
+
+**Pliki:**
+- `app/api/org/users/route.ts` — GET lista userów z `manager_id`, widoczność hierarchiczna
+- `app/api/org/users/[id]/route.ts` — PUT (name, role, manager_id) z granularną kontrolą uprawnień
+- `components/adminNew/org/OrgChart.tsx` — D3 tree z zoom/pan, węzły kolorowane wg roli
+- `components/adminNew/org/OrgNodeEditor.tsx` — panel slide-in do edycji węzła
+- `components/adminNew/org/OrgChartView.tsx` — wrapper kompozytowy (dynamic import, `ssr: false`)
+
+**Uwaga:** `manager_id` już istnieje w tabeli `user_profiles` — migracja SQL zbędna. D3 wymaga dynamic import z `ssr: false`.
 
 ### CSS (`index.css`)
 
@@ -241,3 +265,17 @@ Available in `components/ui/` and `components/bits/`:
 - `zoom` CSS property is in `.main-zoom` CSS class (not inline style) — applies desktop-only via media query
 - All UI changes must work identically on **localhost:3010** AND **Vercel** — no localStorage-gated visibility
 - CRM routes wymagają roli CRM — `pracodawca`/`pracownik` dostaną 401/403
+- D3 (`OrgChart.tsx`) wymaga `next/dynamic` + `{ ssr: false }` — nie importuj bezpośrednio
+
+### Roadmapa
+
+**Faza 1 — wdrożona (commit `2d2671f`, 2026-05-19):**
+- [x] Gamification / CRM Leaderboard — ranking sprzedaży z medalami, eksport CSV
+- [x] Org-chart D3 — wizualizacja struktury firmy z edycją węzłów
+
+**Faza 2 — zaplanowana:**
+- [ ] AI Knowledge Base — pgvector + OpenAI, upload dokumentów przez admina, chat dla CRM
+- [ ] Moduł prowizji CRM — integracja Fakturownia, automatyczne faktury prowizyjne
+
+**Faza 3 — zaplanowana:**
+- [ ] Pełny klient email IMAP — dla handlowców/menedżerów/dyrektorów bezpośrednio w panelu

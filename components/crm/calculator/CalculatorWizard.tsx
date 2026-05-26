@@ -75,7 +75,7 @@ export default function CalculatorWizard() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
+    <div className="w-full min-h-screen" style={{ backgroundColor: '#f0f7fa', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: TEAL }}>
