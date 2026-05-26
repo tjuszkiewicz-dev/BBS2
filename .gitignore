@@ -25,3 +25,7 @@ dist-ssr
 .next/
 next-env.d.ts
 .vercel
+
+# Claude Code worktrees + Supabase local temp
+.claude/worktrees/
+supabase/.temp/
