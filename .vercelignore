@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.claude
+.vercel
+supabase/.temp
+dist
+dist-ssr
+*.log
+.DS_Store
