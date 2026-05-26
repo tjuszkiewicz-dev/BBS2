@@ -85,7 +85,7 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
 
   return (
     <div
-      className="-m-4 md:-m-8 min-h-screen"
+      className="-m-4 md:-m-6 min-h-screen"
       style={{ backgroundColor: 'transparent', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
     >
       {/* ── TOP BAR (identyczny styl jak HR) ─────────────────────────────── */}
@@ -120,16 +120,8 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
         {tab === 'uzytkowniczy' && <AdminUsers />}
       </div>
       {/* CRM views — full-bleed, no padding wrapper */}
-      {tab === 'crm-kalkulator' && (
-        <div className="-m-6">
-          <CalculatorWizard />
-        </div>
-      )}
-      {tab === 'crm-pipeline' && (
-        <div className="-m-6">
-          <PipelineKanban />
-        </div>
-      )}
+      {tab === 'crm-kalkulator' && <CalculatorWizard />}
+      {tab === 'crm-pipeline' && <PipelineKanban />}
       {tab === 'crm-kontakty' && (
         <div className="p-6">
           <CrmKontakty />
