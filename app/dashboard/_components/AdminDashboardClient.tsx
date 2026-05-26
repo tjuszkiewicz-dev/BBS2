@@ -46,7 +46,7 @@ function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen font-sans text-slate-900 overflow-hidden" style={{ backgroundColor: '#deedf3' }}>
+    <div className={`flex h-screen font-sans text-slate-900 overflow-hidden transition-[padding] duration-300 ease-in-out ${isDesktopSidebarOpen ? 'md:pl-72' : 'md:pl-16'}`} style={{ backgroundColor: '#deedf3' }}>
 
       <ToastContainer toasts={toasts} removeToast={actions.removeToast} />
 
@@ -70,7 +70,7 @@ function AdminLayout() {
         isLogout={true}
       />
 
-      <div className={`flex flex-col min-h-0 relative z-10 transition-[margin] duration-300 ease-in-out w-full ${isDesktopSidebarOpen ? 'md:ml-72' : 'md:ml-16'}`}>
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
 
         {/* HEADER */}
         <header className="h-16 flex items-center px-4 md:px-8 flex-shrink-0 z-40 relative border-b bg-white border-slate-200 shadow-sm">
