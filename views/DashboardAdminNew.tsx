@@ -85,7 +85,7 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
 
   return (
     <div
-      className="-m-4 md:-m-6 min-h-screen"
+      className="min-h-screen"
       style={{ backgroundColor: 'transparent', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
     >
       {/* ── TOP BAR (identyczny styl jak HR) ─────────────────────────────── */}
