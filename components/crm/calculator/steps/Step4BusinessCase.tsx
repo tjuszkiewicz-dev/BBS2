@@ -24,7 +24,7 @@ export function Step4BusinessCase({ wyniki, firma, provisionPct, onProvisionChan
   const { podsumowanie: p } = wyniki;
 
   const kpis = [
-    { icon: <TrendingDown size={20} />, label: 'Oszczędność brutto / mies.', value: fmt(p.oszczednoscBrutto), color: TEAL },
+    { icon: <TrendingDown size={20} />, label: 'Oszczędność całkowita', value: fmt(p.oszczednoscBrutto), color: TEAL },
     { icon: <Award size={20} />, label: 'Prowizja / mies.', value: fmt(p.prowizja), color: GOLD },
     { icon: <TrendingDown size={20} />, label: 'Oszczędność netto / mies.', value: fmt(p.oszczednoscNetto), color: '#22c55e' },
     { icon: <Calendar size={20} />, label: 'Oszczędność roczna', value: fmt(p.oszczednoscRoczna), color: '#22c55e' },
