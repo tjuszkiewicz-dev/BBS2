@@ -194,7 +194,7 @@ function LeadDetailPanel({
 // ─── Lead Card ────────────────────────────────────────────────────────────────
 
 function LeadCard({
-  lead, selected, onQualify, onConvert, onReject, onEdit,
+  lead, selected, onQualify, onConvert, onReject, onEdit, onDragStart,
 }: {
   lead: Lead;
   selected: boolean;
@@ -202,10 +202,13 @@ function LeadCard({
   onConvert: () => void;
   onReject: () => void;
   onEdit: () => void;
+  onDragStart: (e: React.DragEvent) => void;
 }) {
   return (
     <div
-      className={`bg-white rounded-xl border p-3.5 cursor-pointer hover:shadow-md transition-all ${selected ? 'border-[#4a95a9] shadow-md ring-1 ring-[#4a95a9]/30' : 'border-slate-200'}`}
+      draggable
+      onDragStart={onDragStart}
+      className={`bg-white rounded-xl border p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${selected ? 'border-[#4a95a9] shadow-md ring-1 ring-[#4a95a9]/30' : 'border-slate-200'}`}
       onClick={onEdit}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -344,6 +347,8 @@ export default function PipelineKanban() {
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<LeadStatus | null>(null);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -398,6 +403,20 @@ export default function PipelineKanban() {
 
   const handleEdit = (lead: Lead) => {
     setSelectedLead(prev => (prev?.id === lead.id ? null : lead));
+  };
+
+  const handleDrop = async (targetStatus: LeadStatus) => {
+    if (!draggedId || draggedId === null) return;
+    const lead = leads.find(l => l.id === draggedId);
+    if (!lead || lead.status === targetStatus) { setDraggedId(null); setDragOverCol(null); return; }
+    setDraggedId(null);
+    setDragOverCol(null);
+    await fetch(`/api/crm/leads/${draggedId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: targetStatus }),
+    });
+    await fetchLeads();
   };
 
   const filtered = leads.filter(l =>
@@ -460,8 +479,14 @@ export default function PipelineKanban() {
                 </div>
 
                 <div
-                  className="min-h-48 rounded-xl p-2 space-y-2"
-                  style={{ backgroundColor: col.bg, border: `1px solid ${col.color}20` }}
+                  className="min-h-48 rounded-xl p-2 space-y-2 transition-colors"
+                  style={{
+                    backgroundColor: dragOverCol === col.id ? col.color + '18' : col.bg,
+                    border: dragOverCol === col.id ? `2px dashed ${col.color}` : `1px solid ${col.color}20`,
+                  }}
+                  onDragOver={e => { e.preventDefault(); setDragOverCol(col.id); }}
+                  onDragLeave={() => setDragOverCol(null)}
+                  onDrop={() => handleDrop(col.id)}
                 >
                   {colLeads.map(lead => (
                     <LeadCard
@@ -472,6 +497,7 @@ export default function PipelineKanban() {
                       onConvert={() => convert(lead.id)}
                       onReject={() => reject(lead.id)}
                       onEdit={() => handleEdit(lead)}
+                      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDraggedId(lead.id); }}
                     />
                   ))}
                   {colLeads.length === 0 && (
