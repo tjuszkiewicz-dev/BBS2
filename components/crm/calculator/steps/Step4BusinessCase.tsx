@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { GlobalneWyniki, Firma } from '@/lib/crm/tax-engine/types';
-import { TrendingDown, Award, Calendar } from 'lucide-react';
+import { TrendingDown, Award, Calendar, RefreshCw } from 'lucide-react';
 
 const TEAL = '#4a95a9';
 const GOLD = '#f0a500';
@@ -16,9 +16,11 @@ interface Props {
   firma: Firma;
   provisionPct: number;
   onProvisionChange: (v: number) => void;
+  onRecalculate: () => void;
+  isCalculating: boolean;
 }
 
-export function Step4BusinessCase({ wyniki, firma, provisionPct, onProvisionChange }: Props) {
+export function Step4BusinessCase({ wyniki, firma, provisionPct, onProvisionChange, onRecalculate, isCalculating }: Props) {
   const { podsumowanie: p } = wyniki;
 
   const kpis = [
@@ -54,9 +56,20 @@ export function Step4BusinessCase({ wyniki, firma, provisionPct, onProvisionChan
           step="0.5"
           value={provisionPct}
           onChange={e => onProvisionChange(parseFloat(e.target.value) || 0)}
+          onKeyDown={e => e.key === 'Enter' && onRecalculate()}
           className="w-24 px-3 py-2 text-sm border border-amber-300 rounded-xl font-bold text-center focus:outline-none focus:ring-2"
         />
         <span className="text-amber-700 font-bold">%</span>
+        <button
+          onClick={onRecalculate}
+          disabled={isCalculating}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
+          style={{ backgroundColor: TEAL }}
+          title="Przelicz z nową prowizją (Enter)"
+        >
+          <RefreshCw size={14} className={isCalculating ? 'animate-spin' : ''} />
+          {isCalculating ? 'Liczę…' : 'Przelicz'}
+        </button>
       </div>
 
       {/* KPI cards */}

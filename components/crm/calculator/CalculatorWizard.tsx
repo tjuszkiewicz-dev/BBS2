@@ -141,6 +141,8 @@ export default function CalculatorWizard() {
                 firma={firma}
                 provisionPct={provisionPct}
                 onProvisionChange={setProvisionPct}
+                onRecalculate={runCalculation}
+                isCalculating={isCalculating}
               />
             )}
             {step === 5 && wyniki && (
