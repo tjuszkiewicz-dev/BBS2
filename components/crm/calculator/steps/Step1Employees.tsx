@@ -186,6 +186,100 @@ function PracownikRow({
   );
 }
 
+function BulkAddBar({ onAdd }: { onAdd: (count: number, netto: number, typ: 'UOP' | 'UZ') => void }) {
+  const [count, setCount] = useState<string>('');
+  const [netto, setNetto] = useState<string>('');
+  const [typ, setTyp]     = useState<'UOP' | 'UZ'>('UOP');
+
+  const handleAdd = () => {
+    const c = parseInt(count);
+    const n = parseFloat(netto);
+    if (!c || c < 1 || !n || n < 1) return;
+    onAdd(c, n, typ);
+    setCount('');
+    setNetto('');
+  };
+
+  return (
+    <div className="mb-6 p-4 rounded-xl border border-blue-100 bg-blue-50">
+      <p className="text-sm text-blue-700 font-medium mb-3">Szybkie dodanie pracowników:</p>
+
+      {/* Preset chips */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {[
+          { label: '10 × 5 000 zł', count: 10, netto: 5000 },
+          { label: '20 × 6 000 zł', count: 20, netto: 6000 },
+          { label: '50 × 7 500 zł', count: 50, netto: 7500 },
+        ].map(opt => (
+          <button
+            key={opt.label}
+            onClick={() => onAdd(opt.count, opt.netto, 'UOP')}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors"
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Custom inputs */}
+      <div className="flex flex-wrap items-end gap-2">
+        <div>
+          <label className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wide mb-1">Ilość</label>
+          <input
+            type="number"
+            min="1"
+            max="999"
+            value={count}
+            onChange={e => setCount(e.target.value)}
+            placeholder="np. 15"
+            className="w-24 px-3 py-2 text-sm border border-blue-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wide mb-1">Zarobki netto (zł)</label>
+          <input
+            type="number"
+            min="1"
+            step="100"
+            value={netto}
+            onChange={e => setNetto(e.target.value)}
+            placeholder="np. 5500"
+            className="w-36 px-3 py-2 text-sm border border-blue-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wide mb-1">Typ umowy</label>
+          <div className="flex rounded-xl overflow-hidden border border-blue-200">
+            {(['UOP', 'UZ'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTyp(t)}
+                className={`px-4 py-2 text-xs font-bold transition-colors ${
+                  typ === t
+                    ? 'text-white'
+                    : 'bg-white text-blue-500 hover:bg-blue-50'
+                }`}
+                style={typ === t ? { backgroundColor: TEAL } : undefined}
+              >
+                {t === 'UOP' ? 'UoP' : 'UZ'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={!count || !netto || parseInt(count) < 1 || parseFloat(netto) < 1}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-opacity"
+          style={{ backgroundColor: TEAL }}
+        >
+          <Plus size={14} />
+          Dodaj
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Step1Employees({ pracownicy, onPracownicyChange, config }: Props) {
   const addEmployee = () => onPracownicyChange([...pracownicy, newPracownik()]);
 
@@ -195,11 +289,13 @@ export function Step1Employees({ pracownicy, onPracownicyChange, config }: Props
   const removeEmployee = (id: string) =>
     onPracownicyChange(pracownicy.filter(p => p.id !== id));
 
-  const addBulk = (count: number, netto: number) => {
+  const addBulk = (count: number, netto: number, typUmowy: 'UOP' | 'UZ' = 'UOP') => {
     const bulk = Array.from({ length: count }, () => ({
       ...newPracownik(),
       nettoDocelowe: netto,
       nettoZasadnicza: config.minNetto,
+      typUmowy,
+      kupTyp: (typUmowy === 'UZ' ? 'PROC_20' : 'STANDARD') as Pracownik['kupTyp'],
     }));
     onPracownicyChange([...pracownicy, ...bulk]);
   };
@@ -227,26 +323,7 @@ export function Step1Employees({ pracownicy, onPracownicyChange, config }: Props
       </div>
 
       {/* Quick bulk add */}
-      {pracownicy.length === 0 && (
-        <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-          <p className="text-sm text-blue-700 font-medium mb-3">Szybkie dodanie przykładowych pracowników:</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: '10 × 5 000 zł', count: 10, netto: 5000 },
-              { label: '20 × 6 000 zł', count: 20, netto: 6000 },
-              { label: '50 × 7 500 zł', count: 50, netto: 7500 },
-            ].map(opt => (
-              <button
-                key={opt.label}
-                onClick={() => addBulk(opt.count, opt.netto)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors"
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <BulkAddBar onAdd={addBulk} />
 
       <div className="space-y-3">
         {pracownicy.map(p => (
