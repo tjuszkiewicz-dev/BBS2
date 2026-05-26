@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle, X, Building2, Hash, User, FileText, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle, X, Building2, Hash, User, FileText, Trash2, StickyNote, Send } from 'lucide-react';
 
 const TEAL = '#4a95a9';
 
@@ -36,6 +36,13 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
 
 // ─── Lead Detail Panel ────────────────────────────────────────────────────────
 
+interface LeadNote {
+  id: string;
+  content: string;
+  author_name: string;
+  created_at: string;
+}
+
 function LeadDetailPanel({
   lead,
   onClose,
@@ -52,9 +59,45 @@ function LeadDetailPanel({
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
 
+  // Notes state
+  const [notes, setNotes] = useState<LeadNote[]>([]);
+  const [noteText, setNoteText] = useState('');
+  const [addingNote, setAddingNote] = useState(false);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
+  const fetchNotes = useCallback(async (leadId: string) => {
+    const res = await fetch(`/api/crm/leads/${leadId}/notes`);
+    if (res.ok) setNotes(await res.json());
+  }, []);
+
   useEffect(() => {
-    if (lead) setForm({ name: lead.name, nip: lead.nip, contact_person: lead.contact_person, phone: lead.phone, email: lead.email, notes: lead.notes });
-  }, [lead]);
+    if (lead) {
+      setForm({ name: lead.name, nip: lead.nip, contact_person: lead.contact_person, phone: lead.phone, email: lead.email, notes: lead.notes });
+      setNotes([]);
+      setNoteText('');
+      fetchNotes(lead.id);
+    }
+  }, [lead, fetchNotes]);
+
+  const handleAddNote = async () => {
+    if (!lead || !noteText.trim()) return;
+    setAddingNote(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${lead.id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: noteText.trim() }),
+      });
+      if (!res.ok) throw new Error('Błąd zapisu');
+      const newNote: LeadNote = await res.json();
+      setNotes(prev => [newNote, ...prev]);
+      setNoteText('');
+    } catch {
+      showToast(false, 'Nie udało się dodać notatki');
+    } finally {
+      setAddingNote(false);
+    }
+  };
 
   const showToast = (ok: boolean, msg: string) => {
     setToast({ ok, msg });
@@ -166,6 +209,56 @@ function LeadDetailPanel({
               {toast.msg}
             </div>
           )}
+
+          {/* ── Notatki ── */}
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <StickyNote size={14} style={{ color: TEAL }} />
+              <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Notatki ({notes.length})</span>
+            </div>
+
+            {/* Add note */}
+            <div className="flex gap-2 mb-3">
+              <textarea
+                ref={noteRef}
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleAddNote(); }}
+                placeholder="Dodaj notatkę… (Ctrl+Enter aby zapisać)"
+                rows={2}
+                className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a95a9] resize-none"
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={addingNote || !noteText.trim()}
+                className="self-end p-2.5 rounded-xl text-white disabled:opacity-40 transition-opacity"
+                style={{ backgroundColor: TEAL }}
+                title="Dodaj notatkę"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+
+            {/* Timeline */}
+            <div className="space-y-2 max-h-52 overflow-y-auto">
+              {notes.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-3">Brak notatek</p>
+              )}
+              {notes.map(note => (
+                <div key={note.id} className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
+                  <p className="text-sm text-slate-800 leading-snug whitespace-pre-wrap">{note.content}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[10px] font-semibold" style={{ color: TEAL }}>{note.author_name}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {new Date(note.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      {' '}
+                      {new Date(note.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
