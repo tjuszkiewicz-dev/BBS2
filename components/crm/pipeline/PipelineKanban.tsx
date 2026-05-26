@@ -5,7 +5,7 @@ import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle } from 'lucide
 
 const TEAL = '#4a95a9';
 
-type LeadStatus = 'new' | 'processing' | 'qualified' | 'converted' | 'rejected';
+type LeadStatus = 'new' | 'qualified' | 'converted' | 'rejected';
 
 interface Lead {
   id: string;
@@ -22,7 +22,6 @@ interface Lead {
 
 const COLUMNS: { id: LeadStatus; label: string; color: string; bg: string }[] = [
   { id: 'new',        label: 'Nowy',           color: '#64748b', bg: '#f8fafc' },
-  { id: 'processing', label: 'W trakcie',       color: '#f0a500', bg: '#fffbeb' },
   { id: 'qualified',  label: 'Zakwalifikowany', color: '#4a95a9', bg: '#f0f9ff' },
   { id: 'converted',  label: 'Pozyskany',       color: '#22c55e', bg: '#f0fdf4' },
   { id: 'rejected',   label: 'Odrzucony',       color: '#ef4444', bg: '#fef2f2' },
@@ -281,11 +280,11 @@ export default function PipelineKanban() {
 
       {/* Kanban board */}
       <div className="p-4 md:p-6">
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <div className="flex flex-wrap gap-4">
           {COLUMNS.map(col => {
             const colLeads = getColumn(col.id);
             return (
-              <div key={col.id} className="min-w-0">
+              <div key={col.id} className="w-60 flex-shrink-0">
                 {/* Column header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
