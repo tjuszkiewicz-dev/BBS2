@@ -194,7 +194,7 @@ export const CompanyFormModal: React.FC<Props> = ({ onClose, onCreated }) => {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {field('name', 'Nazwa firmy', 'np. Stratton Prime S.A.', true)}
+            {field('name', 'Nazwa firmy', 'np. ABC Sp. z o.o.', true)}
 
             {/* NIP z przyciskiem GUS */}
             <div>

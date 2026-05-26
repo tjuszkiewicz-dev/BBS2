@@ -96,7 +96,7 @@ export const DashboardAdminNew: React.FC<Props> = ({ currentView, onViewChange }
           <span className="text-gray-300">|</span>
           <span className="text-xs text-gray-500">
             {tabs.find(t => t.id === tab)?.label
-              ?? (tab === 'crm-kalkulator'  ? 'Kalkulator Prime™'
+              ?? (tab === 'crm-kalkulator'  ? 'Kalkulator Ofertowy'
               : tab === 'crm-pipeline'      ? 'Pipeline CRM'
               : tab === 'crm-kontakty'      ? 'Kontakty CRM'
               : tab === 'crm-leaderboard'   ? 'Leaderboard'

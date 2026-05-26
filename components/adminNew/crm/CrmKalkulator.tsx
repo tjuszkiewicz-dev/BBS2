@@ -71,7 +71,7 @@ const STEPS = [
   { label: 'Firma',       icon: <Building2 size={16} /> },
   { label: 'Pracownicy',  icon: <Users size={16} /> },
   { label: 'Standard',    icon: <TrendingDown size={16} /> },
-  { label: 'Prime™',      icon: <TrendingUp size={16} /> },
+  { label: 'Ofertowy',    icon: <TrendingUp size={16} /> },
   { label: 'Business Case', icon: <CheckCircle size={16} /> },
 ];
 
@@ -135,7 +135,7 @@ export const CrmKalkulator: React.FC = () => {
           <Calculator size={20} className="text-white" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Kalkulator Stratton Prime™</h2>
+          <h2 className="text-lg font-bold text-slate-800">Kalkulator Ofertowy</h2>
           <p className="text-xs text-slate-500">Pokaż klientowi ile zaoszczędzi na poodziale wynagrodzenia</p>
         </div>
       </div>
@@ -360,7 +360,7 @@ export const CrmKalkulator: React.FC = () => {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-200" style={{ backgroundColor: '#f0fdf4' }}>
               <TrendingUp size={16} style={{ color: '#16a34a' }} />
-              <h3 className="font-semibold text-sm" style={{ color: '#16a34a' }}>Model Stratton Prime™ — UOP + UZ split</h3>
+              <h3 className="font-semibold text-sm" style={{ color: '#16a34a' }}>Model Ofertowy — UOP + UZ split</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -437,7 +437,7 @@ export const CrmKalkulator: React.FC = () => {
             <h3 className="font-bold text-slate-800 mb-4">Zestawienie dla {firma.nazwa || 'klienta'}</h3>
             {[
               { label: 'Suma koszt Standard / mies.',    value: fmt(P.sumaKosztStandard) + ' zł' },
-              { label: 'Suma koszt Prime™ / mies.',      value: fmt(P.sumaKosztPodzial)  + ' zł' },
+              { label: 'Suma koszt ofertowy / mies.',    value: fmt(P.sumaKosztPodzial)  + ' zł' },
               { label: 'Brutto świadczeń / mies.',       value: fmt(P.sumaBruttoSwiadczen) + ' zł' },
               { label: 'Oszczędność brutto / mies.',     value: fmt(P.oszczednoscBrutto) + ' zł', bold: true, green: true },
               { label: `Prowizja BBS (${firma.prowizjaProc}%) / mies.`, value: '−' + fmt(P.prowizja) + ' zł' },
