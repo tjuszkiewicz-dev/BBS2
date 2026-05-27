@@ -38,9 +38,10 @@ Supabase SSR (`@supabase/ssr`) + Server Actions + cookie-based sessions.
 - Login action: `app/actions/auth.ts` — reads role from `user_profiles`, returns `{ ok, redirectUrl }`
 - Role → redirect mapping:
   - `pracodawca` → `/dashboard/employer`
+  - `hr` → `/dashboard/employer` (delegowany kadrowiec — to samo menu co pracodawca)
   - `pracownik` → `/dashboard/employee`
   - `superadmin` → `/dashboard/admin`
-  - `dyrektor`, `menedzer`, `partner` → `/dashboard/admin` (CRM panel)
+  - `dyrektor`, `menedzer`, `partner` → `/dashboard/network` (sieć sprzedaży / CRM)
 
 ### Routing (Next.js App Router)
 
