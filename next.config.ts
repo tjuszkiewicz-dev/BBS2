@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   // xlsx jest biblioteką CJS — bez transpilePackages webpack 5 zgłasza
   // "__webpack_modules__[moduleId] is not a function" w runtime przeglądarki
   transpilePackages: ['xlsx'],
+  // @sparticuz/chromium ships a tarball — exclude from bundling so it's loaded
+  // from node_modules at runtime in the serverless function
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
   typescript: {
     ignoreBuildErrors: true,
   },

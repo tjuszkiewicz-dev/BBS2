@@ -10,8 +10,12 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getAuthUserWithRole } from '@/lib/apiAuth';
 import { admin } from '@/lib/crm/visibility';
-import { generatePdfBuffer } from '@/lib/documents/pdfUtils';
 import { renderOfferHtml, type OfferData } from '@/lib/crm/offer/offerTemplate';
+import { renderOfferPdf } from '@/lib/crm/offer/pdfRenderer';
+
+// Vercel serverless config — needs more memory + time for Chromium
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 let cachedLogo: string | null = null;
 async function readLogoDataUri(): Promise<string | null> {
@@ -63,14 +67,14 @@ export async function POST(request: NextRequest) {
 
   const html = renderOfferHtml(offerData);
 
-  const pdfBuffer = await generatePdfBuffer(html, {
-    margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
-  });
-
-  if (!pdfBuffer) {
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await renderOfferPdf(html);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Serwer PDF jest niedostępny. Uruchom `node server/app.js` na porcie 3015.' },
-      { status: 502 }
+      { error: `Generowanie PDF nie powiodło się: ${msg}` },
+      { status: 500 }
     );
   }
 
