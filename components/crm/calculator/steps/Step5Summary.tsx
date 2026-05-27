@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import type { GlobalneWyniki, Firma, Pracownik } from '@/lib/crm/tax-engine/types';
-import { Download, Save, CheckCircle2 } from 'lucide-react';
+import { Download, Save, CheckCircle2, FileText, ExternalLink } from 'lucide-react';
 
 const TEAL = '#4a95a9';
+const GOLD = '#f0a500';
 
 function fmt(n: number) {
   return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
@@ -21,6 +22,9 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
   const { podsumowanie: p } = wyniki;
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [offerResult, setOfferResult] = useState<{ url: string; fileName: string } | null>(null);
+  const [offerError, setOfferError] = useState<string | null>(null);
 
   const handleSave = async () => {
     setSaving(true);
@@ -33,6 +37,35 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
       setSaved(true);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleGenerateOffer = async () => {
+    setGenerating(true);
+    setOfferError(null);
+    setOfferResult(null);
+    try {
+      const res = await fetch('/api/crm/offers/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firma,
+          pracownicyCount: pracownicy.length,
+          provisionPct,
+          podsumowanie: p,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Błąd generowania oferty');
+      }
+      setOfferResult({ url: data.pdfUrl, fileName: data.fileName });
+      // Auto-open in new tab
+      window.open(data.pdfUrl, '_blank');
+    } catch (e) {
+      setOfferError(e instanceof Error ? e.message : 'Błąd');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -88,6 +121,38 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
         ))}
       </div>
 
+      {/* Generated offer card */}
+      {offerResult && (
+        <div className="mb-4 p-4 rounded-xl border-2 border-green-200 bg-green-50 flex items-center gap-3">
+          <CheckCircle2 size={20} className="text-green-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-green-800">Oferta wygenerowana</p>
+            <p className="text-xs text-green-700">{offerResult.fileName}</p>
+          </div>
+          <a
+            href={offerResult.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm font-semibold text-green-700 hover:bg-green-100"
+          >
+            <ExternalLink size={14} /> Otwórz
+          </a>
+          <a
+            href={offerResult.url}
+            download={offerResult.fileName}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+          >
+            <Download size={14} /> Pobierz
+          </a>
+        </div>
+      )}
+
+      {offerError && (
+        <div className="mb-4 p-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          {offerError}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-100">
         <button
@@ -105,6 +170,15 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
         >
           <Save size={16} />
           {saved ? 'Zapisano!' : saving ? 'Zapisuję…' : 'Zapisz kalkulację'}
+        </button>
+        <button
+          onClick={handleGenerateOffer}
+          disabled={generating}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60 shadow-lg"
+          style={{ backgroundColor: GOLD, boxShadow: `0 4px 16px ${GOLD}40` }}
+        >
+          <FileText size={16} />
+          {generating ? 'Generuję PDF…' : 'Generuj ofertę'}
         </button>
       </div>
     </div>

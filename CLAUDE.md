@@ -163,8 +163,33 @@ admin-org-chart   Org-chart            Network         (superadmin/dyrektor/mene
 - `leads` — leady (NIP, assigned_to, status, last_activity_at, city, industry, itp.)
 - `crm_contacts` — kontakty powiązane z leadem przez `company_id`
 - `crm_client_activities` — aktywności (CALL/MEETING/EMAIL/NOTE, lead_id, occurred_at, is_completed)
+- `lead_notes` — notatki do leadów (lead_id, content, author_id, author_name, created_at), RLS via service role
+- `crm_offers` — wygenerowane oferty PDF (lead_id, created_by, company_name, employees_count, provision_pct, total/net_savings_*, pdf_url, pdf_path, snapshot JSONB)
 - `calculator_configs` — konfiguracje kalkulatora
 - `payroll_calculations` — zapisane kalkulacje
+
+**Storage bucket:**
+- `offers` (private) — PDFy wygenerowanych ofert; ścieżka `oferty/{slug}-{ts}.pdf`, signed URL ważny 1 rok
+
+### Generator ofert PDF (Kalkulator Ofertowy → Step5)
+
+**Cel:** Z poziomu kroku 6 (Podsumowanie) kalkulatora handlowiec klika "Generuj ofertę" — system wytwarza 5-stronicowy sprzedażowy PDF gotowy do wysyłki klientowi.
+
+**Pliki:**
+- `lib/crm/offer/offerTemplate.ts` — `renderOfferHtml(data)` → HTML 5-stronicowej oferty A4 z inline CSS (gradienty, hero KPI, paski porównawcze, 6 filarów prawnych, 4 kroki, CTA)
+- `app/api/crm/offers/generate/route.ts` — POST: renderuje HTML → wysyła do PDF servera (Puppeteer) → upload do Supabase Storage → wpis w `crm_offers` → zwraca signed URL (1 rok)
+- `components/crm/calculator/steps/Step5Summary.tsx` — przycisk "Generuj ofertę" (gold) → auto-open w nowej zakładce + karta z linkami Otwórz/Pobierz
+
+**Struktura PDF (sales psychology):**
+1. **Cover** — gradient navy→teal, logo BBS, "Oferta dla [Klient]", doradca, slogan
+2. **3 bóle** — pre-suasion (koszty ZUS, rotacja, brak zabezpieczenia) + wniosek
+3. **Twój wynik** — hero z **roczną oszczędnością** (anchor effect), 4 KPI cards, wykres porównawczy Standard vs Ofertowy z callout %
+4. **6 filarów prawnych** — Rozp. MPiPS 1998, Wyrok SN 2010, Interpretacja ZUS 2023, Ustawa PIT, Opinia [KANCELARIA…], Reforma PIP 2026
+5. **4 kroki wdrożenia + CTA** — gradient navy→teal, tagi (bezpłatna/RODO/48h), dane kontaktowe, zastrzeżenia prawne (must-have)
+
+**Wymaga:** PDF server (`node server/app.js` na porcie 3015) — endpoint `/api/generate-pdf-raw`.
+
+**Treść marketingowa BBS** zapisana w pamięci: `memory/project_bbs_offer_content.md` (3 bóle, 6 filarów, 4 kroki, zastrzeżenia, value props).
 
 ### CRM Leaderboard (Gamification)
 
