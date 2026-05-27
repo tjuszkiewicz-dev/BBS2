@@ -41,7 +41,8 @@ export default async function EmployerDashboardPage() {
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'pracodawca' && profile?.role !== 'superadmin') redirect('/login');
+  const ALLOWED = ['pracodawca', 'hr', 'superadmin'] as const;
+  if (!profile?.role || !ALLOWED.includes(profile.role as typeof ALLOWED[number])) redirect('/login');
 
   return <EmployerDashboardClient />;
 }

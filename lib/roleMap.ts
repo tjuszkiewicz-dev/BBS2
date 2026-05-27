@@ -51,7 +51,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const ROLE_DASHBOARD: Record<Role, string> = {
   [Role.SUPERADMIN]: '/dashboard/admin',
   [Role.HR]:         '/dashboard/employer',
-  [Role.HR_PANEL]:   '/dashboard/admin',
+  [Role.HR_PANEL]:   '/dashboard/employer',
   [Role.EMPLOYEE]:   '/dashboard/employee',
   [Role.ADVISOR]:    '/dashboard/network',
   [Role.MANAGER]:    '/dashboard/network',
