@@ -28,12 +28,16 @@ async function renderViaPuppeteer(html: string): Promise<Buffer> {
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Use 'load' (not 'networkidle0') — content is all inline (data URIs),
+    // no external requests to wait for. networkidle0 + huge embedded base64
+    // logo was hitting the 30s default timeout on Vercel.
+    await page.setContent(html, { waitUntil: 'load', timeout: 50000 });
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
       preferCSSPageSize: true,
       margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+      timeout: 50000,
     });
     return Buffer.from(pdf);
   } finally {

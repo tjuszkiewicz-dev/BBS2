@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import sharp from 'sharp';
 import { getAuthUserWithRole } from '@/lib/apiAuth';
 import { admin } from '@/lib/crm/visibility';
 import { renderOfferHtml, type OfferData } from '@/lib/crm/offer/offerTemplate';
@@ -22,7 +23,12 @@ async function readLogoDataUri(): Promise<string | null> {
   if (cachedLogo) return cachedLogo;
   try {
     const buf = await readFile(join(process.cwd(), 'public', 'logo.png'));
-    cachedLogo = `data:image/png;base64,${buf.toString('base64')}`;
+    // Resize the 4.5MB logo to ~400px wide, output PNG ~30-80KB
+    const resized = await sharp(buf)
+      .resize({ width: 400, withoutEnlargement: true })
+      .png({ compressionLevel: 9, quality: 90 })
+      .toBuffer();
+    cachedLogo = `data:image/png;base64,${resized.toString('base64')}`;
     return cachedLogo;
   } catch {
     return null;
