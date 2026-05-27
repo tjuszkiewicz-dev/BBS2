@@ -39,6 +39,7 @@ export interface OfferData {
     name: string;
     email?: string;
   };
+  logoDataUri?: string;
 }
 
 const TEAL   = '#4a95a9';
@@ -62,7 +63,7 @@ function todayPl(): string {
 }
 
 export function renderOfferHtml(data: OfferData): string {
-  const { firma, pracownicyCount, provisionPct, podsumowanie: p, advisor } = data;
+  const { firma, pracownicyCount, provisionPct, podsumowanie: p, advisor, logoDataUri } = data;
 
   // Skala pasków porównawczych
   const standardPct = 100;
@@ -105,13 +106,20 @@ export function renderOfferHtml(data: OfferData): string {
   }
   .cover-logo {
     background: white;
-    color: ${NAVY};
-    padding: 8px 18px;
+    padding: 8px 14px;
     border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    height: 48px;
+  }
+  .cover-logo img { height: 32px; width: auto; display: block; }
+  .cover-logo-text {
+    color: ${NAVY};
     font-weight: 800;
     font-size: 14pt;
     letter-spacing: 1px;
   }
+  .page-header-logo-img { height: 22px; width: auto; display: block; }
   .cover-meta {
     text-align: right;
     font-size: 9pt;
@@ -573,7 +581,9 @@ export function renderOfferHtml(data: OfferData): string {
      ═══════════════════════════════════════════════════════════════════ -->
 <section class="page cover">
   <div class="cover-header">
-    <div class="cover-logo">BBS</div>
+    <div class="cover-logo">
+      ${logoDataUri ? `<img src="${logoDataUri}" alt="Baltic Benefit System">` : `<span class="cover-logo-text">BBS</span>`}
+    </div>
     <div class="cover-meta">
       Oferta nr ${shortId()}<br>
       ${todayPl()}
@@ -613,7 +623,7 @@ export function renderOfferHtml(data: OfferData): string {
      ═══════════════════════════════════════════════════════════════════ -->
 <section class="page content">
   <div class="page-header">
-    <div class="page-header-logo">BBS · Baltic Benefit</div>
+    <div class="page-header-logo">${logoDataUri ? `<img class="page-header-logo-img" src="${logoDataUri}" alt="BBS">` : 'BBS · Baltic Benefit'}</div>
     <div class="page-header-meta">www.baltic-benefit.pl</div>
   </div>
 
@@ -674,7 +684,7 @@ export function renderOfferHtml(data: OfferData): string {
      ═══════════════════════════════════════════════════════════════════ -->
 <section class="page content">
   <div class="page-header">
-    <div class="page-header-logo">BBS · Baltic Benefit</div>
+    <div class="page-header-logo">${logoDataUri ? `<img class="page-header-logo-img" src="${logoDataUri}" alt="BBS">` : 'BBS · Baltic Benefit'}</div>
     <div class="page-header-meta">www.baltic-benefit.pl</div>
   </div>
 
@@ -748,7 +758,7 @@ export function renderOfferHtml(data: OfferData): string {
      ═══════════════════════════════════════════════════════════════════ -->
 <section class="page content">
   <div class="page-header">
-    <div class="page-header-logo">BBS · Baltic Benefit</div>
+    <div class="page-header-logo">${logoDataUri ? `<img class="page-header-logo-img" src="${logoDataUri}" alt="BBS">` : 'BBS · Baltic Benefit'}</div>
     <div class="page-header-meta">www.baltic-benefit.pl</div>
   </div>
 
@@ -815,7 +825,7 @@ export function renderOfferHtml(data: OfferData): string {
      ═══════════════════════════════════════════════════════════════════ -->
 <section class="page content">
   <div class="page-header">
-    <div class="page-header-logo">BBS · Baltic Benefit</div>
+    <div class="page-header-logo">${logoDataUri ? `<img class="page-header-logo-img" src="${logoDataUri}" alt="BBS">` : 'BBS · Baltic Benefit'}</div>
     <div class="page-header-meta">www.baltic-benefit.pl</div>
   </div>
 

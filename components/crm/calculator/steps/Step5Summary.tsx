@@ -16,9 +16,10 @@ interface Props {
   pracownicy: Pracownik[];
   wyniki: GlobalneWyniki;
   provisionPct: number;
+  leadId?: string | null;
 }
 
-export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props) {
+export function Step5Summary({ firma, pracownicy, wyniki, provisionPct, leadId }: Props) {
   const { podsumowanie: p } = wyniki;
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,6 +54,7 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
           pracownicyCount: pracownicy.length,
           provisionPct,
           podsumowanie: p,
+          leadId: leadId ?? null,
         }),
       });
       const data = await res.json();
@@ -100,6 +102,11 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct }: Props)
           <h2 className="text-lg font-bold text-slate-800">Podsumowanie kalkulacji</h2>
           <p className="text-sm text-slate-500">{firma.nazwa} — {firma.okres} — {pracownicy.length} pracowników</p>
         </div>
+        {leadId && (
+          <span className="ml-auto text-[10px] font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+            🔗 Powiązane z leadem
+          </span>
+        )}
       </div>
 
       {/* Summary table */}

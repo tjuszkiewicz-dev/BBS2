@@ -42,6 +42,7 @@ export default function CalculatorWizard() {
   const [config] = useState<CalcConfig>(DEFAULT_CONFIG);
   const [isCalculating, setIsCalculating] = useState(false);
   const [calcError, setCalcError] = useState<string | null>(null);
+  const [leadId, setLeadId] = useState<string | null>(null);
 
   const runCalculation = useCallback(async () => {
     if (pracownicy.length === 0) return;
@@ -125,7 +126,7 @@ export default function CalculatorWizard() {
                 {calcError}
               </div>
             )}
-            {step === 0 && <Step0Company firma={firma} onFirmaChange={setFirma} />}
+            {step === 0 && <Step0Company firma={firma} onFirmaChange={setFirma} onLeadPicked={setLeadId} />}
             {step === 1 && (
               <Step1Employees
                 pracownicy={pracownicy}
@@ -151,6 +152,7 @@ export default function CalculatorWizard() {
                 pracownicy={pracownicy}
                 wyniki={wyniki}
                 provisionPct={provisionPct}
+                leadId={leadId}
               />
             )}
             {(step === 2 || step === 3 || step === 4 || step === 5) && !wyniki && (

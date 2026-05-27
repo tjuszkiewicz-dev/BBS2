@@ -6,10 +6,24 @@
 // 4. Tworzy rekord w `crm_offers` + zwraca signed URL
 
 import { NextRequest, NextResponse } from 'next/server';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { getAuthUserWithRole } from '@/lib/apiAuth';
 import { admin } from '@/lib/crm/visibility';
 import { generatePdfBuffer } from '@/lib/documents/pdfUtils';
 import { renderOfferHtml, type OfferData } from '@/lib/crm/offer/offerTemplate';
+
+let cachedLogo: string | null = null;
+async function readLogoDataUri(): Promise<string | null> {
+  if (cachedLogo) return cachedLogo;
+  try {
+    const buf = await readFile(join(process.cwd(), 'public', 'logo.png'));
+    cachedLogo = `data:image/png;base64,${buf.toString('base64')}`;
+    return cachedLogo;
+  } catch {
+    return null;
+  }
+}
 
 const CRM_ROLES = ['superadmin', 'partner', 'menedzer', 'dyrektor'];
 
@@ -36,6 +50,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   const advisorName = profile?.full_name ?? auth.email ?? 'Doradca BBS';
+  const logoDataUri = await readLogoDataUri();
 
   const offerData: OfferData = {
     firma,
@@ -43,6 +58,7 @@ export async function POST(request: NextRequest) {
     provisionPct: Number(provisionPct) || 0,
     podsumowanie,
     advisor: { name: advisorName, email: auth.email ?? undefined },
+    logoDataUri: logoDataUri ?? undefined,
   };
 
   const html = renderOfferHtml(offerData);

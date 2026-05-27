@@ -7,6 +7,7 @@ import { Building2, Search, Users, X, CheckCircle2 } from 'lucide-react';
 interface Props {
   firma: Firma;
   onFirmaChange: (f: Firma) => void;
+  onLeadPicked?: (leadId: string | null) => void;
 }
 
 const TEAL = '#4a95a9';
@@ -155,7 +156,7 @@ function LeadPickerModal({ onClose, onPick }: {
 
 // ─── Step ─────────────────────────────────────────────────────────────────────
 
-export function Step0Company({ firma, onFirmaChange }: Props) {
+export function Step0Company({ firma, onFirmaChange, onLeadPicked }: Props) {
   const [showPicker, setShowPicker] = useState(false);
 
   const set = (key: keyof Firma) => (val: string | number) =>
@@ -187,6 +188,7 @@ export function Step0Company({ firma, onFirmaChange }: Props) {
       telefon:         lead.phone ?? firma.telefon,
       email:           lead.email ?? firma.email,
     });
+    onLeadPicked?.(lead.id);
   };
 
   return (

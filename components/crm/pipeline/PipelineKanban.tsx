@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle, X, Building2, Hash, User, FileText, Trash2, StickyNote, Send } from 'lucide-react';
+import { Plus, Search, Phone, Mail, RefreshCw, UserCheck, XCircle, X, Building2, Hash, User, FileText, Trash2, StickyNote, Send, FileSpreadsheet, ExternalLink, Download } from 'lucide-react';
 
 const TEAL = '#4a95a9';
 
@@ -43,6 +43,18 @@ interface LeadNote {
   created_at: string;
 }
 
+interface LeadOffer {
+  id: string;
+  company_name: string;
+  employees_count: number;
+  provision_pct: number;
+  total_savings_monthly: number;
+  total_savings_yearly: number;
+  net_savings_monthly: number;
+  pdf_url: string | null;
+  created_at: string;
+}
+
 function LeadDetailPanel({
   lead,
   onClose,
@@ -65,19 +77,35 @@ function LeadDetailPanel({
   const [addingNote, setAddingNote] = useState(false);
   const noteRef = useRef<HTMLTextAreaElement>(null);
 
+  // Offers state
+  const [offers, setOffers] = useState<LeadOffer[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+
   const fetchNotes = useCallback(async (leadId: string) => {
     const res = await fetch(`/api/crm/leads/${leadId}/notes`);
     if (res.ok) setNotes(await res.json());
+  }, []);
+
+  const fetchOffers = useCallback(async (leadId: string) => {
+    setLoadingOffers(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${leadId}/offers`);
+      if (res.ok) setOffers(await res.json());
+    } finally {
+      setLoadingOffers(false);
+    }
   }, []);
 
   useEffect(() => {
     if (lead) {
       setForm({ name: lead.name, nip: lead.nip, contact_person: lead.contact_person, phone: lead.phone, email: lead.email, notes: lead.notes });
       setNotes([]);
+      setOffers([]);
       setNoteText('');
       fetchNotes(lead.id);
+      fetchOffers(lead.id);
     }
-  }, [lead, fetchNotes]);
+  }, [lead, fetchNotes, fetchOffers]);
 
   const handleAddNote = async () => {
     if (!lead || !noteText.trim()) return;
@@ -209,6 +237,82 @@ function LeadDetailPanel({
               {toast.msg}
             </div>
           )}
+
+          {/* ── Oferty / Kalkulacje ── */}
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <FileSpreadsheet size={14} style={{ color: TEAL }} />
+              <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                Oferty i kalkulacje ({offers.length})
+              </span>
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {loadingOffers && (
+                <p className="text-xs text-slate-400 text-center py-3">Ładowanie…</p>
+              )}
+              {!loadingOffers && offers.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-3">
+                  Brak ofert. Wygeneruj ofertę w Kalkulatorze Ofertowym, używając „Dodaj z leadów".
+                </p>
+              )}
+              {offers.map(o => (
+                <div key={o.id} className="bg-white rounded-xl px-3 py-2.5 border border-slate-200 hover:border-[#4a95a9]/40 transition-colors">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
+                        {o.company_name}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {new Date(o.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        {' · '}
+                        {new Date(o.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white whitespace-nowrap"
+                      style={{ backgroundColor: TEAL }}
+                    >
+                      {o.employees_count} {o.employees_count === 1 ? 'os.' : 'os.'} · {Number(o.provision_pct).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 mb-2">
+                    <div className="bg-slate-50 rounded px-2 py-1">
+                      <p className="text-[9px] text-slate-500 uppercase">Oszczędność / mies.</p>
+                      <p className="text-xs font-bold text-slate-800">
+                        {new Intl.NumberFormat('pl-PL').format(Math.round(Number(o.net_savings_monthly)))} zł
+                      </p>
+                    </div>
+                    <div className="rounded px-2 py-1" style={{ backgroundColor: '#dcfce7' }}>
+                      <p className="text-[9px] uppercase" style={{ color: '#16a34a' }}>Oszczędność / rok</p>
+                      <p className="text-xs font-bold" style={{ color: '#16a34a' }}>
+                        {new Intl.NumberFormat('pl-PL').format(Math.round(Number(o.total_savings_yearly)))} zł
+                      </p>
+                    </div>
+                  </div>
+                  {o.pdf_url && (
+                    <div className="flex gap-1.5">
+                      <a
+                        href={o.pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors"
+                      >
+                        <ExternalLink size={11} /> Otwórz
+                      </a>
+                      <a
+                        href={o.pdf_url}
+                        download
+                        className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[11px] font-semibold transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: TEAL }}
+                      >
+                        <Download size={11} /> PDF
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* ── Notatki ── */}
           <div className="pt-2 border-t border-slate-100">
