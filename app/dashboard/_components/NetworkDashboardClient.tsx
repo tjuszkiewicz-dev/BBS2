@@ -6,11 +6,16 @@ import { DashboardBootstrap } from './DashboardBootstrap';
 import { DashboardSales } from '@/views/DashboardSales';
 import { Sidebar } from '@/components/Sidebar';
 import { useStrattonSystem } from '@/context/StrattonContext';
+import { Role } from '@/types';
+import { PartnerLeaderboardWidget } from '@/components/crm/sales/PartnerLeaderboardWidget';
 import Image from 'next/image';
 import { Menu, Bell, LogOut } from 'lucide-react';
 
 const CalculatorWizard = dynamic(() => import('@/components/crm/calculator/CalculatorWizard'), { ssr: false });
 const PipelineKanban = dynamic(() => import('@/components/crm/pipeline/PipelineKanban'), { ssr: false });
+const CrmInvoices = dynamic(() => import('@/components/adminNew/crm/CrmInvoices').then(m => ({ default: m.CrmInvoices })), { ssr: false });
+const CrmLeaderboard = dynamic(() => import('@/components/adminNew/crm/CrmLeaderboard').then(m => ({ default: m.CrmLeaderboard })), { ssr: false });
+const OrgChartView = dynamic(() => import('@/components/adminNew/org/OrgChartView').then(m => ({ default: m.OrgChartView })), { ssr: false });
 
 const TEAL = '#4a95a9';
 
@@ -32,7 +37,7 @@ function NetworkLayout() {
     window.location.href = '/login';
   };
 
-  const isCRM = currentView.startsWith('crm-');
+  const isCRM = currentView.startsWith('crm-') || currentView === 'org-chart' || currentView === 'sales-platnosci';
   const myCommissions = commissions.filter(c => c.agentId === currentUser.id);
   const myCompanies = companies.filter(c =>
     c.advisorId === currentUser.id || c.managerId === currentUser.id || c.directorId === currentUser.id
@@ -91,7 +96,8 @@ function NetworkLayout() {
         {/* Content */}
         <main className="flex-1 overflow-auto">
           {!isCRM && (
-            <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8 space-y-4">
+              {currentUser.role === Role.ADVISOR && <PartnerLeaderboardWidget />}
               <DashboardSales
                 currentUser={currentUser}
                 commissions={myCommissions}
@@ -101,8 +107,11 @@ function NetworkLayout() {
               />
             </div>
           )}
-          {currentView === 'crm-kalkulator' && <CalculatorWizard />}
-          {currentView === 'crm-pipeline' && <PipelineKanban />}
+          {currentView === 'crm-kalkulator'  && <CalculatorWizard />}
+          {currentView === 'crm-pipeline'    && <PipelineKanban />}
+          {currentView === 'crm-leaderboard' && currentUser.role !== Role.ADVISOR && <CrmLeaderboard />}
+          {currentView === 'org-chart'       && currentUser.role !== Role.ADVISOR && <OrgChartView />}
+          {currentView === 'sales-platnosci' && <CrmInvoices />}
         </main>
       </div>
     </div>
