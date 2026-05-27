@@ -112,21 +112,15 @@ Auto-themes based on role:
 - `EMPLOYEE` → black theme (`bg-black`, white text)
 - Other roles → white/light theme with BBS blue accent (`#deedf3`)
 
-**SUPERADMIN / CRM menu items**:
-```
-admin-pulpit      Pulpit               LayoutDashboard
-admin-klienci     Baza klientów        Users
-admin-platnosci   Płatności i faktury  CreditCard
-admin-archiwum    Archiwum             FolderOpen
-admin-vouchery    Vouchery             Ticket
---- CRM section ---
-crm-pipeline      Pipeline CRM         Target
-crm-kalkulator    Kalkulator Prime      Calculator
-crm-kontakty      Kontakty             UserRound
-crm-leaderboard   Leaderboard          Trophy          (superadmin/dyrektor/menedzer)
---- Admin/Org section ---
-admin-org-chart   Org-chart            Network         (superadmin/dyrektor/menedzer)
-```
+**Menu per rola** (Switch w `Sidebar.tsx`):
+
+| `Role.*` (DB) | Pozycje menu |
+|---|---|
+| `HR_PANEL` (`hr`) + `HR` (`pracodawca`) — fall-through, identyczne menu | Nowe zamówienie / Historia zamówień / Kartoteka pracowników / Płatności i faktury |
+| `SUPERADMIN` (`superadmin`) | Pulpit / Baza klientów / Płatności i faktury / Archiwum / Vouchery / Anulowanie subskrypcji / Użytkownicy / **CRM**: Pipeline / Kalkulator / Kontakty / Leaderboard / Org-chart / **HR**: Pracownicy / Umowy / Raporty HR |
+| `EMPLOYEE` (`pracownik`) | Twoje Aplikacje / Profitowi / Multipolisa.pl / Goldman Sachs / Wellbeing / Poradniki / E-booki / Historia / Centrum Pomocy / Aktywne usługi |
+| `ADVISOR` (`partner`) | Panel Sprzedaży / Pipeline / Kalkulator Ofertowy / **Faktury i płatności** (bez Leaderboardu w menu — widget pulpitowy zamiast) |
+| `DIRECTOR` + `MANAGER` (`dyrektor` + `menedzer`) — fall-through | Panel Sprzedaży / Pipeline / Kalkulator Ofertowy / Leaderboard / Org-chart / **Faktury i płatności** |
 
 ### CRM Module
 
@@ -166,6 +160,7 @@ admin-org-chart   Org-chart            Network         (superadmin/dyrektor/mene
 - `crm_client_activities` — aktywności (CALL/MEETING/EMAIL/NOTE, lead_id, occurred_at, is_completed)
 - `lead_notes` — notatki do leadów (lead_id, content, author_id, author_name, created_at), RLS via service role
 - `crm_offers` — wygenerowane oferty PDF (lead_id, created_by, company_name, employees_count, provision_pct, total/net_savings_*, pdf_url, pdf_path, snapshot JSONB)
+- `crm_invoices` — faktury VAT klientów + należna prowizja sprzedawcy (lead_id, offer_id, issued_by, amount_net, vat_rate, vat_amount **GEN**, amount_gross **GEN**, provision_pct, provision_amount **GEN**, status DRAFT/ISSUED/PAID/OVERDUE/CANCELLED, due_at, paid_at). Migracja: `20260527120000_crm_invoices.sql`.
 - `calculator_configs` — konfiguracje kalkulatora
 - `payroll_calculations` — zapisane kalkulacje
 
@@ -192,15 +187,33 @@ admin-org-chart   Org-chart            Network         (superadmin/dyrektor/mene
 
 **Treść marketingowa BBS** zapisana w pamięci: `memory/project_bbs_offer_content.md` (3 bóle, 6 filarów, 4 kroki, zastrzeżenia, value props).
 
+### Faktury i płatności (Network Dashboard)
+
+**Cel:** Widok dla sieci sprzedaży (`partner`, `menedzer`, `dyrektor`, `superadmin`) pokazujący faktury VAT klientów + należną prowizję sprzedawcy. Spec: [docs/superpowers/specs/2026-05-27-roles-views-design.md](docs/superpowers/specs/2026-05-27-roles-views-design.md).
+
+**Pliki:**
+- `app/api/crm/invoices/route.ts` — GET (lista z filtrem hierarchii przez `getVisibleUserIds()`), POST (DRAFT)
+- `app/api/crm/invoices/[id]/route.ts` — GET, PATCH (allowed fields), DELETE (soft-delete = status CANCELLED dla nie-superadmina, hard-delete tylko superadmin)
+- `components/adminNew/crm/CrmInvoices.tsx` — tabela: nr / klient / sprzedawca / netto / VAT / brutto / prowizja(%) / status / termin. KPI cards: liczba faktur, suma netto, należna prowizja z PAID.
+- Podpięcie w `app/dashboard/_components/NetworkDashboardClient.tsx` pod `currentView === 'sales-platnosci'`
+
+**Widoczność danych** — filtr przez `issued_by` zgodnie z hierarchią: partner = swoje, menedzer = zespół, dyrektor = pion, superadmin = wszystko.
+
+**Prowizja** = `crm_invoices.amount_net × provision_pct / 100` (kolumna generated). Liczy się tylko dla statusu `PAID`.
+
 ### CRM Leaderboard (Gamification)
 
 **Pliki:**
-- `lib/crm/leaderboard.ts` — `fetchLeaderboard()`, typy `LeaderboardEntry`, `Period`
-- `app/api/crm/leaderboard/route.ts` — GET `/api/crm/leaderboard?period=month|quarter|year`, widoczność hierarchiczna
+- `lib/crm/leaderboard.ts` — `fetchLeaderboard()` (dla menedzer/dyrektor/superadmin) + `fetchPartnerSelfStanding()` (dla partnera). Typy: `LeaderboardEntry`, `PartnerSelfStanding`, `Period`.
+- `app/api/crm/leaderboard/route.ts` — GET zwraca **`{ self: PartnerSelfStanding | null; entries: LeaderboardEntry[] }`** (nie tablicę). Dla `partner` → `{ self, entries: [] }` (tylko własna pozycja w rankingu globalnym partnerów). Dla `menedzer/dyrektor/superadmin` → `{ self: null, entries: [...] }`.
 - `app/api/crm/leaderboard/export/route.ts` — CSV eksport z medalami złoto/srebro/brąz
-- `components/adminNew/crm/CrmLeaderboard.tsx` — podium top 3, tabela rankingowa, selektor okresu, eksport CSV
+- `components/adminNew/crm/CrmLeaderboard.tsx` — podium top 3, tabela rankingowa, selektor okresu, eksport CSV (czyta `data.entries`)
+- `components/crm/sales/PartnerLeaderboardWidget.tsx` — karta "Twoja pozycja: #N / total" widoczna na pulpicie `/dashboard/network` **tylko dla partnera** (renderowana warunkowo w `NetworkDashboardClient` dla `Role.ADVISOR`). Empty state: "Brak sprzedaży w tym miesiącu — zacznij od pierwszej oferty".
 
-**Dostęp:** role `superadmin`, `dyrektor`, `menedzer` (partner nie widzi rankingu innych).
+**Dostęp:**
+- `superadmin/dyrektor/menedzer` → pełny ranking (CRM Leaderboard w menu)
+- `partner` → tylko widget z własną pozycją na pulpicie (brak Leaderboardu w menu)
+- pozostałe role → 403
 
 ### Org-chart (D3)
 
@@ -224,16 +237,22 @@ Custom classes:
 | Email | Hasło | Rola | Redirect |
 |---|---|---|---|
 | `biuro@balticbenefits.pl` | `123456` | `superadmin` | `/dashboard/admin` |
-| `dyrektor@bbs.test` | `Test1234!` | `dyrektor` | `/dashboard/admin` (CRM) |
-| `menedzer@bbs.test` | `Test1234!` | `menedzer` | `/dashboard/admin` (CRM) |
-| `partner@bbs.test` | `Test1234!` | `partner` | `/dashboard/admin` (CRM) |
+| `artur@balticbenefits.pl` | `123456` | `superadmin` | `/dashboard/admin` |
+| `jakub@balticbenefits.pl` | `123456` | `superadmin` | `/dashboard/admin` |
+| `dyrektor@bbs.test` | `Test1234!` | `dyrektor` | `/dashboard/network` (CRM) |
+| `menedzer@bbs.test` | `Test1234!` | `menedzer` | `/dashboard/network` (CRM) |
+| `partner@bbs.test` | `Test1234!` | `partner` | `/dashboard/network` (CRM) |
+| `piotr@balticbenefits.pl` | `123456` | `partner` | `/dashboard/network` (manager: Anna Menedzer) |
 | `t.juszkiewicz@gmail.com` | — | `pracodawca` | `/dashboard/employer` |
 | `pracownik@bbs.test` | `Test1234!` | `pracownik` | `/dashboard/employee` |
 
 **Hierarchia CRM (manager_id):**
 - `partner@bbs.test` → manager: `menedzer@bbs.test`
+- `piotr@balticbenefits.pl` → manager: `menedzer@bbs.test` (Anna Menedzer)
 - `menedzer@bbs.test` → manager: `dyrektor@bbs.test`
 - `dyrektor@bbs.test` → brak managera (top)
+
+**Skrypty utworzenia kont** (`scripts/create-user-*.mjs`) — wczytują `.env.local`, używają service role do `auth.admin.createUser` + upsert `user_profiles`. Wzorzec do tworzenia kolejnych testowych userów.
 
 ### Key Types
 
@@ -286,6 +305,7 @@ Available in `components/ui/` and `components/bits/`:
 
 ### Known Issues / Gotchas
 
+- **Layout dashboardów z `position: fixed` Sidebarem** — Sidebar jest `fixed inset-y-0 left-0`, więc wyjmuje się z flow flex. Outer wrapper MUSI mieć `md:pl-72/pl-16` (padding-left zgodny z szerokością sidebara), a inner content wrapper `flex-1 min-w-0` i `<main>` też `min-w-0`. Brak któregokolwiek = content zachodzi pod sidebar. Wzorzec: [app/dashboard/_components/AdminDashboardClient.tsx](app/dashboard/_components/AdminDashboardClient.tsx) (commit `cdf5f80`); analogicznie naprawiony NetworkDashboardClient w `27a4cec`.
 - Browser-only libraries (`html2pdf.js`, `ogl`/SoftAurora) must be loaded with `next/dynamic` + `{ ssr: false }`
 - Logo BBS: `/public/logo.png` — białe tło, używaj CSS filter jeśli potrzeba inwersji
 - `zoom` CSS property is in `.main-zoom` CSS class (not inline style) — applies desktop-only via media query
@@ -299,9 +319,18 @@ Available in `components/ui/` and `components/bits/`:
 - [x] Gamification / CRM Leaderboard — ranking sprzedaży z medalami, eksport CSV
 - [x] Org-chart D3 — wizualizacja struktury firmy z edycją węzłów
 
+**Faza 1.5 — uporządkowanie ról i widoków (2026-05-27, commity `c6d1c41`..`27a4cec`):**
+- [x] Spec + plan w `docs/superpowers/specs/` i `docs/superpowers/plans/`
+- [x] `Role.HR_PANEL` (`hr`) → klon `pracodawca`, trasa `/dashboard/employer`
+- [x] `partner/menedzer/dyrektor` → `/dashboard/network` (zgodnie z `lib/roleMap.ts`, sprostowanie wcześniejszej dokumentacji)
+- [x] Sidebar rozbity per rola: ADVISOR bez Leaderboardu/Org-chartu, DIRECTOR/MANAGER pełne menu + Faktury
+- [x] Widok "Faktury i płatności" (`CrmInvoices.tsx` + `/api/crm/invoices/*` + tabela `crm_invoices`)
+- [x] `PartnerLeaderboardWidget` — partner widzi własną pozycję na pulpicie `/dashboard/network`
+- [x] Naprawa layoutu `NetworkDashboardClient` (analogicznie do `cdf5f80` dla admina)
+
 **Faza 2 — zaplanowana:**
 - [ ] AI Knowledge Base — pgvector + OpenAI, upload dokumentów przez admina, chat dla CRM
-- [ ] Moduł prowizji CRM — integracja Fakturownia, automatyczne faktury prowizyjne
+- [ ] Moduł prowizji CRM — integracja Fakturownia (tabela `crm_invoices` jest, brakuje UI tworzenia + sync z Fakturownia)
 
 **Faza 3 — zaplanowana:**
 - [ ] Pełny klient email IMAP — dla handlowców/menedżerów/dyrektorów bezpośrednio w panelu
