@@ -40,11 +40,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = useMemo(() => {
     switch (currentUser.role) {
       case Role.HR_PANEL:
+      case Role.HR:
         return [
-          { id: 'hr-divider',     label: '── Panel HR ──',  icon: null, divider: true, section: 'HR' },
-          { id: 'hr-pracownicy',  label: 'Pracownicy',      icon: <Users size={20} /> },
-          { id: 'hr-umowy',       label: 'Umowy',           icon: <FileText size={20} /> },
-          { id: 'hr-raporty',     label: 'Raporty HR',      icon: <BarChart3 size={20} /> },
+          { id: 'hr-order',     label: 'Nowe zamówienie',       icon: <Plus size={20} /> },
+          { id: 'hr-history',   label: 'Historia zamówień',     icon: <FileText size={20} /> },
+          { id: 'hr-employees', label: 'Kartoteka pracowników', icon: <Users size={20} /> },
+          { id: 'hr-payments',  label: 'Płatności i faktury',   icon: <CreditCard size={20} /> },
         ];
       case Role.SUPERADMIN:
         return [
@@ -66,13 +67,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'hr-umowy',       label: 'Umowy',           icon: <Briefcase size={20} /> },
           { id: 'hr-raporty',     label: 'Raporty HR',      icon: <BarChart3 size={20} /> },
         ];
-      case Role.HR:
-        return [
-          { id: 'hr-order',     label: 'Nowe zamówienie',       icon: <Plus size={20} /> },
-          { id: 'hr-history',   label: 'Historia zamówień',     icon: <FileText size={20} /> },
-          { id: 'hr-employees', label: 'Kartoteka pracowników', icon: <Users size={20} /> },
-          { id: 'hr-payments',  label: 'Płatności i faktury',   icon: <CreditCard size={20} /> },
-        ];
       case Role.EMPLOYEE:
         return [
           { id: 'emp-twoje-aplikacje', label: 'Twoje Aplikacje', icon: <Smartphone size={20} /> },
@@ -86,17 +80,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'emp-support', label: 'Centrum Pomocy', icon: <HelpCircle size={20} /> },
           { id: 'emp-active-services', label: 'Aktywne usługi', icon: <ShieldCheck size={20} /> },
         ];
-      case Role.DIRECTOR:
-      case Role.MANAGER:
       case Role.ADVISOR:
         return [
-          { id: 'sales-dashboard',  label: 'Panel Sprzedaży', icon: <DollarSign size={20} /> },
-          { id: 'sales-commissions', label: 'Moje Prowizje',  icon: <FileText size={20} /> },
+          { id: 'sales-dashboard',   label: 'Panel Sprzedaży',     icon: <DollarSign size={20} /> },
           { id: 'crm-divider', label: '── CRM ──', icon: null, divider: true },
-          { id: 'crm-pipeline',    label: 'Pipeline',       icon: <KanbanSquare size={20} /> },
-          { id: 'crm-kalkulator',  label: 'Kalkulator Ofertowy', icon: <Calculator size={20} /> },
-          { id: 'crm-leaderboard', label: 'Leaderboard',    icon: <Trophy size={20} /> },
-          { id: 'org-chart',       label: 'Org-chart',      icon: <Network size={20} /> },
+          { id: 'crm-pipeline',      label: 'Pipeline',            icon: <KanbanSquare size={20} /> },
+          { id: 'crm-kalkulator',    label: 'Kalkulator Ofertowy', icon: <Calculator size={20} /> },
+          { id: 'sales-platnosci',   label: 'Faktury i płatności', icon: <CreditCard size={20} /> },
+        ];
+      case Role.DIRECTOR:
+      case Role.MANAGER:
+        return [
+          { id: 'sales-dashboard',   label: 'Panel Sprzedaży',     icon: <DollarSign size={20} /> },
+          { id: 'crm-divider', label: '── CRM ──', icon: null, divider: true },
+          { id: 'crm-pipeline',      label: 'Pipeline',            icon: <KanbanSquare size={20} /> },
+          { id: 'crm-kalkulator',    label: 'Kalkulator Ofertowy', icon: <Calculator size={20} /> },
+          { id: 'crm-leaderboard',   label: 'Leaderboard',         icon: <Trophy size={20} /> },
+          { id: 'org-chart',         label: 'Org-chart',           icon: <Network size={20} /> },
+          { id: 'sales-platnosci',   label: 'Faktury i płatności', icon: <CreditCard size={20} /> },
         ];
       default:
         return [];
