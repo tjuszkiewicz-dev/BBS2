@@ -63,7 +63,7 @@ function NetworkLayout() {
       />
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
         {/* Header */}
         <header className="bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ function NetworkLayout() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden scroll-smooth">
           {!isCRM && (
             <div className="p-4 md:p-8 space-y-4">
               {currentUser.role === Role.ADVISOR && <PartnerLeaderboardWidget />}
