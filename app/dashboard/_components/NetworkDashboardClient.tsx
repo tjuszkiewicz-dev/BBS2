@@ -45,8 +45,11 @@ function NetworkLayout() {
   const myOrders = orders.filter(o => myCompanies.some(c => c.id === o.companyId));
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f1f5f9' }}>
-      {/* Sidebar */}
+    <div
+      className={`flex h-screen overflow-hidden transition-[padding] duration-300 ease-in-out ${isDesktopSidebarOpen ? 'md:pl-72' : 'md:pl-16'}`}
+      style={{ backgroundColor: '#f1f5f9' }}
+    >
+      {/* Sidebar (position: fixed — miejsce rezerwowane przez pl-72/pl-16 powyżej) */}
       <Sidebar
         currentUser={currentUser}
         currentView={currentView}
@@ -60,7 +63,7 @@ function NetworkLayout() {
       />
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10 overflow-hidden">
         {/* Header */}
         <header className="bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
