@@ -127,3 +127,74 @@ export async function fetchLeaderboard(
 
   return leaderboard;
 }
+
+export interface PartnerSelfStanding {
+  rank: number;
+  total_count: number;
+  leads_count: number;
+  deals_closed: number;
+  conversion_rate: number;
+  full_name: string;
+}
+
+/**
+ * Dla partnera: jego pozycja wśród WSZYSTKICH partnerów w danym okresie.
+ * Ranking globalny — nie ograniczony do zespołu.
+ */
+export async function fetchPartnerSelfStanding(
+  callerId: string,
+  period: Period,
+): Promise<PartnerSelfStanding | null> {
+  const periodStart = getPeriodStart(period);
+
+  const { data: partners, error: partnersError } = await admin()
+    .from('user_profiles')
+    .select('id, full_name')
+    .eq('role', 'partner');
+
+  if (partnersError) throw new Error(partnersError.message);
+  if (!partners || partners.length === 0) return null;
+
+  const userIds = partners.map((p: { id: string }) => p.id);
+
+  const { data: leads, error: leadsError } = await admin()
+    .from('leads')
+    .select('id, assigned_to, status')
+    .in('assigned_to', userIds)
+    .gte('created_at', periodStart);
+
+  if (leadsError) throw new Error(leadsError.message);
+  const leadsData = leads ?? [];
+
+  const statsByUser = new Map<string, { total: number; signed: number }>();
+  for (const userId of userIds) statsByUser.set(userId, { total: 0, signed: 0 });
+  for (const lead of leadsData) {
+    if (!lead.assigned_to) continue;
+    const entry = statsByUser.get(lead.assigned_to);
+    if (!entry) continue;
+    entry.total += 1;
+    if (lead.status === 'SIGNED') entry.signed += 1;
+  }
+
+  const ranked = partners
+    .map((p: { id: string; full_name: string | null }) => {
+      const s = statsByUser.get(p.id) ?? { total: 0, signed: 0 };
+      return { id: p.id, full_name: p.full_name ?? '', total: s.total, signed: s.signed };
+    })
+    .sort((a, b) => (b.signed - a.signed) || (b.total - a.total));
+
+  const idx = ranked.findIndex(r => r.id === callerId);
+  if (idx === -1) return null;
+
+  const me = ranked[idx];
+  const conversion_rate = me.total > 0 ? Math.round((me.signed / me.total) * 100 * 100) / 100 : 0;
+
+  return {
+    rank: idx + 1,
+    total_count: ranked.length,
+    leads_count: me.total,
+    deals_closed: me.signed,
+    conversion_rate,
+    full_name: me.full_name,
+  };
+}

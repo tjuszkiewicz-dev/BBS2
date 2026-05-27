@@ -3,11 +3,13 @@ import { getAuthUserWithRole } from '@/lib/apiAuth';
 import {
   CRM_ROLES,
   fetchLeaderboard,
+  fetchPartnerSelfStanding,
   type LeaderboardEntry,
+  type PartnerSelfStanding,
   type Period,
 } from '@/lib/crm/leaderboard';
 
-export type { LeaderboardEntry };
+export type { LeaderboardEntry, PartnerSelfStanding };
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthUserWithRole();
@@ -22,8 +24,12 @@ export async function GET(request: NextRequest) {
     : 'month';
 
   try {
+    if (auth.role === 'partner') {
+      const self = await fetchPartnerSelfStanding(auth.id, period);
+      return NextResponse.json({ self, entries: [] as LeaderboardEntry[] });
+    }
     const leaderboard = await fetchLeaderboard(auth.id, auth.role, period);
-    return NextResponse.json(leaderboard);
+    return NextResponse.json({ self: null, entries: leaderboard });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json({ error: message }, { status: 500 });

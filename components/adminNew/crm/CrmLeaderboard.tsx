@@ -95,8 +95,9 @@ export function CrmLeaderboard() {
         throw new Error(body?.error ?? `HTTP ${res.status}`);
       }
       const data = await res.json();
-      if (!Array.isArray(data)) throw new Error(data?.error ?? 'Unexpected response');
-      setEntries(data as LeaderboardEntry[]);
+      const entries = Array.isArray(data) ? data : data?.entries;
+      if (!Array.isArray(entries)) throw new Error(data?.error ?? 'Unexpected response');
+      setEntries(entries as LeaderboardEntry[]);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Błąd ładowania danych');
     } finally {
