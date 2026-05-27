@@ -404,8 +404,12 @@ export type Database = {
           client_profile_id: string | null
           content: string | null
           created_at: string
+          description: string | null
           id: string
+          is_completed: boolean | null
+          lead_id: string | null
           metadata: Json | null
+          occurred_at: string | null
           type: string
           user_id: string | null
         }
@@ -413,8 +417,12 @@ export type Database = {
           client_profile_id?: string | null
           content?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          is_completed?: boolean | null
+          lead_id?: string | null
           metadata?: Json | null
+          occurred_at?: string | null
           type: string
           user_id?: string | null
         }
@@ -422,8 +430,12 @@ export type Database = {
           client_profile_id?: string | null
           content?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          is_completed?: boolean | null
+          lead_id?: string | null
           metadata?: Json | null
+          occurred_at?: string | null
           type?: string
           user_id?: string | null
         }
@@ -563,6 +575,154 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_invoices: {
+        Row: {
+          amount_gross: number | null
+          amount_net: number
+          created_at: string
+          due_at: string | null
+          id: string
+          invoice_number: string | null
+          issued_at: string | null
+          issued_by: string | null
+          lead_id: string | null
+          offer_id: string | null
+          paid_at: string | null
+          provision_amount: number | null
+          provision_pct: number
+          status: string
+          updated_at: string
+          vat_amount: number | null
+          vat_rate: number
+        }
+        Insert: {
+          amount_gross?: number | null
+          amount_net?: number
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          issued_by?: string | null
+          lead_id?: string | null
+          offer_id?: string | null
+          paid_at?: string | null
+          provision_amount?: number | null
+          provision_pct?: number
+          status?: string
+          updated_at?: string
+          vat_amount?: number | null
+          vat_rate?: number
+        }
+        Update: {
+          amount_gross?: number | null
+          amount_net?: number
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          issued_by?: string | null
+          lead_id?: string | null
+          offer_id?: string | null
+          paid_at?: string | null
+          provision_amount?: number | null
+          provision_pct?: number
+          status?: string
+          updated_at?: string
+          vat_amount?: number | null
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_invoices_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_invoices_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_invoices_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "crm_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_offers: {
+        Row: {
+          company_name: string
+          company_nip: string | null
+          created_at: string
+          created_by: string | null
+          employees_count: number
+          id: string
+          lead_id: string | null
+          net_savings_monthly: number
+          pdf_path: string | null
+          pdf_url: string | null
+          provision_pct: number
+          snapshot: Json | null
+          total_savings_monthly: number
+          total_savings_yearly: number
+        }
+        Insert: {
+          company_name: string
+          company_nip?: string | null
+          created_at?: string
+          created_by?: string | null
+          employees_count: number
+          id?: string
+          lead_id?: string | null
+          net_savings_monthly: number
+          pdf_path?: string | null
+          pdf_url?: string | null
+          provision_pct: number
+          snapshot?: Json | null
+          total_savings_monthly: number
+          total_savings_yearly: number
+        }
+        Update: {
+          company_name?: string
+          company_nip?: string | null
+          created_at?: string
+          created_by?: string | null
+          employees_count?: number
+          id?: string
+          lead_id?: string | null
+          net_savings_monthly?: number
+          pdf_path?: string | null
+          pdf_url?: string | null
+          provision_pct?: number
+          snapshot?: Json | null
+          total_savings_monthly?: number
+          total_savings_yearly?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_offers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_offers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -962,59 +1122,125 @@ export type Database = {
           },
         ]
       }
+      lead_notes: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
+          city: string | null
           company_id: string | null
+          company_size: string | null
           contact_person: string | null
+          contact_position: string | null
           converted_at: string | null
           created_at: string
           email: string | null
           id: string
+          industry: string | null
+          last_activity_at: string | null
           name: string
           nip: string | null
           notes: string | null
           phone: string | null
+          postal_code: string | null
           qualification_notes: string | null
           rejected_at: string | null
+          reservation_end_date: string | null
           source: string | null
           status: string
+          street: string | null
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
+          city?: string | null
           company_id?: string | null
+          company_size?: string | null
           contact_person?: string | null
+          contact_position?: string | null
           converted_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          industry?: string | null
+          last_activity_at?: string | null
           name: string
           nip?: string | null
           notes?: string | null
           phone?: string | null
+          postal_code?: string | null
           qualification_notes?: string | null
           rejected_at?: string | null
+          reservation_end_date?: string | null
           source?: string | null
           status?: string
+          street?: string | null
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
+          city?: string | null
           company_id?: string | null
+          company_size?: string | null
           contact_person?: string | null
+          contact_position?: string | null
           converted_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          industry?: string | null
+          last_activity_at?: string | null
           name?: string
           nip?: string | null
           notes?: string | null
           phone?: string | null
+          postal_code?: string | null
           qualification_notes?: string | null
           rejected_at?: string | null
+          reservation_end_date?: string | null
           source?: string | null
           status?: string
+          street?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1412,6 +1638,7 @@ export type Database = {
           iban_verified: boolean | null
           iban_verified_at: string | null
           id: string
+          manager_id: string | null
           pesel: string | null
           pesel_encrypted: string | null
           phone_number: string | null
@@ -1440,6 +1667,7 @@ export type Database = {
           iban_verified?: boolean | null
           iban_verified_at?: string | null
           id: string
+          manager_id?: string | null
           pesel?: string | null
           pesel_encrypted?: string | null
           phone_number?: string | null
@@ -1468,6 +1696,7 @@ export type Database = {
           iban_verified?: boolean | null
           iban_verified_at?: string | null
           id?: string
+          manager_id?: string | null
           pesel?: string | null
           pesel_encrypted?: string | null
           phone_number?: string | null
@@ -1486,6 +1715,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1735,6 +1971,12 @@ export type Database = {
           p_expiry_minute?: number
         }
         Returns: string
+      }
+      crm_visible_user_ids: {
+        Args: { p_caller_id: string; p_role: string }
+        Returns: {
+          user_id: string
+        }[]
       }
       decrypt_pesel: {
         Args: { p_ciphertext: string; p_key: string }
