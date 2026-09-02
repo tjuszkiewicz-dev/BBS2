@@ -116,9 +116,9 @@ export function Step5Summary({ firma, pracownicy, wyniki, provisionPct, leadId }
           { label: 'Prowizja BBS', value: provisionPct + '%' },
           { label: 'Koszt Standard / mies.', value: fmt(p.sumaKosztStandard) },
           { label: 'Koszt ofertowy / mies.', value: fmt(p.sumaKosztSplit) },
-          { label: 'Oszczędność brutto / mies.', value: fmt(p.oszczednoscBrutto) },
+          { label: 'Oszczędność całkowita / mies.', value: fmt(p.oszczednoscBrutto) },
           { label: 'Prowizja / mies.', value: fmt(p.prowizja) },
-          { label: 'Oszczędność netto / mies.', value: fmt(p.oszczednoscNetto) },
+          { label: 'Oszczędność po prowizji BBS / mies.', value: fmt(p.oszczednoscNetto) },
           { label: 'Oszczędność roczna', value: fmt(p.oszczednoscRoczna) },
         ].map(row => (
           <div key={row.label} className="flex justify-between items-center py-2.5 px-4 bg-slate-50 rounded-xl border border-slate-100">

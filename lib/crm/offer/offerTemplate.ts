@@ -106,20 +106,20 @@ export function renderOfferHtml(data: OfferData): string {
   }
   .cover-logo {
     background: white;
-    padding: 8px 14px;
+    padding: 24px 42px;
     border-radius: 10px;
     display: inline-flex;
     align-items: center;
-    height: 48px;
+    height: 144px;
   }
-  .cover-logo img { height: 32px; width: auto; display: block; }
+  .cover-logo img { height: 96px; width: auto; display: block; }
   .cover-logo-text {
     color: ${NAVY};
     font-weight: 800;
     font-size: 14pt;
     letter-spacing: 1px;
   }
-  .page-header-logo-img { height: 22px; width: auto; display: block; }
+  .page-header-logo-img { height: 66px; width: auto; display: block; }
   .cover-meta {
     text-align: right;
     font-size: 9pt;
@@ -201,9 +201,9 @@ export function renderOfferHtml(data: OfferData): string {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 8mm;
+    padding-bottom: 3mm;
     border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 8mm;
+    margin-bottom: 4mm;
   }
   .page-header-logo {
     font-weight: 800;
@@ -309,7 +309,7 @@ export function renderOfferHtml(data: OfferData): string {
     background: linear-gradient(135deg, ${GREEN} 0%, #15803d 100%);
     color: white;
     border-radius: 16px;
-    padding: 8mm;
+    padding: 16mm;
     text-align: center;
     box-shadow: 0 8px 28px rgba(22,163,74,0.25);
     margin-bottom: 6mm;
@@ -318,19 +318,22 @@ export function renderOfferHtml(data: OfferData): string {
     font-size: 10pt;
     text-transform: uppercase;
     letter-spacing: 3px;
-    opacity: 0.9;
+    opacity: 0.75;
     margin-bottom: 4mm;
     font-weight: 600;
   }
   .kpi-hero-value {
     font-size: 38pt;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
-    margin-bottom: 3mm;
+    margin-bottom: 5mm;
+    opacity: 0.9;
   }
   .kpi-hero-sub {
-    font-size: 10pt;
-    opacity: 0.85;
+    font-size: 26pt;
+    font-weight: 400;
+    opacity: 1;
+    line-height: 1.2;
   }
   .kpi-row {
     display: flex;
